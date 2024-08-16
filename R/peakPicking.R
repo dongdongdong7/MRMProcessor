@@ -59,6 +59,27 @@
   rt_start <-  rt_new[a_end];rt_end <- rt_new[b_end]
   return(c(start = rt_start, end = rt_end))
 }
+#' @title get_peakPara
+#' @description
+#' Get peakPara list.
+#' @param sn sn threshold.
+#' @param preNum preNum.
+#' @param extend extend.
+#' @param tol_m tol_m.
+#' @param multiSmooth Whether or not to give multiple smoothing to the ZOI region, which helps the accuracy of edge finding.
+#' @param cal_ZOI_baseline Whether or not to calculate a baseline for the ZOI separately, which helps the accuracy of edge finding.
+#' @param fwhm This is the parameter used in the matchfilter function to determine the multi-peak case.
+#' The smaller the value the easier it is to find multiple peaks.
+#' @param snthresh This is the parameter used in the matchfilter function to determine the multi-peak case.
+#'
+#' @return A list.
+#' @export
+#'
+#' @examples
+#' peakPara <- get_peakPara()
+get_peakPara <- function(sn = 3, preNum = 3, extend = 5, tol_m = 10, multiSmooth = TRUE, cal_ZOI_baseline = TRUE, fwhm = NA, snthresh = 0.5){
+  return(list(sn = sn, preNum = preNum, extend = extend, tol_m = tol_m, multiSmooth = multiSmooth, cal_ZOI_baseline = cal_ZOI_baseline, fwhm = fwhm, snthresh = snthresh))
+}
 
 #' @title peakPicking
 #' @description
@@ -94,8 +115,12 @@
 #' plot(sort(data[row,col]@intensity))
 #' peakPicking(int = data[row,col]@intensity, rt = data[row,col]@rtime * 60, tol_m = 0.5)
 peakPicking <- function(int, rt, noise = NA,
-                        smoothPara = get_smoothPara(), baselinePara = get_baselinePara(),
-                        sn = 3, preNum = 3, extend = 5, tol_m = 10, multiSmooth = TRUE, cal_ZOI_baseline = TRUE,fwhm = NA, snthresh = 0.5){
+                        smoothPara = get_smoothPara(), baselinePara = get_baselinePara(), peakPara = get_peakPara()){
+  # peakPara
+  sn <- peakPara$sn;preNum <- peakPara$preNum;extend <- peakPara$extend;tol_m <- peakPara$tol_m
+  multiSmooth <- peakPara$multiSmooth;cal_ZOI_baseline <- peakPara$cal_ZOI_baseline
+  fwhm <- peakPara$fwhm;snthresh <- peakPara$snthresh
+
   int <- smoothFun(int, smoothPara = smoothPara)
   if(is.na(noise)) noise0 <- noiseEs(int)
   else if(noise > 0) noise0 <- noise

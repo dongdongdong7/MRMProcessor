@@ -10,14 +10,7 @@ peakPicking(
   noise = NA,
   smoothPara = get_smoothPara(),
   baselinePara = get_baselinePara(),
-  sn = 3,
-  preNum = 3,
-  extend = 5,
-  tol_m = 10,
-  multiSmooth = TRUE,
-  cal_ZOI_baseline = TRUE,
-  fwhm = NA,
-  snthresh = 0.5
+  peakPara = get_peakPara()
 )
 }
 \arguments{
@@ -35,18 +28,18 @@ peakPicking(
 
 \item{preNum}{preNum.}
 
-\item{extend}{extend.}
-
 \item{tol_m}{tol_m.}
 
-\item{multiSmooth}{Whether or not to give multiple smoothing to the ZOI region, which helps the accuracy of edge finding}
-
-\item{cal_ZOI_baseline}{Whether or not to calculate a baseline for the ZOI separately, which helps the accuracy of edge finding.}
+\item{snthresh}{This is the parameter used in the matchfilter function to determine the multi-peak case.}
 
 \item{fwhm}{This is the parameter used in the matchfilter function to determine the multi-peak case.
 The smaller the value the easier it is to find multiple peaks.}
 
-\item{snthresh}{This is the parameter used in the matchfilter function to determine the multi-peak case.}
+\item{cal_ZOI_baseline}{Whether or not to calculate a baseline for the ZOI separately, which helps the accuracy of edge finding.}
+
+\item{multiSmooth}{Whether or not to give multiple smoothing to the ZOI region, which helps the accuracy of edge finding}
+
+\item{extend}{extend.}
 }
 \value{
 A list.
