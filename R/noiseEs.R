@@ -1,8 +1,19 @@
+.prepare_noiseEs <- function(int){
+  yi <- sort(int)
+  x <- seq(1, length(yi))
+  xi <- sapply(unique(yi), function(tmp) {
+    which(yi == tmp)[1]
+  })
+  yi <- yi[xi]
+  y <- pracma::pchip(xi, yi, x)
+  return(y)
+}
 #' @title noiseEs
 #' @description
 #' Estimates the noise of a chromatogram, which can be used to find the apex of a chromatographic peak.
 #'
 #' @param int intensity vector.
+#' @param prepare TRUE or FALSE
 #'
 #' @return noise.
 #' @export
@@ -11,8 +22,9 @@
 #' noise <- noiseEs(data[1,1]@intensity)
 #' plot(data[1,1]@intensity, type = "l")
 #' lines(rep(noise, length(data[1,1]@intensity)))
-noiseEs <- function(int){
-  intensity <- int
+noiseEs <- function(int, prepare = FALSE){
+  intensity <- sort(int[int > 0])
+  if(prepare) intensity <- .prepare_noiseEs(intensity)
   intLength <- length(intensity)
   if(intLength == 1) return(intensity)
   for(i in (intLength - 1):1){
@@ -25,3 +37,4 @@ noiseEs <- function(int){
   noise <- intensity[i + 1]
   return(noise)
 }
+

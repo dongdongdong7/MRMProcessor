@@ -59,7 +59,22 @@
   }
   return(ys)
 }
-.get_baselinePara <- function(threshold = 1, tol_m = 30, loops = 6){
+
+#' @title get_baselinePara
+#' @description
+#' Get baselineEs parameters list.
+#'
+#'
+#' @param threshold threshold.
+#' @param tol_m tol_m.
+#' @param loops loops.
+#'
+#' @return baseline numeric.
+#' @export
+#'
+#' @examples
+#' baselinePara = get_baselinePara()
+get_baselinePara <- function(threshold = 1, tol_m = 30, loops = 6){
   return(list(threshold = threshold, tol_m = tol_m, loops = loops))
 }
 
@@ -78,7 +93,7 @@
 #' plot(data[1,1]@intensity, type = "l")
 #' baseline <- baselineEs(int = data[1,1]@intensity, rt = data[1,1]@rtime)
 #' lines(baseline)
-baselineEs <- function(int, rt, baselinePara = .get_baselinePara()){
+baselineEs <- function(int, rt, baselinePara = get_baselinePara()){
   bottom_idx <- .inflect(int, baselinePara$threshold)$minima
   bottom_idx <- unique(c(1, bottom_idx, length(int)))
   if(length(bottom_idx) < 3){

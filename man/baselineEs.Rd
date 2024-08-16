@@ -4,7 +4,7 @@
 \alias{baselineEs}
 \title{baselineEs}
 \usage{
-baselineEs(int, rt, baselinePara = .get_baselinePara())
+baselineEs(int, rt, baselinePara = get_baselinePara())
 }
 \arguments{
 \item{int}{intensity vector.}

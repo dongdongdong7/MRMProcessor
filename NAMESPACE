@@ -2,7 +2,9 @@
 
 export(baselineEs)
 export(cal_IE)
+export(get_baselinePara)
 export(get_smoothPara)
 export(noiseEs)
+export(peakPicking)
 export(readMRMData)
 export(smoothFun)
