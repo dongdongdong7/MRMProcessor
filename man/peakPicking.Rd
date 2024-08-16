@@ -12,7 +12,10 @@ peakPicking(
   baselinePara = get_baselinePara(),
   sn = 3,
   preNum = 3,
+  extend = 5,
   tol_m = 10,
+  multiSmooth = TRUE,
+  cal_ZOI_baseline = TRUE,
   fwhm = NA,
   snthresh = 0.5
 )
@@ -32,7 +35,13 @@ peakPicking(
 
 \item{preNum}{preNum.}
 
+\item{extend}{extend.}
+
 \item{tol_m}{tol_m.}
+
+\item{multiSmooth}{Whether or not to give multiple smoothing to the ZOI region, which helps the accuracy of edge finding}
+
+\item{cal_ZOI_baseline}{Whether or not to calculate a baseline for the ZOI separately, which helps the accuracy of edge finding.}
 
 \item{fwhm}{This is the parameter used in the matchfilter function to determine the multi-peak case.
 The smaller the value the easier it is to find multiple peaks.}
@@ -46,7 +55,7 @@ A list.
 This is a peak-picking function for the MRM targeting window
 }
 \examples{
-row <- 19;col <- 1
+row <- 200;col <- 2
 plot(x=data[row,col]@rtime * 60,y = data[row,col]@intensity, type = "l")
 plot(x=data[row,col]@rtime * 60,y = smoothFun(data[row,col]@intensity), type = "l")
 baseline <- baselineEs(int = smoothFun(data[row,col]@intensity), rt = data[row,col]@rtime * 60)

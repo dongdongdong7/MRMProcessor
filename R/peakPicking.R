@@ -3,7 +3,7 @@
   intercept <- A[2] - slope * A[1]
   return(c(slope = slope, intercept = intercept))
 }
-.edgeTrack_crude <- function(int, rt, baseline, preNum = 3, tol_m = 30){
+.edgeTrack_crude <- function(int, rt, baseline, preNum = 3, tol_m = 30, multiSmooth = TRUE){
   aboveTHidx <- which(int > baseline)
   candidateSegInd <- split(aboveTHidx, cumsum(c(1, diff(aboveTHidx) != 1)))
   pointNum <- sapply(candidateSegInd, length)
@@ -22,10 +22,12 @@
   baseline_new <- baseline[idx]
   apex_idx <- which.max(int_new)
   int_a <- int_new[1:apex_idx];int_b <- int_new[apex_idx:length(int_new)]
-  while(!all(diff(int_a) >0) | !all(diff(int_b) < 0)){
-    int_new <- .smoothMean(int_new, size = 3)
-    apex_idx <- which.max(int_new)
-    int_a <- int_new[1:apex_idx];int_b <- int_new[apex_idx:length(int_new)]
+  if(multiSmooth){
+    while(!all(diff(int_a) >0) | !all(diff(int_b) < 0)){
+      int_new <- .smoothMean(int_new, size = 3)
+      apex_idx <- which.max(int_new)
+      int_a <- int_new[1:apex_idx];int_b <- int_new[apex_idx:length(int_new)]
+    }
   }
   #browser()
   int_norm <- (int_new - min(int_new)) / (max(int_new) - min(int_new))
@@ -73,12 +75,15 @@
 #' @param snthresh This is the parameter used in the matchfilter function to determine the multi-peak case.
 #' @param fwhm This is the parameter used in the matchfilter function to determine the multi-peak case.
 #' The smaller the value the easier it is to find multiple peaks.
+#' @param cal_ZOI_baseline Whether or not to calculate a baseline for the ZOI separately, which helps the accuracy of edge finding.
+#' @param multiSmooth Whether or not to give multiple smoothing to the ZOI region, which helps the accuracy of edge finding
+#' @param extend extend.
 #'
 #' @return A list.
 #' @export
 #'
 #' @examples
-#' row <- 19;col <- 1
+#' row <- 200;col <- 2
 #' plot(x=data[row,col]@rtime * 60,y = data[row,col]@intensity, type = "l")
 #' plot(x=data[row,col]@rtime * 60,y = smoothFun(data[row,col]@intensity), type = "l")
 #' baseline <- baselineEs(int = smoothFun(data[row,col]@intensity), rt = data[row,col]@rtime * 60)
@@ -90,7 +95,7 @@
 #' peakPicking(int = data[row,col]@intensity, rt = data[row,col]@rtime * 60, tol_m = 0.5)
 peakPicking <- function(int, rt, noise = NA,
                         smoothPara = get_smoothPara(), baselinePara = get_baselinePara(),
-                        sn = 3, preNum = 3, tol_m = 10, fwhm = NA, snthresh = 0.5){
+                        sn = 3, preNum = 3, extend = 5, tol_m = 10, multiSmooth = TRUE, cal_ZOI_baseline = TRUE,fwhm = NA, snthresh = 0.5){
   int <- smoothFun(int, smoothPara = smoothPara)
   if(is.na(noise)) noise0 <- noiseEs(int)
   else if(noise > 0) noise0 <- noise
@@ -105,16 +110,36 @@ peakPicking <- function(int, rt, noise = NA,
   })]
   if(length(candidateSegInd) == 0) return(NULL)
   ZOIList <- lapply(1:length(candidateSegInd), function(i) {
+    extend1 <- extend
+    extend2 <- extend
     idx <- candidateSegInd[[i]]
     idxLength <- length(idx)
-    idx1 <- idx[1] - 5
+    idx1 <- idx[1] - extend1
     if(idx1 < 1) idx1 <- 1
-    idx2 <- idx[idxLength] + 5
+    if(i != 1){
+      while(idx1 %in% candidateSegInd[[i - 1]] | idx1 < min(candidateSegInd[[i - 1]])){
+        extend1 <- extend1 - 1
+        idx1 <- idx[1] - extend1
+      }
+    }
+    if(idx1 < 1) idx1 <- 1
+    idx2 <- idx[idxLength] + extend2
+    if(idx2 > length(int)) idx2 <- length(int)
+    if(i != length(candidateSegInd)){
+      while(idx2 %in% candidateSegInd[[i + 1]] | idx2 > max(candidateSegInd[[i + 1]])){
+        extend2 <- extend2 - 1
+        idx2 <- idx[idxLength] + extend2
+      }
+    }
     if(idx2 > length(int)) idx2 <- length(int)
     idx <- unique(c(idx1:idx[1], idx, idx[idxLength]:idx2))
     ZOI_int <- int[idx]
     ZOI_rt <- rt[idx]
-    ZOI_baseline <- baseline[idx]
+    if(cal_ZOI_baseline){
+      ZOI_baseline <- baselineEs(int = ZOI_int, rt = ZOI_rt, baselinePara = baselinePara)
+    }else{
+      ZOI_baseline <- baseline[idx]
+    }
     ZOIWidth <- (max(ZOI_rt) - min(ZOI_rt)) / 2 # half
     if(is.na(fwhm)) fwhm <- round(ZOIWidth / 2)
     else fwhm <- fwhm
@@ -142,12 +167,12 @@ peakPicking <- function(int, rt, noise = NA,
         ZOI_int_t <- ZOI_int[a_idx:b_idx]
         ZOI_rt_t <- ZOI_rt[a_idx:b_idx]
         ZOI_baseline_t <- ZOI_baseline[a_idx:b_idx]
-        edge <- .edgeTrack_crude(int = ZOI_int_t, ZOI_rt_t, baseline = ZOI_baseline_t, preNum = preNum, tol_m = tol_m)
+        edge <- .edgeTrack_crude(int = ZOI_int_t, ZOI_rt_t, baseline = ZOI_baseline_t, preNum = preNum, tol_m = tol_m, multiSmooth = multiSmooth)
         return(edge)
       })
       return(multiZOIList)
     }else{
-      ZOI <- .edgeTrack_crude(int = ZOI_int, rt = ZOI_rt, baseline = ZOI_baseline, preNum = preNum, tol_m = tol_m)
+      ZOI <- .edgeTrack_crude(int = ZOI_int, rt = ZOI_rt, baseline = ZOI_baseline, preNum = preNum, tol_m = tol_m, multiSmooth = multiSmooth)
       return(ZOI)
     }
   })
