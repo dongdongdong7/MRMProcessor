@@ -21,6 +21,8 @@ peakPicking_MChromatograms <- function(MChromatograms, noise = NA,
                                        thread = 1, unit = "min"){
   nrow <- nrow(MChromatograms)
   ncol <- ncol(MChromatograms)
+  pData <- MChromatograms@phenoData@data
+  fData <- MChromatograms@featureData@data
   pb <- utils::txtProgressBar(max = ncol, style = 3)
   if(thread == 1){
     chrs <- unlist(lapply(1:ncol, function(j) {
@@ -32,6 +34,9 @@ peakPicking_MChromatograms <- function(MChromatograms, noise = NA,
           Chromatogram <- peakPicking_Chromatogram(Chromatogram = Chromatogram, noise = noise,
                                                    smoothPara = smoothPara, baselinePara = baselinePara,
                                                    peakPara = peakPara)
+          attributes(Chromatogram)$sample_name <- pData$file[j]
+          attributes(Chromatogram)$chrInfo <- fData[i, ]
+          return(Chromatogram)
         })
       }
       loop(j)
@@ -51,7 +56,11 @@ peakPicking_MChromatograms <- function(MChromatograms, noise = NA,
                                             Chromatogram <- MChromatograms[i, j]
                                             if(unit == "min") attributes(Chromatogram)$rtime <- attributes(Chromatogram)$rtime * 60
                                             Chromatogram <- peakPicking_Chromatogram(Chromatogram = Chromatogram, noise = noise,
-                                                                                     smoothPara = smoothPara, baselinePara = baselinePara, peakPara = peakPara)
+                                                                                     smoothPara = smoothPara, baselinePara = baselinePara,
+                                                                                     peakPara = peakPara)
+                                            attributes(Chromatogram)$sample_name <- pData$file[j]
+                                            attributes(Chromatogram)$chrInfo <- fData[i, ]
+                                            return(Chromatogram)
                                           })
                                         }
                                         loop(j)

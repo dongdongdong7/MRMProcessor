@@ -10,3 +10,69 @@
                    axis.text = ggplot2::element_text(size = axis.text.size))
   return(p)
 }
+
+#' @title plotChromatogram
+#' @description
+#' Plot a Chromatogram object.
+#'
+#' @param Chromatogram Chromatogram object.
+#' @param xlim xlim.
+#' @param ylim ylim.
+#' @param intColour intColour.
+#' @param intLinewidth intLineidth.
+#' @param axis.title.size Size of coordinate axis headings.
+#' @param axis.text.size Size of axis labels.
+#' @param title.size Title Size.
+#' @param text.size Size of Q3-Q1 text.
+#' @param text.colour Colour of Q3-Q1 text
+#' @param fillColour Colour of peaks.
+#'
+#' @return A ggplot object.
+#' @export
+#'
+#' @examples
+#' plotChromatogram(MChromatograms[42,8], text.colour = "purple", fillColour = "purple")
+plotChromatogram <- function(Chromatogram,
+                             xlim = NA, ylim = NA,
+                             intColour = "black", intLinewidth = 1,
+                             axis.title.size = 15, axis.text.size = 10,
+                             title.size = 15, text.size = 15, text.colour = "red",
+                             fillColour = "gray"){
+  p <- .plotFun(int = Chromatogram@intensity, rt = Chromatogram@rtime,
+                xlim = xlim, ylim = ylim,
+                intColour = intColour, intLinewidth = intLinewidth,
+                axis.title.size = axis.title.size, axis.text.size = axis.text.size)
+  p$data$baseline <- attributes(Chromatogram)$baseline
+  sample_name <- basename(attributes(Chromatogram)$sample_name)
+  chrInfo <- attributes(Chromatogram)$chrInfo
+  analyte_name <- purrr::pluck(strsplit(regmatches(chrInfo$chromatogramId, regexpr("name=(.+)", chrInfo$chromatogramId, perl = TRUE)), "name=")[[1]], 2)
+  p <- p +
+    ggplot2::labs(title = analyte_name, subtitle = sample_name) +
+    ggplot2::theme(title = ggplot2::element_text(size = title.size)) +
+    ggplot2::annotation_custom(
+      grob = grid::textGrob(paste0(Chromatogram@precursorMz[1], " - ", Chromatogram@productMz[1]),
+                            x = grid::unit(0.05, "npc"),  # 使用相对单位
+                            y = grid::unit(0.95, "npc"),  # 使用相对单位
+                            just = c("left", "top"),
+                            gp = grid::gpar(col = text.colour, fontsize = text.size))
+    ) +
+    ggplot2::geom_line(ggplot2::aes(y = attributes(Chromatogram)$baseline), col = "red", linewidth = 1, linetype = "dashed") +
+    ggplot2::annotate("segment", x = min(Chromatogram@rtime), xend = max(Chromatogram@rtime), y = attributes(Chromatogram)$noise, yend = attributes(Chromatogram)$noise, linetype = "dashed")
+  if(!is.null(attributes(Chromatogram)$peaksInfo)){
+    peaksInfo <- attributes(Chromatogram)$peaksInfo
+    for(i in 1:length(peaksInfo)){
+      #browser()
+      df <- p$data
+      peakInfo <- peaksInfo[[i]]
+      x_start <- peakInfo["start"];x_end <- peakInfo["end"]
+      df_new <- subset(df, rt == x_start | rt == x_end)
+      p <- p +
+        ggplot2::geom_ribbon(data = subset(df, rt >= x_start & rt <= x_end),
+                             ggplot2::aes(ymin = baseline, ymax = int), fill = fillColour, alpha = 0.5) +
+        ggplot2::geom_point(data = subset(df, rt == x_start | rt == x_end),
+                            ggplot2::aes(x = rt, y = int), col = "black") +
+        ggplot2::annotate("segment", x = df_new$rt, xend = df_new$rt, y = df_new$baseline, yend = df_new$int, linetype = "dashed")
+    }
+  }
+  p
+}
