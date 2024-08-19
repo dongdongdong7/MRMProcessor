@@ -57,5 +57,5 @@ noise0 <- noiseEs(smoothFun(data[row,col]@intensity))
 noiseEs(data[row,col]@intensity, prepare = FALSE)
 abline(h = noise0)
 plot(sort(data[row,col]@intensity))
-peakPicking(int = data[row,col]@intensity, rt = data[row,col]@rtime * 60, tol_m = 0.5)
+peakPicking(int = data[row,col]@intensity, rt = data[row,col]@rtime * 60, noise = 1000, peakPara = get_peakPara())
 }

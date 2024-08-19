@@ -113,7 +113,7 @@ get_peakPara <- function(sn = 3, preNum = 3, extend = 5, tol_m = 10, multiSmooth
 #' noiseEs(data[row,col]@intensity, prepare = FALSE)
 #' abline(h = noise0)
 #' plot(sort(data[row,col]@intensity))
-#' peakPicking(int = data[row,col]@intensity, rt = data[row,col]@rtime * 60, tol_m = 0.5)
+#' peakPicking(int = data[row,col]@intensity, rt = data[row,col]@rtime * 60, noise = 1000, peakPara = get_peakPara())
 peakPicking <- function(int, rt, noise = NA,
                         smoothPara = get_smoothPara(), baselinePara = get_baselinePara(), peakPara = get_peakPara()){
   # peakPara
@@ -134,6 +134,7 @@ peakPicking <- function(int, rt, noise = NA,
     else return(FALSE)
   })]
   if(length(candidateSegInd) == 0) return(NULL)
+  #browser()
   ZOIList <- lapply(1:length(candidateSegInd), function(i) {
     extend1 <- extend
     extend2 <- extend
@@ -244,3 +245,4 @@ peakPicking <- function(int, rt, noise = NA,
   })
   return(ZOIList)
 }
+
