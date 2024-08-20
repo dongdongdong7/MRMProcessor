@@ -26,18 +26,19 @@
 #' @param text.size Size of Q3-Q1 text.
 #' @param text.colour Colour of Q3-Q1 text
 #' @param fillColour Colour of peaks.
+#' @param targetPeak Whether to plot only the target peaks.
 #'
 #' @return A ggplot object.
 #' @export
 #'
 #' @examples
-#' plotChromatogram(MChromatograms[42,8], text.colour = "purple", fillColour = "purple")
+#' plotChromatogram(MChromatograms[42,8], text.colour = "purple")
 plotChromatogram <- function(Chromatogram,
                              xlim = NA, ylim = NA,
                              intColour = "black", intLinewidth = 1,
                              axis.title.size = 15, axis.text.size = 10,
                              title.size = 15, text.size = 15, text.colour = "red",
-                             fillColour = "gray"){
+                             fillColour = "gray", targetPeak = TRUE){
   p <- .plotFun(int = Chromatogram@intensity, rt = Chromatogram@rtime,
                 xlim = xlim, ylim = ylim,
                 intColour = intColour, intLinewidth = intLinewidth,
@@ -58,8 +59,12 @@ plotChromatogram <- function(Chromatogram,
     ) +
     ggplot2::geom_line(ggplot2::aes(y = attributes(Chromatogram)$baseline), col = "red", linewidth = 1, linetype = "dashed") +
     ggplot2::annotate("segment", x = min(Chromatogram@rtime), xend = max(Chromatogram@rtime), y = attributes(Chromatogram)$noise, yend = attributes(Chromatogram)$noise, linetype = "dashed")
-  if(!is.null(attributes(Chromatogram)$peaksInfo)){
+  if(targetPeak){
+    peaksInfo <- attributes(Chromatogram)$peak
+  }else{
     peaksInfo <- attributes(Chromatogram)$peaksInfo
+  }
+  if(!is.null(peaksInfo)){
     for(i in 1:length(peaksInfo)){
       #browser()
       df <- p$data
@@ -75,4 +80,49 @@ plotChromatogram <- function(Chromatogram,
     }
   }
   p
+}
+
+#' @title plotMChromatograms
+#' @description
+#' Plot a MChromatograms object.
+#'
+#' @param MChromatograms MChromatograms object.
+#' @param rows rows.
+#' @param cols cols.
+#' @param ncol The number of picture col.
+#' @param xlim xlim.
+#' @param ylim ylim.
+#' @param intColour intColour.
+#' @param intLinewidth intLineidth.
+#' @param axis.title.size Size of coordinate axis headings.
+#' @param axis.text.size Size of axis labels.
+#' @param title.size Title Size.
+#' @param text.size Size of Q3-Q1 text.
+#' @param text.colour Colour of Q3-Q1 text
+#' @param fillColour Colour of peaks.
+#' @param targetPeak Whether to plot only the target peaks.
+#'
+#' @return A ggplot object.
+#' @export
+#'
+#' @examples
+#' plotMChromatograms(MChromatograms, rows = 1, cols = 1:4, ncol = 2, title.size = 12)
+plotMChromatograms <- function(MChromatograms, rows, cols, ncol,
+                               xlim = NA, ylim = NA,
+                               intColour = "black", intLinewidth = 1,
+                               axis.title.size = 15, axis.text.size = 10,
+                               title.size = 15, text.size = 15, text.colour = "red",
+                               fillColour = "gray", targetPeak = TRUE){
+  p_list <- lapply(rows, function(i) {
+    lapply(cols, function(j) {
+      plotChromatogram(MChromatograms[i, j],
+                       xlim = xlim, ylim = ylim,
+                       intColour = intColour, intLinewidth = intLinewidth,
+                       axis.title.size = axis.title.size, axis.text.size = axis.text.size,
+                       title.size = title.size, text.size = text.size, text.colour = text.colour,
+                       fillColour = fillColour, targetPeak = targetPeak)
+    })
+  })
+  p_list <- purrr::list_flatten(p_list)
+  cowplot::plot_grid(plotlist = p_list, ncol = ncol)
 }
