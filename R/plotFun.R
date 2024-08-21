@@ -46,7 +46,8 @@ plotChromatogram <- function(Chromatogram,
   p$data$baseline <- attributes(Chromatogram)$baseline
   sample_name <- basename(attributes(Chromatogram)$sample_name)
   chrInfo <- attributes(Chromatogram)$chrInfo
-  analyte_name <- purrr::pluck(strsplit(regmatches(chrInfo$chromatogramId, regexpr("name=(.+)", chrInfo$chromatogramId, perl = TRUE)), "name=")[[1]], 2)
+  if(!is.null(attributes(Chromatogram)$analyteName)) analyte_name <- attributes(Chromatogram)$analyteName
+  else analyte_name <- purrr::pluck(strsplit(regmatches(chrInfo$chromatogramId, regexpr("name=(.+)", chrInfo$chromatogramId, perl = TRUE)), "name=")[[1]], 2)
   p <- p +
     ggplot2::labs(title = analyte_name, subtitle = sample_name) +
     ggplot2::theme(title = ggplot2::element_text(size = title.size)) +
