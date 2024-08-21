@@ -8,7 +8,7 @@ extractTargetPeak_MChromatograms(
   MChromatograms,
   rows,
   cols,
-  targetRt,
+  targetRt = NA,
   tolRt = 5
 )
 }
@@ -19,7 +19,7 @@ extractTargetPeak_MChromatograms(
 
 \item{cols}{cols.}
 
-\item{targetRt}{targetRt.}
+\item{targetRt}{targetRt. If tagretRt is NA, targetRt = expectRt.}
 
 \item{tolRt}{tolRt.}
 }
@@ -30,5 +30,5 @@ MChromatograms object.
 extractTargetPeak_MChromatograms.
 }
 \examples{
-extractTargetPeak_MChromatograms(MChromatograms, rows = 1:3, cols = 1:3, targetRt = 30)
+test <- extractTargetPeak_MChromatograms(MChromatograms, rows = 1:3, cols = 1:10, targetRt = NA)
 }

@@ -4,14 +4,14 @@
 \alias{extractTargetPeak_Chromatogram}
 \title{extractTargetPeak_Chromatogram}
 \usage{
-extractTargetPeak_Chromatogram(Chromatogram, targetRt, tolRt = 5)
+extractTargetPeak_Chromatogram(Chromatogram, targetRt = NA, tolRt = 5)
 }
 \arguments{
 \item{Chromatogram}{Chromatogram object.}
 
 \item{targetRt}{targetRt, The target retention time is different from the expected retention time.
 The target retention time is manually specified and most of the time it is the same as the expected retention time,
-but it is subject to batch effects, which need to be changed manually.}
+but it is subject to batch effects, which need to be changed manually. If tagretRt is NA, targetRt = expectRt.}
 
 \item{tolRt}{tolRt.}
 }

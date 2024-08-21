@@ -5,7 +5,7 @@
 #' @param Chromatogram Chromatogram object.
 #' @param targetRt targetRt, The target retention time is different from the expected retention time.
 #' The target retention time is manually specified and most of the time it is the same as the expected retention time,
-#' but it is subject to batch effects, which need to be changed manually.
+#' but it is subject to batch effects, which need to be changed manually. If tagretRt is NA, targetRt = expectRt.
 #' @param tolRt tolRt.
 #'
 #' @return A new Chromatogram.
@@ -15,7 +15,11 @@
 #' Chromatogram_new <- extractTargetPeak_Chromatogram(MChromatograms[6,2], targetRt = 30, tolRt = 5)
 #' plotChromatogram(Chromatogram_new, text.colour = "purple", targetPeak = FALSE)
 #' plotChromatogram(Chromatogram_new, text.colour = "purple", targetPeak = TRUE)
-extractTargetPeak_Chromatogram <- function(Chromatogram, targetRt, tolRt = 5){
+extractTargetPeak_Chromatogram <- function(Chromatogram, targetRt = NA, tolRt = 5){
+  if(is.na(targetRt)){
+    if(!is.null(attributes(Chromatogram)$expectRt)) targetRt <- attributes(Chromatogram)$expectRt
+    else stop("You should run prepare_MChromatograms function firse!")
+  }
   if(!is.null(attributes(Chromatogram)$peaksInfo)){
     apex_rt <- sapply(attributes(Chromatogram)$peaksInfo, function(x) {x["apex"]})
     target_idx <- which(seq.int(length(apex_rt)) == which.min(abs(apex_rt - targetRt)) & abs(apex_rt - targetRt) < tolRt)
@@ -36,15 +40,15 @@ extractTargetPeak_Chromatogram <- function(Chromatogram, targetRt, tolRt = 5){
 #' @param MChromatograms MChromatograms object.
 #' @param rows rows.
 #' @param cols cols.
-#' @param targetRt targetRt.
+#' @param targetRt targetRt. If tagretRt is NA, targetRt = expectRt.
 #' @param tolRt tolRt.
 #'
 #' @return MChromatograms object.
 #' @export
 #'
 #' @examples
-#' extractTargetPeak_MChromatograms(MChromatograms, rows = 1:3, cols = 1:3, targetRt = 30)
-extractTargetPeak_MChromatograms <- function(MChromatograms, rows, cols, targetRt, tolRt = 5){
+#' test <- extractTargetPeak_MChromatograms(MChromatograms, rows = 1:3, cols = 1:10, targetRt = NA)
+extractTargetPeak_MChromatograms <- function(MChromatograms, rows, cols, targetRt = NA, tolRt = 5){
   nrow <- nrow(MChromatograms)
   ncol <- ncol(MChromatograms)
   chrs_all <- MChromatograms[,1:ncol , drop = TRUE]
@@ -52,7 +56,7 @@ extractTargetPeak_MChromatograms <- function(MChromatograms, rows, cols, targetR
   colnames(combinations) <- c("i", "j")
   chrs_idx <- sapply(1:nrow(combinations), function(l) {
     i <- combinations[l, ]$i;j <- combinations[l, ]$j
-    (i - 1) * ncol + j
+    (j - 1) * nrow + i
   })
   chrs <- lapply(1:nrow(combinations), function(l) {
     i <- combinations[l, ]$i;j <- combinations[l, ]$j
@@ -63,5 +67,4 @@ extractTargetPeak_MChromatograms <- function(MChromatograms, rows, cols, targetR
   chrs_all[chrs_idx] <- chrs
   MSnbase::MChromatograms(chrs_all,
                           ncol = ncol)
-  return(MChromatograms)
 }
