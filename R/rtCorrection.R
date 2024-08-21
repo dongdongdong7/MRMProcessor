@@ -78,3 +78,7 @@ rtCorrection_IS <- function(MChromatograms){
   MSnbase::MChromatograms(chrs_all,
                           ncol = ncol)
 }
+
+# rtCorrection_analyte <- function(MChromatograms){
+#
+# }
