@@ -31,4 +31,6 @@ extractTargetPeak_MChromatograms.
 }
 \examples{
 test <- extractTargetPeak_MChromatograms(MChromatograms, rows = 1:3, cols = 1:10, targetRt = NA)
+rows_IS <- .getRow4analyteType(MChromatograms = MChromatograms, analyteType = "IS")
+MChromatograms <- extractTargetPeak_MChromatograms(MChromatograms, rows = rows_IS, cols = 1:10, targetRt = NA)
 }
