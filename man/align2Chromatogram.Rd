@@ -4,12 +4,24 @@
 \alias{align2Chromatogram}
 \title{align2Chromatogram}
 \usage{
-align2Chromatogram(Chromatogram1, Chromatogram2)
+align2Chromatogram(
+  Chromatogram1,
+  Chromatogram2,
+  cosMag = 0.5,
+  corMag = 0.5,
+  method = "direct"
+)
 }
 \arguments{
 \item{Chromatogram1}{Chromatogram object.}
 
 \item{Chromatogram2}{Chromatogram object.}
+
+\item{cosMag}{Magnification of cosScore.}
+
+\item{corMag}{Magnification of corScore}
+
+\item{method}{cor method. direct or apex.}
 }
 \value{
 A numeric score.
@@ -18,5 +30,5 @@ A numeric score.
 Calculate two Chromatogram object alignment scores.
 }
 \examples{
-align2Chromatogram(Chromatogram1 = MChromatograms_new[3, 1], Chromatogram2 = MChromatograms_new[3, 2])
+align2Chromatogram(Chromatogram1 = MChromatograms[3, 1], Chromatogram2 = MChromatograms[3, 2])
 }

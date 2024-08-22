@@ -167,9 +167,10 @@ peakPicking <- function(int, rt, noise = NA,
       ZOI_baseline <- baseline[idx]
     }
     ZOIWidth <- (max(ZOI_rt) - min(ZOI_rt)) / 2 # half
-    if(is.na(fwhm)) fwhm <- round(ZOIWidth / 2)
+    if(is.na(fwhm)) fwhm <- ZOIWidth / 2 # round(ZOIWidth / 2)
     else fwhm <- fwhm
     tmp <- tryCatch({
+      # xcms::peaksWithCentWave(ZOI_int, ZOI_rt, snthresh = 0.5, peakwidth = c(2, 7))
       xcms::peaksWithMatchedFilter(ZOI_int, ZOI_rt, fwhm = fwhm, snthresh = snthresh)
     },
     error = function(e){
