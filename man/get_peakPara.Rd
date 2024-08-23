@@ -12,7 +12,9 @@ get_peakPara(
   multiSmooth = TRUE,
   cal_ZOI_baseline = TRUE,
   fwhm = NA,
-  snthresh = 0.5
+  snthresh = 0.5,
+  peakWidth = NA,
+  xcms = "CentWave"
 )
 }
 \arguments{
@@ -32,6 +34,10 @@ get_peakPara(
 The smaller the value the easier it is to find multiple peaks.}
 
 \item{snthresh}{This is the parameter used in the matchfilter function to determine the multi-peak case.}
+
+\item{peakWidth}{peakWidth for CentWave algorithm.}
+
+\item{xcms}{xcms methods, CentWave and Matched}
 }
 \value{
 A list.

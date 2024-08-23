@@ -62,6 +62,7 @@
 #' @title get_peakPara
 #' @description
 #' Get peakPara list.
+#'
 #' @param sn sn threshold.
 #' @param preNum preNum.
 #' @param extend extend.
@@ -71,14 +72,16 @@
 #' @param fwhm This is the parameter used in the matchfilter function to determine the multi-peak case.
 #' The smaller the value the easier it is to find multiple peaks.
 #' @param snthresh This is the parameter used in the matchfilter function to determine the multi-peak case.
+#' @param peakWidth peakWidth for CentWave algorithm.
+#' @param xcms xcms methods, CentWave and Matched
 #'
 #' @return A list.
 #' @export
 #'
 #' @examples
 #' peakPara <- get_peakPara()
-get_peakPara <- function(sn = 3, preNum = 3, extend = 5, tol_m = 10, multiSmooth = TRUE, cal_ZOI_baseline = TRUE, fwhm = NA, snthresh = 0.5){
-  return(list(sn = sn, preNum = preNum, extend = extend, tol_m = tol_m, multiSmooth = multiSmooth, cal_ZOI_baseline = cal_ZOI_baseline, fwhm = fwhm, snthresh = snthresh))
+get_peakPara <- function(sn = 3, preNum = 3, extend = 5, tol_m = 10, multiSmooth = TRUE, cal_ZOI_baseline = TRUE, fwhm = NA, snthresh = 0.5, peakWidth = NA, xcms = "CentWave"){
+  return(list(sn = sn, preNum = preNum, extend = extend, tol_m = tol_m, multiSmooth = multiSmooth, cal_ZOI_baseline = cal_ZOI_baseline, fwhm = fwhm, snthresh = snthresh, peakWidth = peakWidth, xcms = xcms))
 }
 
 #' @title peakPicking
@@ -120,6 +123,7 @@ peakPicking <- function(int, rt, noise = NA,
   sn <- peakPara$sn;preNum <- peakPara$preNum;extend <- peakPara$extend;tol_m <- peakPara$tol_m
   multiSmooth <- peakPara$multiSmooth;cal_ZOI_baseline <- peakPara$cal_ZOI_baseline
   fwhm <- peakPara$fwhm;snthresh <- peakPara$snthresh
+  peakWidth <- peakPara$peakWidth;xcms <- peakPara$xcms
 
   int <- smoothFun(int, smoothPara = smoothPara)
   if(is.na(noise)) noise0 <- noiseEs(int)
@@ -169,9 +173,11 @@ peakPicking <- function(int, rt, noise = NA,
     ZOIWidth <- (max(ZOI_rt) - min(ZOI_rt)) / 2 # half
     if(is.na(fwhm)) fwhm <- ZOIWidth / 2 # round(ZOIWidth / 2)
     else fwhm <- fwhm
+    if(any(is.na(peakWidth))) peakWidth <- c(fwhm / 2, fwhm * 2)
+    if(xcms != "CentWave" | xcms != "MatchedFilter") stop("xcms method wrong!")
     tmp <- tryCatch({
-      # xcms::peaksWithCentWave(ZOI_int, ZOI_rt, snthresh = 0.5, peakwidth = c(2, 7))
-      xcms::peaksWithMatchedFilter(ZOI_int, ZOI_rt, fwhm = fwhm, snthresh = snthresh)
+      if(xcms == "CentWave") xcms::peaksWithCentWave(ZOI_int, ZOI_rt, snthresh = snthresh, peakwidth = peakWidth)
+      else if(xcms == "MatchedFilter") xcms::peaksWithMatchedFilter(ZOI_int, ZOI_rt, fwhm = fwhm, snthresh = snthresh)
     },
     error = function(e){
       matrix(NA, nrow = 0, ncol = 8)
