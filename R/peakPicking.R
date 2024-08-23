@@ -80,7 +80,7 @@
 #'
 #' @examples
 #' peakPara <- get_peakPara()
-get_peakPara <- function(sn = 3, preNum = 3, extend = 5, tol_m = 10, multiSmooth = TRUE, cal_ZOI_baseline = TRUE, fwhm = NA, snthresh = 0.5, peakWidth = NA, xcms = "CentWave"){
+get_peakPara <- function(sn = 3, preNum = 3, extend = 5, tol_m = 10, multiSmooth = TRUE, cal_ZOI_baseline = TRUE, fwhm = NA, snthresh = 0.5, peakWidth = NA, xcms = "BOTH"){
   return(list(sn = sn, preNum = preNum, extend = extend, tol_m = tol_m, multiSmooth = multiSmooth, cal_ZOI_baseline = cal_ZOI_baseline, fwhm = fwhm, snthresh = snthresh, peakWidth = peakWidth, xcms = xcms))
 }
 
@@ -174,10 +174,16 @@ peakPicking <- function(int, rt, noise = NA,
     if(is.na(fwhm)) fwhm <- ZOIWidth / 2 # round(ZOIWidth / 2)
     else fwhm <- fwhm
     if(any(is.na(peakWidth))) peakWidth <- c(fwhm / 2, fwhm * 2)
-    if(!(xcms == "CentWave" | xcms == "MatchedFilter")) stop("xcms method wrong!")
+    if(!(xcms == "CentWave" | xcms == "MatchedFilter" | xcms == "BOTH")) stop("xcms method wrong!")
     tmp <- tryCatch({
       if(xcms == "CentWave") xcms::peaksWithCentWave(ZOI_int, ZOI_rt, snthresh = snthresh, peakwidth = peakWidth)
       else if(xcms == "MatchedFilter") xcms::peaksWithMatchedFilter(ZOI_int, ZOI_rt, fwhm = fwhm, snthresh = snthresh)
+      else if(xcms == "BOTH"){
+        tmp_CentWave <- xcms::peaksWithCentWave(ZOI_int, ZOI_rt, snthresh = snthresh, peakwidth = peakWidth)
+        tmp_MatchedFilter <- xcms::peaksWithMatchedFilter(ZOI_int, ZOI_rt, fwhm = fwhm, snthresh = snthresh)
+        if(nrow(tmp_CentWave) > nrow(tmp_MatchedFilter)) tmp_CentWave
+        else if(nrow(tmp_CentWave) <= nrow(tmp_MatchedFilter)) tmp_MatchedFilter
+      }
     },
     error = function(e){
       matrix(NA, nrow = 0, ncol = 8)
