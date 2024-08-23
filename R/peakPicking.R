@@ -80,7 +80,7 @@
 #'
 #' @examples
 #' peakPara <- get_peakPara()
-get_peakPara <- function(sn = 3, preNum = 3, extend = 5, tol_m = 10, multiSmooth = TRUE, cal_ZOI_baseline = TRUE, fwhm = NA, snthresh = 0.5, peakWidth = NA, xcms = "BOTH"){
+get_peakPara <- function(sn = 3, preNum = 3, extend = 5, tol_m = 10, multiSmooth = TRUE, cal_ZOI_baseline = TRUE, fwhm = NA, snthresh = 0.5, peakWidth = NA, xcms = "ORIGN"){
   return(list(sn = sn, preNum = preNum, extend = extend, tol_m = tol_m, multiSmooth = multiSmooth, cal_ZOI_baseline = cal_ZOI_baseline, fwhm = fwhm, snthresh = snthresh, peakWidth = peakWidth, xcms = xcms))
 }
 
@@ -174,11 +174,11 @@ peakPicking <- function(int, rt, noise = NA,
     if(is.na(fwhm)) fwhm <- ZOIWidth / 2 # round(ZOIWidth / 2)
     else fwhm <- fwhm
     if(any(is.na(peakWidth))) peakWidth <- c(fwhm / 2, fwhm * 2)
-    if(!(xcms == "CentWave" | xcms == "MatchedFilter" | xcms == "BOTH")) stop("xcms method wrong!")
+    if(!(xcms == "CentWave" | xcms == "MatchedFilter" | xcms == "BOTH" | xcms == "ORIGN")) stop("xcms method wrong!")
     tmp <- tryCatch({
       if(xcms == "CentWave") xcms::peaksWithCentWave(ZOI_int, ZOI_rt, snthresh = snthresh, peakwidth = peakWidth)
       else if(xcms == "MatchedFilter") xcms::peaksWithMatchedFilter(ZOI_int, ZOI_rt, fwhm = fwhm, snthresh = snthresh)
-      else if(xcms == "BOTH"){
+      else if(xcms == "BOTH" | xcms == "ORIGN"){
         tmp_CentWave <- xcms::peaksWithCentWave(ZOI_int, ZOI_rt, snthresh = snthresh, peakwidth = peakWidth)
         tmp_MatchedFilter <- xcms::peaksWithMatchedFilter(ZOI_int, ZOI_rt, fwhm = fwhm, snthresh = snthresh)
         if(nrow(tmp_CentWave) > nrow(tmp_MatchedFilter)) tmp_CentWave
@@ -188,31 +188,40 @@ peakPicking <- function(int, rt, noise = NA,
     error = function(e){
       matrix(NA, nrow = 0, ncol = 8)
     })
-    if(nrow(tmp) > 1) { # Multi peaks
-      top_idx <- sort(sapply(1:nrow(tmp), function(j) {
-        which(dplyr::near(ZOI_rt, tmp[j, "rt"], tol = 0.005))
-      }))
-      bottom_idx <- sapply(1:(length(top_idx) - 1), function(j) {
-        a_idx <- top_idx[j];b_idx <- top_idx[j + 1]
-        int_tmp <- ZOI_int
-        int_tmp[1:a_idx] <- NA;int_tmp[b_idx:length(int_tmp)] <- NA
-        which.min(int_tmp)
-      })
-      bottom_idx <- c(1, bottom_idx, length(ZOI_int))
-      multiZOIList <- lapply(top_idx, function(t) {
-        if(t %in% bottom_idx) return(NULL)
-        a_idx <- bottom_idx[bottom_idx < t];a_idx <- a_idx[length(a_idx)]
-        b_idx <- bottom_idx[bottom_idx > t];b_idx <- b_idx[1]
-        ZOI_int_t <- ZOI_int[a_idx:b_idx]
-        ZOI_rt_t <- ZOI_rt[a_idx:b_idx]
-        ZOI_baseline_t <- ZOI_baseline[a_idx:b_idx]
-        edge <- .edgeTrack_crude(int = ZOI_int_t, ZOI_rt_t, baseline = ZOI_baseline_t, preNum = preNum, tol_m = tol_m, multiSmooth = multiSmooth)
-        return(edge)
-      })
-      return(multiZOIList)
+    if(xcms == "ORIGN"){
+      if(nrow(tmp) == 0) return(NULL)
+      else{
+        lapply(1:nrow(tmp), function(k) {
+          c(start = as.numeric(tmp[k, ]["rtmin"]), end = as.numeric(tmp[k, ]["rtmax"]))
+        })
+      }
     }else{
-      ZOI <- .edgeTrack_crude(int = ZOI_int, rt = ZOI_rt, baseline = ZOI_baseline, preNum = preNum, tol_m = tol_m, multiSmooth = multiSmooth)
-      return(ZOI)
+      if(nrow(tmp) > 1) { # Multi peaks
+        top_idx <- sort(sapply(1:nrow(tmp), function(j) {
+          which(dplyr::near(ZOI_rt, tmp[j, "rt"], tol = 0.005))
+        }))
+        bottom_idx <- sapply(1:(length(top_idx) - 1), function(j) {
+          a_idx <- top_idx[j];b_idx <- top_idx[j + 1]
+          int_tmp <- ZOI_int
+          int_tmp[1:a_idx] <- NA;int_tmp[b_idx:length(int_tmp)] <- NA
+          which.min(int_tmp)
+        })
+        bottom_idx <- c(1, bottom_idx, length(ZOI_int))
+        multiZOIList <- lapply(top_idx, function(t) {
+          if(t %in% bottom_idx) return(NULL)
+          a_idx <- bottom_idx[bottom_idx < t];a_idx <- a_idx[length(a_idx)]
+          b_idx <- bottom_idx[bottom_idx > t];b_idx <- b_idx[1]
+          ZOI_int_t <- ZOI_int[a_idx:b_idx]
+          ZOI_rt_t <- ZOI_rt[a_idx:b_idx]
+          ZOI_baseline_t <- ZOI_baseline[a_idx:b_idx]
+          edge <- .edgeTrack_crude(int = ZOI_int_t, ZOI_rt_t, baseline = ZOI_baseline_t, preNum = preNum, tol_m = tol_m, multiSmooth = multiSmooth)
+          return(edge)
+        })
+        return(multiZOIList)
+      }else{
+        ZOI <- .edgeTrack_crude(int = ZOI_int, rt = ZOI_rt, baseline = ZOI_baseline, preNum = preNum, tol_m = tol_m, multiSmooth = multiSmooth)
+        return(ZOI)
+      }
     }
   })
   ZOIList <- purrr::list_flatten(ZOIList)

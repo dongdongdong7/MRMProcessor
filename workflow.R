@@ -12,9 +12,9 @@ sampleInfo <- read_sampleInfo("D:/fudan/Projects/2023/MRMProcessor/Progress/buil
 # The first time peakPicing is performed,
 # where the first peakPicking is performed on the MChromatograms
 # using either the default parameters or the specified parameters.
-MChromatograms <- peakPicking_MChromatograms(MChromatograms = MChromatograms, thread = 4, unit = "min")
-plotMChromatograms(MChromatograms, rows = 6, cols = 1:10, targetPeak = FALSE, ncol = 5) # 明天要更新一下peakPicking了看来, 我们应该需要CentWave提高峰宽范围
-plotChromatogram(peakPicking_Chromatogram(MChromatograms[6, 9], peakPara = get_peakPara(snthresh = 0.1, sn = 0.5, xcms = "BOTH", peakWidth = c(4, 10))), targetPeak = FALSE)
+MChromatograms <- peakPicking_MChromatograms(MChromatograms = MChromatograms, thread = 4, unit = "min", peakPara = get_peakPara(tol_m = 1, snthresh = 0.1))
+plotMChromatograms(MChromatograms, rows = 34, cols = 1:10, targetPeak = FALSE, ncol = 5) # 6 需要更改noise数值, 12需要更改tol_m
+plotChromatogram(peakPicking_Chromatogram(MChromatograms[24, 8], peakPara = get_peakPara(snthresh = 0.1, sn = 1, xcms = "BOTH", multiSmooth = TRUE, tol_m = 1)), targetPeak = FALSE)
 # Note: The function adjusts the retention time unit according to the unit parameter
 # 3. Prepare MChromatograms
 # Associate the MChromatograms object with the windowInfo.
