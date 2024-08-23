@@ -174,7 +174,7 @@ peakPicking <- function(int, rt, noise = NA,
     if(is.na(fwhm)) fwhm <- ZOIWidth / 2 # round(ZOIWidth / 2)
     else fwhm <- fwhm
     if(any(is.na(peakWidth))) peakWidth <- c(fwhm / 2, fwhm * 2)
-    if(xcms != "CentWave" | xcms != "MatchedFilter") stop("xcms method wrong!")
+    if(!(xcms == "CentWave" | xcms == "MatchedFilter")) stop("xcms method wrong!")
     tmp <- tryCatch({
       if(xcms == "CentWave") xcms::peaksWithCentWave(ZOI_int, ZOI_rt, snthresh = snthresh, peakwidth = peakWidth)
       else if(xcms == "MatchedFilter") xcms::peaksWithMatchedFilter(ZOI_int, ZOI_rt, fwhm = fwhm, snthresh = snthresh)
