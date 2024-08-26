@@ -15,13 +15,13 @@ sampleInfo <- read_sampleInfo("D:/fudan/Projects/2023/MRMProcessor/Progress/buil
 MChromatograms <- peakPicking_MChromatograms(MChromatograms = MChromatograms, thread = 4, unit = "min", peakPara = get_peakPara(tol_m = 1, snthresh = 0.1, xcms = "BOTH"))
 # Note: The function adjusts the retention time unit according to the unit parameter
 # Checking the effect of algorithms.
-plotMChromatograms(MChromatograms, rows = 6, cols = 1:20, targetPeak = FALSE, ncol = 5)
+plotMChromatograms(MChromatograms, rows = 6, cols = 1:10, targetPeak = FALSE, ncol = 5)
 # Noise evaluation too high, manually adjusted down and change the fwhm.
 MChromatograms <- peakPicking_MChromatograms2(MChromatograms, rows = 6, cols = 1:10, noise = 250, peakPara = get_peakPara(snthresh = 0, fwhm = 1, xcms = "MatchedFilter"))
 plotMChromatograms(MChromatograms, rows = 6, cols = 1:10, targetPeak = FALSE, ncol = 5)
 # 3. Prepare MChromatograms
 # Associate the MChromatograms object with the windowInfo.
-MChromatograms <- prepare_MChromatograms(MChromatograms = MChromatograms, windowInfo = windowInfo, sampleInfo = sampleInfo, unit = "min")
+MChromatograms <- prepare_MChromatograms(MChromatograms = MChromatograms, windowInfo = windowInfo, sampleInfo = sampleInfo, unit = "min", thread = 4)
 # 4. IS check
 # The expected retention time was first used to determine the target peaks for each IS.
 rows_IS <- .getRow4analyteType(MChromatograms = MChromatograms, analyteType = "IS")

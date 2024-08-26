@@ -8,7 +8,8 @@ prepare_MChromatograms(
   MChromatograms,
   windowInfo = windowInfo,
   sampleInfo = sampleInfo,
-  unit = "min"
+  unit = "min",
+  thread = 4
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ prepare_MChromatograms(
 \item{sampleInfo}{sampleInfo.}
 
 \item{unit}{unit.}
+
+\item{thread}{thread.}
 }
 \value{
 A new MChromatograms.
