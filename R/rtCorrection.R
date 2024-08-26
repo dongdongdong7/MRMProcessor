@@ -3,6 +3,8 @@
 #' Retention time correction for the internal standard and calculation of deltaRt.
 #'
 #' @param MChromatograms MChromatograms object.
+#' @param rows rows.If rows is NA, rows is rows_IS.
+#' @param cols cols.
 #'
 #' @return MChromatograms object.
 #' @export
@@ -11,11 +13,11 @@
 #' rows_IS <- .getRow4analyteType(MChromatograms = MChromatograms, analyteType = "IS")
 #' MChromatograms <- extractTargetPeak_MChromatograms(MChromatograms, rows = rows_IS, cols = 1:10, targetRt = NA)
 #' MChromatograms_new <- rtCorrection_IS(MChromatograms = MChromatograms)
-rtCorrection_IS <- function(MChromatograms){
+rtCorrection_IS <- function(MChromatograms, rows = NA, cols){
   nrow <- nrow(MChromatograms)
   ncol <- ncol(MChromatograms)
-  rows <- .getRow4analyteType(MChromatograms = MChromatograms, analyteType = "IS")
-  cols <- 1:ncol
+  if(any(is.na(rows))) rows <- .getRow4analyteType(MChromatograms = MChromatograms, analyteType = "IS")
+  else rows <- rows
   chrs_all <- MChromatograms[,1:ncol , drop = TRUE]
   combinations <- expand.grid(rows, cols)
   colnames(combinations) <- c("i", "j")

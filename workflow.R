@@ -38,4 +38,18 @@ check_i <- .getRow4analyteName(MChromatograms = MChromatograms, analyteNameVec =
 check_j <- .getCol4sampleName(MChromatograms = MChromatograms, sampleNameVec = c("SBRA021A230425_CF40ul_3_p1-a08182", "SBRA021A230425_CF40ul_3_p1-a05965"))
 plotMChromatograms(MChromatograms = MChromatograms, rows = check_i, cols = check_j, targetPeak = TRUE)
 # Before retention time correction, the graph applies within a batch; after correction, it applies to the entire batch.
-
+# 4.2 We need to calculate IS's deltaRt and correct the rtime
+MChromatograms_new <- rtCorrection_IS(MChromatograms = MChromatograms, rows = NA, cols = cols_batch1)
+plotMChromatograms(MChromatograms = MChromatograms_new, rows = check_i, cols = check_j, targetPeak = TRUE)
+plotHeatMap_MChromatograms(MChromatograms = MChromatograms_new, rows = rows_IS, cols = cols_batch1, standard_cols = NA)
+check_i <- .getRow4analyteName(MChromatograms_new, analyteNameVec = c("C4-DC-d3"))
+check_j <- .getCol4sampleName(MChromatograms_new, sampleNameVec = c("SBRA021A230425_CF40ul_3_p1-a08171"))
+# We can easily find the problem peak
+plotMChromatograms(MChromatograms = MChromatograms_new, rows = check_i, cols = c(1, check_j), targetPeak = TRUE)
+MChromatograms_new <- peakPicking_MChromatograms2(MChromatograms_new, rows = check_i, cols = check_j, noise = 10000, smoothPara = get_smoothPara(smooth = TRUE),baselinePara = get_baselinePara(tol_m = 5), peakPara = get_peakPara(xcms = "BOTH", fwhm = 10))
+plotMChromatograms(MChromatograms = MChromatograms_new, rows = check_i, cols = c(1, check_j), targetPeak = FALSE)
+plotHeatMap_MChromatograms(MChromatograms = MChromatograms_new, rows = rows_IS, cols = cols_batch1, standard_cols = NA)
+MChromatograms_new <- extractTargetPeak_MChromatograms(MChromatograms_new, rows = check_i, cols = check_j, targetRt = NA, tolRt = 10)
+MChromatograms_new <- rtCorrection_IS(MChromatograms = MChromatograms_new, rows = check_i, cols = check_j)
+# Now, all square is purple.
+plotHeatMap_MChromatograms(MChromatograms = MChromatograms_new, rows = rows_IS, cols = cols_batch1, standard_cols = NA)

@@ -4,10 +4,14 @@
 \alias{rtCorrection_IS}
 \title{rtCorrection_IS}
 \usage{
-rtCorrection_IS(MChromatograms)
+rtCorrection_IS(MChromatograms, rows = NA, cols)
 }
 \arguments{
 \item{MChromatograms}{MChromatograms object.}
+
+\item{rows}{rows.If rows is NA, rows is rows_IS.}
+
+\item{cols}{cols.}
 }
 \value{
 MChromatograms object.
