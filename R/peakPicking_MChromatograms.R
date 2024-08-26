@@ -73,7 +73,7 @@ peakPicking_MChromatograms <- function(MChromatograms, noise = NA,
 #' @param rows rows.
 #' @param cols cols.
 #' @param noise noise.
-#' @param smoothPara smoothPara.
+#' @param smoothPara smoothPara. Here smooth is FALSE (default), because smoothing has usually already been performed once.
 #' @param baselinePara baselinePara.
 #' @param peakPara peakPara.
 #' @param thread thread.
@@ -84,7 +84,7 @@ peakPicking_MChromatograms <- function(MChromatograms, noise = NA,
 #' @examples
 #' MChromatograms <- peakPicking_MChromatograms(MChromatograms = MChromatograms, rows = 1:nrow(MChromatograms), cols = 1:ncol(MChromatograms), thread = 4)
 peakPicking_MChromatograms2 <- function(MChromatograms, rows, cols, noise = NA,
-                                       smoothPara = get_smoothPara(), baselinePara = get_baselinePara(),
+                                       smoothPara = get_smoothPara(smooth = FALSE), baselinePara = get_baselinePara(),
                                        peakPara = get_peakPara(),
                                        thread = 1){
   nrow <- nrow(MChromatograms)
@@ -100,9 +100,13 @@ peakPicking_MChromatograms2 <- function(MChromatograms, rows, cols, noise = NA,
   loop <- function(l){
     i <- combinations[l, ]$i;j <- combinations[l, ]$j
     Chromatogram <- MChromatograms[i, j]
+    smoothPara_old <- attributes(Chromatogram)$smoothPara
+    if(smoothPara$smooth) smoothPara_new <- smoothPara
+    else smoothPara_new <- smoothPara_old
     Chromatogram <- peakPicking_Chromatogram(Chromatogram = Chromatogram, noise = noise,
                                              smoothPara = smoothPara, baselinePara = baselinePara,
                                              peakPara = peakPara)
+    attributes(Chromatogram)$smoothPara <- smoothPara_new
     return(Chromatogram)
   }
   if((length(rows) * length(cols)) < 20) thread <- 1 # If the number of peakPicking objects is small, force the number of threads to be 1

@@ -4,12 +4,21 @@
 \alias{prepare_MChromatograms}
 \title{prepare_MChromatograms}
 \usage{
-prepare_MChromatograms(MChromatograms, windowInfo = windowInfo, unit = "min")
+prepare_MChromatograms(
+  MChromatograms,
+  windowInfo = windowInfo,
+  sampleInfo = sampleInfo,
+  unit = "min"
+)
 }
 \arguments{
 \item{MChromatograms}{MChromatograms object.}
 
 \item{windowInfo}{windowInfo.}
+
+\item{sampleInfo}{sampleInfo.}
+
+\item{unit}{unit.}
 }
 \value{
 A new MChromatograms.

@@ -13,32 +13,29 @@ sampleInfo <- read_sampleInfo("D:/fudan/Projects/2023/MRMProcessor/Progress/buil
 # where the first peakPicking is performed on the MChromatograms
 # using either the default parameters or the specified parameters.
 MChromatograms <- peakPicking_MChromatograms(MChromatograms = MChromatograms, thread = 4, unit = "min", peakPara = get_peakPara(tol_m = 1, snthresh = 0.1, xcms = "BOTH"))
-plotMChromatograms(MChromatograms, rows = 140, cols = 1:10, targetPeak = FALSE, ncol = 5)
-plotMChromatograms(MChromatograms, rows = 85, cols = 1:4, targetPeak = FALSE, ncol = 2)
-plotChromatogram(peakPicking_Chromatogram(MChromatograms[116, 3],smoothPara = get_smoothPara(smooth = FALSE), peakPara = get_peakPara(snthresh = 0.1, sn = 0.1, xcms = "BOTH", multiSmooth = TRUE, tol_m = 1, fwhm = 2)), targetPeak = FALSE)
 # Note: The function adjusts the retention time unit according to the unit parameter
+# Checking the effect of algorithms.
+plotMChromatograms(MChromatograms, rows = 6, cols = 1:20, targetPeak = FALSE, ncol = 5)
+# Noise evaluation too high, manually adjusted down and change the fwhm.
+MChromatograms <- peakPicking_MChromatograms2(MChromatograms, rows = 6, cols = 1:10, noise = 250, peakPara = get_peakPara(snthresh = 0, fwhm = 1, xcms = "MatchedFilter"))
+plotMChromatograms(MChromatograms, rows = 6, cols = 1:10, targetPeak = FALSE, ncol = 5)
 # 3. Prepare MChromatograms
 # Associate the MChromatograms object with the windowInfo.
-MChromatograms <- prepare_MChromatograms(MChromatograms = MChromatograms, windowInfo = windowInfo)
+MChromatograms <- prepare_MChromatograms(MChromatograms = MChromatograms, windowInfo = windowInfo, sampleInfo = sampleInfo, unit = "min")
 # 4. IS check
 # The expected retention time was first used to determine the target peaks for each IS.
 rows_IS <- .getRow4analyteType(MChromatograms = MChromatograms, analyteType = "IS")
-ncol <- ncol(MChromatograms)
-MChromatograms <- extractTargetPeak_MChromatograms(MChromatograms, rows = rows_IS, cols = 1:ncol, targetRt = NA, tolRt = 10)
+cols_batch1 <- .getCol4batchName(MChromatograms = MChromatograms, batchName = "batch1")
+MChromatograms <- extractTargetPeak_MChromatograms(MChromatograms, rows = rows_IS, cols = cols_batch1, targetRt = NA, tolRt = 10)
 # After that, user need to manually review each IS
 # Here are some ways to quickly help users review
-scoreList_test <- calAlignScore_MChromatograms(MChromatograms = MChromatograms, row = rows_IS, cols = 1:ncol, standard_cols = NA,
-                             cosMag = 0.5, corMag = 0.5, method = "direct")
-scoreMatrix_test <- matrix(purrr::list_c(scoreList_test), nrow = length(rows_IS), byrow = TRUE)
-.plotHeatMap(scoreMatrix_test)
-plotMChromatograms(MChromatograms, rows = rows_IS[c(8, 9)], cols = 1:10, ncol = 5)
-# We can find an error in C4-d3, and we can manually fix it.
-MChromatograms <- extractTargetPeak_MChromatograms(MChromatograms = MChromatograms, rows = rows_IS[9], cols = 1:ncol, targetRt = 190, tolRt = 10)
-plotMChromatograms(MChromatograms, rows = rows_IS[c(8, 9)], cols = 1:10, ncol = 5, targetPeak = FALSE)
+plotHeatMap_MChromatograms(MChromatograms = MChromatograms, rows = rows_IS, cols = cols_batch1, standard_cols = NA)
+# scoreList_test <- calAlignScore_MChromatograms(MChromatograms = MChromatograms, row = rows_IS, cols = cols_batch1, standard_cols = NA,
+#                              cosMag = 0.5, corMag = 0.5, method = "direct")
+# scoreMatrix_test <- matrix(purrr::list_c(scoreList_test), nrow = length(rows_IS), byrow = TRUE)
+# .plotHeatMap(scoreMatrix_test)
+check_i <- .getRow4analyteName(MChromatograms = MChromatograms, analyteNameVec = c("isoC5-OH-d3", "C5-DC-d3"))
+check_j <- .getCol4sampleName(MChromatograms = MChromatograms, sampleNameVec = c("SBRA021A230425_CF40ul_3_p1-a08182", "SBRA021A230425_CF40ul_3_p1-a05965"))
+plotMChromatograms(MChromatograms = MChromatograms, rows = check_i, cols = check_j, targetPeak = TRUE)
 # Before retention time correction, the graph applies within a batch; after correction, it applies to the entire batch.
-plotChromatogram(MChromatograms[rows_IS[20], 4])
-
-attributes(MChromatograms[rows_IS[9], 1])
-plotChromatogram(peakPicking_Chromatogram(MChromatograms[rows_IS[9], 1], peakPara = get_peakPara(snthresh = 0.5, fwhm = NA)), targetPeak = FALSE)
-plotChromatogram(peakPicking_MChromatograms2(MChromatograms, rows = rows_IS[9], cols = 1)[rows_IS[9], 1], targetPeak = FALSE)
 

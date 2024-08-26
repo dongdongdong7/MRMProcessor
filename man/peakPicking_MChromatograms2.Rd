@@ -9,7 +9,7 @@ peakPicking_MChromatograms2(
   rows,
   cols,
   noise = NA,
-  smoothPara = get_smoothPara(),
+  smoothPara = get_smoothPara(smooth = FALSE),
   baselinePara = get_baselinePara(),
   peakPara = get_peakPara(),
   thread = 1
@@ -24,7 +24,7 @@ peakPicking_MChromatograms2(
 
 \item{noise}{noise.}
 
-\item{smoothPara}{smoothPara.}
+\item{smoothPara}{smoothPara. Here smooth is FALSE (default), because smoothing has usually already been performed once.}
 
 \item{baselinePara}{baselinePara.}
 

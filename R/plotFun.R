@@ -83,6 +83,32 @@ plotChromatogram <- function(Chromatogram,
   p
 }
 
+.min_matrix_dimensions <- function(n) {
+  if (n <= 0) {
+    stop("请输入一个正整数")
+  }
+
+  # 计算可能的行数
+  possible_rows <- 1:floor(sqrt(n))
+
+  # 使用 sapply 来找到能整除 n 的行数
+  divisors <- sapply(possible_rows, function(i) {
+    if (n %% i == 0) {
+      return(i)
+    } else {
+      return(NA)
+    }
+  })
+
+  # 移除 NA 值
+  divisors <- na.omit(divisors)
+
+  # 选择最后一个合适的行数
+  rows <- tail(divisors, 1)
+  cols <- n / rows
+
+  return(c(rows, cols))
+}
 #' @title plotMChromatograms
 #' @description
 #' Plot a MChromatograms object.
@@ -108,7 +134,7 @@ plotChromatogram <- function(Chromatogram,
 #'
 #' @examples
 #' plotMChromatograms(MChromatograms, rows = 1, cols = 1:4, ncol = 2, title.size = 12)
-plotMChromatograms <- function(MChromatograms, rows, cols, ncol,
+plotMChromatograms <- function(MChromatograms, rows, cols, ncol = NA,
                                xlim = NA, ylim = NA,
                                intColour = "black", intLinewidth = 1,
                                axis.title.size = 15, axis.text.size = 10,
@@ -125,5 +151,7 @@ plotMChromatograms <- function(MChromatograms, rows, cols, ncol,
     })
   })
   p_list <- purrr::list_flatten(p_list)
+  if(is.na(ncol)) ncol <- .min_matrix_dimensions(length(p_list))[2]
+  else ncol <- ncol
   cowplot::plot_grid(plotlist = p_list, ncol = ncol)
 }

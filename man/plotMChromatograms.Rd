@@ -8,7 +8,7 @@ plotMChromatograms(
   MChromatograms,
   rows,
   cols,
-  ncol,
+  ncol = NA,
   xlim = NA,
   ylim = NA,
   intColour = "black",
