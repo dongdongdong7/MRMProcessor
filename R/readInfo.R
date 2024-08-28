@@ -12,6 +12,9 @@
 read_windowInfo <- function(windowInfo_path){
   windowInfo_path <- normalizePath(windowInfo_path)
   windowInfo <- openxlsx::read.xlsx(windowInfo_path, sheet = 1)
+  if(any(duplicated(windowInfo$analyteName))){
+    stop(paste0(paste0(windowInfo$analyteName[which(duplicated(windowInfo$analyteName))], collapse = ", "), " is duplicated"))
+  }
   return(windowInfo)
 }
 #' @title read_sampleInfo

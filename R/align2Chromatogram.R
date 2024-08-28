@@ -79,9 +79,9 @@
 #' @examples
 #' align2Chromatogram(Chromatogram1 = MChromatograms[3, 1], Chromatogram2 = MChromatograms[3, 2])
 align2Chromatogram <- function(Chromatogram1, Chromatogram2, cosMag = 0.5, corMag = 0.5, method = "direct"){
-  if(is.null(attributes(Chromatogram1)$peak) | is.null(attributes(Chromatogram2)$peak)) return(0)
-  peak_x <- attributes(Chromatogram1)$peak[[1]]
-  peak_y <- attributes(Chromatogram2)$peak[[1]]
+  if(is.null(attributes(Chromatogram1)$targetPeak) | is.null(attributes(Chromatogram2)$targetPeak)) return(0)
+  peak_x <- attributes(Chromatogram1)$targetPeak[[1]]
+  peak_y <- attributes(Chromatogram2)$targetPeak[[1]]
   rt_x <- attributes(Chromatogram1)$rtime
   idx_x <- which(rt_x >= peak_x["start"] & rt_x <= peak_x["end"])
   rt_x <- rt_x[idx_x]
@@ -125,7 +125,7 @@ align2Chromatogram <- function(Chromatogram1, Chromatogram2, cosMag = 0.5, corMa
 #' Chromatogram_await_new <- align2ChromatogramVstandard(Chromatogram_standard = MChromatograms[6, 2], Chromatogram_await = MChromatograms[6, 9])
 #' plotChromatogram(Chromatogram_await_new, targetPeak = TRUE)
 align2ChromatogramVstandard <- function(Chromatogram_standard, Chromatogram_await, cosMag = 0.5, corMag = 0.5, method = "direct", scoreTh = 0.9){
-  if(is.null(attributes(Chromatogram_standard)$peak)) stop("Standard chromatogram do not have standard peak!")
+  if(is.null(attributes(Chromatogram_standard)$targetPeak)) stop("Standard chromatogram do not have standard peak!")
   if(is.null(attributes(Chromatogram_await)$peaksInfo)) return(Chromatogram_await)
   peaksInfo_await <- attributes(Chromatogram_await)$peaksInfo
   scoreVec <- sapply(peaksInfo_await, function(x) {
@@ -133,7 +133,7 @@ align2ChromatogramVstandard <- function(Chromatogram_standard, Chromatogram_awai
     align2Chromatogram(Chromatogram1 = Chromatogram_standard, Chromatogram2 = Chromatogram_tmp, cosMag = cosMag, corMag = corMag, method = method)
   })
   peakIdx <- which(scoreVec == max(scoreVec) & scoreVec > scoreTh)
-  if(length(peakIdx) == 1) attributes(Chromatogram_await)$peak <- peaksInfo_await[peakIdx]
+  if(length(peakIdx) == 1) attributes(Chromatogram_await)$targetPeak <- peaksInfo_await[peakIdx]
   else stop("length(peakIdx) must be 1!")
   return(Chromatogram_await)
 }

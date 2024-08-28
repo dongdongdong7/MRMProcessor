@@ -42,14 +42,24 @@ plotMChromatograms(MChromatograms = MChromatograms, rows = check_i, cols = check
 MChromatograms_new <- rtCorrection_IS(MChromatograms = MChromatograms, rows = NA, cols = cols_batch1)
 plotMChromatograms(MChromatograms = MChromatograms_new, rows = check_i, cols = check_j, targetPeak = TRUE)
 plotHeatMap_MChromatograms(MChromatograms = MChromatograms_new, rows = rows_IS, cols = cols_batch1, standard_cols = NA)
-check_i <- .getRow4analyteName(MChromatograms_new, analyteNameVec = c("C4-DC-d3"))
-check_j <- .getCol4sampleName(MChromatograms_new, sampleNameVec = c("SBRA021A230425_CF40ul_3_p1-a08171"))
+check_i <- .getRow4analyteName(MChromatograms_new, analyteNameVec = c("C4-DC-d3")) #C4-DC-d3, MM-d3
+check_j <- .getCol4sampleName(MChromatograms_new, sampleNameVec = c("SBRA021A230425_CF40ul_3_p1-a08171")) # SBRA021A230425_CF40ul_3_p1-a08171, SBRA021A230425_CF40ul_3_p1-a08238
 # We can easily find the problem peak
 plotMChromatograms(MChromatograms = MChromatograms_new, rows = check_i, cols = c(1, check_j), targetPeak = TRUE)
-MChromatograms_new <- peakPicking_MChromatograms2(MChromatograms_new, rows = check_i, cols = check_j, noise = 10000, smoothPara = get_smoothPara(smooth = TRUE),baselinePara = get_baselinePara(tol_m = 5), peakPara = get_peakPara(xcms = "BOTH", fwhm = 10))
+MChromatograms_new <- peakPicking_MChromatograms2(MChromatograms_new, rows = check_i, cols = check_j, noise = 10000,baselinePara = get_baselinePara(tol_m = 5), peakPara = get_peakPara(xcms = "ORIGN", fwhm = 18, tol_m = -1))
 plotMChromatograms(MChromatograms = MChromatograms_new, rows = check_i, cols = c(1, check_j), targetPeak = FALSE)
 plotHeatMap_MChromatograms(MChromatograms = MChromatograms_new, rows = rows_IS, cols = cols_batch1, standard_cols = NA)
 MChromatograms_new <- extractTargetPeak_MChromatograms(MChromatograms_new, rows = check_i, cols = check_j, targetRt = NA, tolRt = 10)
 MChromatograms_new <- rtCorrection_IS(MChromatograms = MChromatograms_new, rows = check_i, cols = check_j)
 # Now, all square is purple.
 plotHeatMap_MChromatograms(MChromatograms = MChromatograms_new, rows = rows_IS, cols = cols_batch1, standard_cols = NA)
+# 5. Analyte retention time correction
+MChromatograms_new <- rtCorrection_analyte(MChromatograms = MChromatograms_new, rows = NA, cols = cols_batch1)
+rows_analyte <- c(.getRow4analyteType(MChromatograms = MChromatograms_new, analyteType = "Quant"),
+                  .getRow4analyteType(MChromatograms = MChromatograms_new, analyteType = "Qual"))
+MChromatograms_new <- extractTargetPeak_MChromatograms(MChromatograms = MChromatograms_new,
+                                                       rows = rows_analyte, cols = cols_batch1,
+                                                       targetRt = NA, tolRt = 5)
+plotMChromatograms(MChromatograms = MChromatograms_new, rows = rows_analyte[12], cols = cols_batch1, targetPeak = TRUE)
+plotHeatMap_MChromatograms(MChromatograms_new, rows = rows_analyte, cols = cols_batch1)
+scoreList_test <- calAlignScore_MChromatograms(MChromatograms = MChromatograms_new, row = rows_analyte, cols = cols_batch1)

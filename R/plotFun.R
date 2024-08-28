@@ -61,7 +61,7 @@ plotChromatogram <- function(Chromatogram,
     ggplot2::geom_line(ggplot2::aes(y = attributes(Chromatogram)$baseline), col = "red", linewidth = 1, linetype = "dashed") +
     ggplot2::annotate("segment", x = min(Chromatogram@rtime), xend = max(Chromatogram@rtime), y = attributes(Chromatogram)$noise, yend = attributes(Chromatogram)$noise, linetype = "dashed")
   if(targetPeak){
-    peaksInfo <- attributes(Chromatogram)$peak
+    peaksInfo <- attributes(Chromatogram)$targetPeak
   }else{
     peaksInfo <- attributes(Chromatogram)$peaksInfo
   }

@@ -24,7 +24,7 @@ extractTargetPeak_Chromatogram <- function(Chromatogram, targetRt = NA, tolRt = 
     apex_rt <- sapply(attributes(Chromatogram)$peaksInfo, function(x) {x["apex"]})
     target_idx <- which(seq.int(length(apex_rt)) == which.min(abs(apex_rt - targetRt)) & abs(apex_rt - targetRt) < tolRt)
     if(length(target_idx) == 1){
-      attributes(Chromatogram)$peak <- attributes(Chromatogram)$peaksInfo[target_idx]
+      attributes(Chromatogram)$targetPeak <- attributes(Chromatogram)$peaksInfo[target_idx]
       return(Chromatogram)
     }else if(length(target_idx) > 1) stop("target_idx > 1")
     else return(Chromatogram)

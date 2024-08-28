@@ -84,7 +84,7 @@ peakPicking_MChromatograms <- function(MChromatograms, noise = NA,
 #' @examples
 #' MChromatograms <- peakPicking_MChromatograms(MChromatograms = MChromatograms, rows = 1:nrow(MChromatograms), cols = 1:ncol(MChromatograms), thread = 4)
 peakPicking_MChromatograms2 <- function(MChromatograms, rows, cols, noise = NA,
-                                       smoothPara = get_smoothPara(smooth = FALSE), baselinePara = get_baselinePara(),
+                                       smoothPara = get_smoothPara(), baselinePara = get_baselinePara(),
                                        peakPara = get_peakPara(),
                                        thread = 1){
   nrow <- nrow(MChromatograms)

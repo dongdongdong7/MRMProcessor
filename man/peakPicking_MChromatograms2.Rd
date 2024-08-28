@@ -9,7 +9,7 @@ peakPicking_MChromatograms2(
   rows,
   cols,
   noise = NA,
-  smoothPara = get_smoothPara(smooth = FALSE),
+  smoothPara = get_smoothPara(),
   baselinePara = get_baselinePara(),
   peakPara = get_peakPara(),
   thread = 1

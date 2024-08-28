@@ -19,7 +19,9 @@ calAlignScore_MChromatograms <- function(MChromatograms, rows, cols, standard_co
                                          cosMag = 0.5, corMag = 0.5, method = "direct"){
   if(any(is.na(standard_cols))) standard_cols <- rep(1, length(rows))
   if(any(!standard_cols %in% cols)) stop("standard_col is not in cols!")
+  browser()
   scoreList <- lapply(1:length(standard_cols), function(l) {
+    print(l)
     i <- rows[l];standard_col <- standard_cols[l]
     Chromatogram_standard <- MChromatograms[i, standard_col]
     sapply(cols, function(j) {
