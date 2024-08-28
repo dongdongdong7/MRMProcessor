@@ -4,12 +4,14 @@
 \alias{noiseEs}
 \title{noiseEs}
 \usage{
-noiseEs(int, prepare = FALSE)
+noiseEs(int, prepare = FALSE, mag = 2)
 }
 \arguments{
 \item{int}{intensity vector.}
 
-\item{prepare}{TRUE or FALSE}
+\item{prepare}{TRUE or FALSE.}
+
+\item{mag}{mag of sd.}
 }
 \value{
 noise.

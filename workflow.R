@@ -62,4 +62,10 @@ MChromatograms_new <- extractTargetPeak_MChromatograms(MChromatograms = MChromat
                                                        targetRt = NA, tolRt = 5)
 plotMChromatograms(MChromatograms = MChromatograms_new, rows = rows_analyte[12], cols = cols_batch1, targetPeak = TRUE)
 plotHeatMap_MChromatograms(MChromatograms_new, rows = rows_analyte, cols = cols_batch1)
-scoreList_test <- calAlignScore_MChromatograms(MChromatograms = MChromatograms_new, row = rows_analyte, cols = cols_batch1)
+check_i <- .getRow4analyteName(MChromatograms_new, analyteNameVec = c("C17:1-iso2"))
+plotMChromatograms(MChromatograms = MChromatograms_new, rows = check_i, cols = cols_batch1, targetPeak = TRUE)
+plotMChromatograms(MChromatograms = MChromatograms_new, rows = check_i, cols = cols_batch1, targetPeak = FALSE)
+attributes(MChromatograms_new[check_i, 1])$expectRt
+attributes(MChromatograms_new[check_i, 1])$peaksInfo
+
+MChromatograms_new <- peakPicking_MChromatograms2(MChromatograms_new, rows = check_i, cols = cols_batch1, peakPara = get_peakPara(tol_m = 1, snthresh = 0.1, xcms = "BOTH"))

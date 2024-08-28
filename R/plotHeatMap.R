@@ -75,7 +75,7 @@ plotHeatMap_MChromatograms <- function(MChromatograms, rows, cols, standard_cols
   p <- ggplot2::ggplot(df, ggplot2::aes(j, i, text = text)) +
     ggplot2::geom_tile(ggplot2::aes(fill = value), colour = "black") +
     #ggplot2::geom_bin2d(bins = 20) +
-    #ggplot2::coord_equal() +
+    ggplot2::coord_equal() +
     ggplot2::scale_fill_gradient(low = "white", high = "purple", limits = c(0, 1)) +
     #hrbrthemes::theme_ipsum(axis_text_size = 0, axis_title_size = 0) +
     ggplot2::theme_light() +

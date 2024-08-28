@@ -8,6 +8,8 @@
     ggplot2::labs(x = "Retention Time", y = "Intensity") +
     ggplot2::theme(axis.title = ggplot2::element_text(size = axis.title.size),
                    axis.text = ggplot2::element_text(size = axis.text.size))
+  if(!any(is.na(xlim))) p <- p + ggplot2::xlim(xlim)
+  if(!any(is.na(ylim))) p <- p + ggplot2::ylim(ylim)
   return(p)
 }
 

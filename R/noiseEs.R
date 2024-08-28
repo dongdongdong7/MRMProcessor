@@ -13,7 +13,8 @@
 #' Estimates the noise of a chromatogram, which can be used to find the apex of a chromatographic peak.
 #'
 #' @param int intensity vector.
-#' @param prepare TRUE or FALSE
+#' @param prepare TRUE or FALSE.
+#' @param mag mag of sd.
 #'
 #' @return noise.
 #' @export
@@ -22,7 +23,7 @@
 #' noise <- noiseEs(data[1,1]@intensity)
 #' plot(data[1,1]@intensity, type = "l")
 #' lines(rep(noise, length(data[1,1]@intensity)))
-noiseEs <- function(int, prepare = FALSE){
+noiseEs <- function(int, prepare = FALSE, mag = 2){
   intensity <- sort(int[int > 0])
   if(prepare) intensity <- .prepare_noiseEs(intensity)
   intLength <- length(intensity)
@@ -31,7 +32,7 @@ noiseEs <- function(int, prepare = FALSE){
     if(i == 1) break
     int <- intensity[i + 1]
     int_vec <- intensity[i:1]
-    noiEsti <- mean(int_vec) + 3 * sd(int_vec)
+    noiEsti <- mean(int_vec) + mag * sd(int_vec)
     if(int < noiEsti) break
   }
   noise <- intensity[i + 1]
