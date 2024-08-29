@@ -91,6 +91,7 @@ get_peakPara <- function(sn = 3, preNum = 3, extend = 5, tol_m = 10, multiSmooth
 #' @param int MRM window intensity vector.
 #' @param rt MRM window retention time vector.
 #' @param noise noise, NA or set by user. If NA, noiseEs function will be used.
+#' @param noiseMag noiseMag.
 #' @param smoothPara smoothPara.
 #' @param baselinePara baselinePara.
 #' @param sn sn threshold.
@@ -117,7 +118,7 @@ get_peakPara <- function(sn = 3, preNum = 3, extend = 5, tol_m = 10, multiSmooth
 #' abline(h = noise0)
 #' plot(sort(data[row,col]@intensity))
 #' peakPicking(int = data[row,col]@intensity, rt = data[row,col]@rtime * 60, noise = 1000, peakPara = get_peakPara())
-peakPicking <- function(int, rt, noise = NA,
+peakPicking <- function(int, rt, noise = NA, noiseMag = 2,
                         smoothPara = get_smoothPara(), baselinePara = get_baselinePara(), peakPara = get_peakPara()){
   # peakPara
   sn <- peakPara$sn;preNum <- peakPara$preNum;extend <- peakPara$extend;tol_m <- peakPara$tol_m
@@ -126,7 +127,7 @@ peakPicking <- function(int, rt, noise = NA,
   peakWidth <- peakPara$peakWidth;xcms <- peakPara$xcms
 
   int <- smoothFun(int, smoothPara = smoothPara)
-  if(is.na(noise)) noise0 <- noiseEs(int)
+  if(is.na(noise)) noise0 <- noiseEs(int, mag = noiseMag)
   else if(noise > 0) noise0 <- noise
   else stop("noise should > 0 !")
   baseline <- baselineEs(int = int, rt = rt, baselinePara = baselinePara)

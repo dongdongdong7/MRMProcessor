@@ -73,6 +73,7 @@ peakPicking_MChromatograms <- function(MChromatograms, noise = NA,
 #' @param rows rows.
 #' @param cols cols.
 #' @param noise noise.
+#' @param noiseMag noiseMag.
 #' @param smoothPara smoothPara. Here smooth is FALSE (default), because smoothing has usually already been performed once.
 #' @param baselinePara baselinePara.
 #' @param peakPara peakPara.
@@ -83,7 +84,7 @@ peakPicking_MChromatograms <- function(MChromatograms, noise = NA,
 #'
 #' @examples
 #' MChromatograms <- peakPicking_MChromatograms(MChromatograms = MChromatograms, rows = 1:nrow(MChromatograms), cols = 1:ncol(MChromatograms), thread = 4)
-peakPicking_MChromatograms2 <- function(MChromatograms, rows, cols, noise = NA,
+peakPicking_MChromatograms2 <- function(MChromatograms, rows, cols, noise = NA, noiseMag = 2,
                                        smoothPara = get_smoothPara(), baselinePara = get_baselinePara(),
                                        peakPara = get_peakPara(),
                                        thread = 1){
@@ -103,7 +104,7 @@ peakPicking_MChromatograms2 <- function(MChromatograms, rows, cols, noise = NA,
     smoothPara_old <- attributes(Chromatogram)$smoothPara
     if(smoothPara$smooth) smoothPara_new <- smoothPara
     else smoothPara_new <- smoothPara_old
-    Chromatogram <- peakPicking_Chromatogram(Chromatogram = Chromatogram, noise = noise,
+    Chromatogram <- peakPicking_Chromatogram(Chromatogram = Chromatogram, noise = noise, noiseMag = noiseMag,
                                              smoothPara = smoothPara, baselinePara = baselinePara,
                                              peakPara = peakPara)
     attributes(Chromatogram)$smoothPara <- smoothPara_new

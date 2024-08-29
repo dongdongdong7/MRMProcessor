@@ -7,6 +7,7 @@
 peakPicking_Chromatogram(
   Chromatogram,
   noise = NA,
+  noiseMag = 2,
   smoothPara = get_smoothPara(),
   baselinePara = get_baselinePara(),
   peakPara = get_peakPara()
@@ -16,6 +17,8 @@ peakPicking_Chromatogram(
 \item{Chromatogram}{A Chromatogram object.}
 
 \item{noise}{noise.}
+
+\item{noiseMag}{noiseMag.}
 
 \item{smoothPara}{smoothPara.}
 

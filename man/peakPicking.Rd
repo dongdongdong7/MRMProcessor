@@ -8,6 +8,7 @@ peakPicking(
   int,
   rt,
   noise = NA,
+  noiseMag = 2,
   smoothPara = get_smoothPara(),
   baselinePara = get_baselinePara(),
   peakPara = get_peakPara()
@@ -19,6 +20,8 @@ peakPicking(
 \item{rt}{MRM window retention time vector.}
 
 \item{noise}{noise, NA or set by user. If NA, noiseEs function will be used.}
+
+\item{noiseMag}{noiseMag.}
 
 \item{smoothPara}{smoothPara.}
 

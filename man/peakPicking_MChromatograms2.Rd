@@ -9,6 +9,7 @@ peakPicking_MChromatograms2(
   rows,
   cols,
   noise = NA,
+  noiseMag = 2,
   smoothPara = get_smoothPara(),
   baselinePara = get_baselinePara(),
   peakPara = get_peakPara(),
@@ -23,6 +24,8 @@ peakPicking_MChromatograms2(
 \item{cols}{cols.}
 
 \item{noise}{noise.}
+
+\item{noiseMag}{noiseMag.}
 
 \item{smoothPara}{smoothPara. Here smooth is FALSE (default), because smoothing has usually already been performed once.}
 
