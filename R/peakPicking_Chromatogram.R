@@ -31,7 +31,7 @@ peakPicking_Chromatogram <- function(Chromatogram, noise = NA, noiseMag = 2,
     int <- smoothFun(attributes(Chromatogram)$intensity_orign, smoothPara = smoothPara)
   }
   Chromatogram@intensity <- int
-  if(is.na(noise)) noise0 <- noiseEs(int = int, prepare = FALSE)
+  if(is.na(noise)) noise0 <- noiseEs(int = int, prepare = FALSE, mag = noiseMag)
   else if(noise > 0) noise0 <- noise
   else stop("noise should > 0 !")
   attributes(Chromatogram)$noise <- noise0
