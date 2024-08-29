@@ -12,7 +12,7 @@ sampleInfo <- read_sampleInfo("D:/fudan/Projects/2023/MRMProcessor/Progress/buil
 # The first time peakPicing is performed,
 # where the first peakPicking is performed on the MChromatograms
 # using either the default parameters or the specified parameters.
-MChromatograms <- peakPicking_MChromatograms(MChromatograms = MChromatograms, thread = 4, unit = "min", peakPara = get_peakPara(tol_m = 1, snthresh = 0.1, xcms = "BOTH"))
+MChromatograms <- peakPicking_MChromatograms(MChromatograms = MChromatograms, noiseMag = 3, thread = 4, unit = "min", peakPara = get_peakPara(tol_m = 1, snthresh = 0.1, xcms = "BOTH"))
 # Note: The function adjusts the retention time unit according to the unit parameter
 # Checking the effect of algorithms.
 plotMChromatograms(MChromatograms, rows = 6, cols = 1:10, targetPeak = FALSE, ncol = 5)

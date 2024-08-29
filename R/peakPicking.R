@@ -22,11 +22,13 @@
   baseline_new <- baseline[idx]
   apex_idx <- which.max(int_new)
   int_a <- int_new[1:apex_idx];int_b <- int_new[apex_idx:length(int_new)]
+  count <- 1
   if(multiSmooth){
-    while(!all(diff(int_a) >0) | !all(diff(int_b) < 0)){
+    while(!all(diff(int_a) >= 0) | !all(diff(int_b) <= 0 | count > 5)){
       int_new <- .smoothMean(int_new, size = 3)
       apex_idx <- which.max(int_new)
       int_a <- int_new[1:apex_idx];int_b <- int_new[apex_idx:length(int_new)]
+      count <- count + 1
     }
   }
   #browser()
@@ -139,7 +141,6 @@ peakPicking <- function(int, rt, noise = NA, noiseMag = 2,
     else return(FALSE)
   })]
   if(length(candidateSegInd) == 0) return(NULL)
-  #browser()
   ZOIList <- lapply(1:length(candidateSegInd), function(i) {
     extend1 <- extend
     extend2 <- extend
