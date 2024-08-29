@@ -5,6 +5,7 @@
 #'
 #' @param MChromatograms MChromatograms object.
 #' @param noise noise.
+#' @param noiseMag noiseMag.
 #' @param smoothPara smoothPara.
 #' @param baselinePara baselinePara.
 #' @param peakPara peakPara.
@@ -16,7 +17,7 @@
 #'
 #' @examples
 #' MChromatograms <- peakPicking_MChromatograms(MChromatograms = MChromatograms, thread = 4)
-peakPicking_MChromatograms <- function(MChromatograms, noise = NA,
+peakPicking_MChromatograms <- function(MChromatograms, noise = NA, noiseMag = 2,
                                        smoothPara = get_smoothPara(), baselinePara = get_baselinePara(),
                                        peakPara = get_peakPara(),
                                        thread = 1, unit = "min"){
@@ -33,7 +34,7 @@ peakPicking_MChromatograms <- function(MChromatograms, noise = NA,
     i <- combinations[l, ]$i;j <- combinations[l, ]$j
     Chromatogram <- MChromatograms[i, j]
     if(unit == "min") attributes(Chromatogram)$rtime <- attributes(Chromatogram)$rtime * 60
-    Chromatogram <- peakPicking_Chromatogram(Chromatogram = Chromatogram, noise = noise,
+    Chromatogram <- peakPicking_Chromatogram(Chromatogram = Chromatogram, noise = noise, noiseMag = noiseMag,
                                              smoothPara = smoothPara, baselinePara = baselinePara,
                                              peakPara = peakPara)
     attributes(Chromatogram)$sample_name <- pData$file[j]

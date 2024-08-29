@@ -7,6 +7,7 @@
 peakPicking_MChromatograms(
   MChromatograms,
   noise = NA,
+  noiseMag = 2,
   smoothPara = get_smoothPara(),
   baselinePara = get_baselinePara(),
   peakPara = get_peakPara(),
@@ -18,6 +19,8 @@ peakPicking_MChromatograms(
 \item{MChromatograms}{MChromatograms object.}
 
 \item{noise}{noise.}
+
+\item{noiseMag}{noiseMag.}
 
 \item{smoothPara}{smoothPara.}
 
