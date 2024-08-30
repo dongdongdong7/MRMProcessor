@@ -46,7 +46,7 @@ plotChromatogram <- function(Chromatogram,
                 intColour = intColour, intLinewidth = intLinewidth,
                 axis.title.size = axis.title.size, axis.text.size = axis.text.size)
   p$data$baseline <- attributes(Chromatogram)$baseline
-  sample_name <- basename(attributes(Chromatogram)$sample_name)
+  sample_name <- strsplit(basename(attributes(Chromatogram)$sample_name), ".", fixed = TRUE)[[1]][1]
   chrInfo <- attributes(Chromatogram)$chrInfo
   if(!is.null(attributes(Chromatogram)$analyteName)) analyte_name <- attributes(Chromatogram)$analyteName
   else analyte_name <- purrr::pluck(strsplit(regmatches(chrInfo$chromatogramId, regexpr("name=(.+)", chrInfo$chromatogramId, perl = TRUE)), "name=")[[1]], 2)
