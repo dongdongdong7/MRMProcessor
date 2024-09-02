@@ -112,8 +112,8 @@ rows_analyte <- c(.getRow4analyteType(MChromatograms = MChromatograms_new, analy
 MChromatograms_new <- extractTargetPeak_MChromatograms(MChromatograms = MChromatograms_new,
                                                        rows = rows_analyte, cols = cols_batch1,
                                                        targetRt = NA, tolRt = 10)
-plotHeatMap_MChromatogramsRow(MChromatograms_new, row = rows_analyte[4], cols = cols_batch1, standard_cols = 1)
-plotMChromatograms(MChromatograms_new, rows = rows_analyte[4], cols = 22, targetPeak = FALSE)
+plotHeatMap_MChromatogramsRow(MChromatograms_new, row = rows_analyte[12], cols = cols_batch1, standard_cols = NA)
+plotMChromatograms(MChromatograms_new, rows = rows_analyte[12], cols = cols_batch1, targetPeak = FALSE)
 
 check_i <- .getRow4analyteName(MChromatograms_new, analyteNameVec = c("C0std-85_CE20"))
 plotMChromatograms(MChromatograms = MChromatograms_new, rows = check_i, cols = 22, targetPeak = TRUE)

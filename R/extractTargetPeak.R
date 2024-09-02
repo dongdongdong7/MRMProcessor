@@ -29,6 +29,7 @@ extractTargetPeak_Chromatogram <- function(Chromatogram, targetRt = NA, tolRt = 
     }else if(length(target_idx) > 1) stop("target_idx > 1")
     else return(Chromatogram)
   }else{
+    attributes(Chromatogram)$targetPeak <- NULL
     return(Chromatogram)
   }
 }

@@ -14,7 +14,7 @@ get_peakPara(
   fwhm = NA,
   snthresh = 0.5,
   peakWidth = NA,
-  xcms = "ORIGN"
+  xcms = "BOTH"
 )
 }
 \arguments{

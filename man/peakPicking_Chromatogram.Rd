@@ -7,7 +7,7 @@
 peakPicking_Chromatogram(
   Chromatogram,
   noise = NA,
-  noiseMag = 2,
+  noiseMag = 3,
   smoothPara = get_smoothPara(),
   baselinePara = get_baselinePara(),
   peakPara = get_peakPara()

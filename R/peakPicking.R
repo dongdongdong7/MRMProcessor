@@ -82,7 +82,7 @@
 #'
 #' @examples
 #' peakPara <- get_peakPara()
-get_peakPara <- function(sn = 3, preNum = 3, extend = 5, tol_m = 10, multiSmooth = TRUE, cal_ZOI_baseline = TRUE, fwhm = NA, snthresh = 0.5, peakWidth = NA, xcms = "ORIGN"){
+get_peakPara <- function(sn = 3, preNum = 3, extend = 5, tol_m = 10, multiSmooth = TRUE, cal_ZOI_baseline = TRUE, fwhm = NA, snthresh = 0.5, peakWidth = NA, xcms = "BOTH"){
   return(list(sn = sn, preNum = preNum, extend = extend, tol_m = tol_m, multiSmooth = multiSmooth, cal_ZOI_baseline = cal_ZOI_baseline, fwhm = fwhm, snthresh = snthresh, peakWidth = peakWidth, xcms = xcms))
 }
 
@@ -120,7 +120,7 @@ get_peakPara <- function(sn = 3, preNum = 3, extend = 5, tol_m = 10, multiSmooth
 #' abline(h = noise0)
 #' plot(sort(data[row,col]@intensity))
 #' peakPicking(int = data[row,col]@intensity, rt = data[row,col]@rtime * 60, noise = 1000, peakPara = get_peakPara())
-peakPicking <- function(int, rt, noise = NA, noiseMag = 2,
+peakPicking <- function(int, rt, noise = NA, noiseMag = 3,
                         smoothPara = get_smoothPara(), baselinePara = get_baselinePara(), peakPara = get_peakPara()){
   # peakPara
   sn <- peakPara$sn;preNum <- peakPara$preNum;extend <- peakPara$extend;tol_m <- peakPara$tol_m
