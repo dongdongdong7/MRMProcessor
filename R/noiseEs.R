@@ -25,10 +25,10 @@
 #' lines(rep(noise, length(data[1,1]@intensity)))
 noiseEs <- function(int, prepare = TRUE, mag = 3){
   intensity <- sort(int[int > 0])
-  if(prepare) intensity <- .prepare_noiseEs(intensity)
+  if(prepare & length(unique(intensity)) >= 3) intensity <- .prepare_noiseEs(intensity)
   intLength <- length(intensity)
   if(intLength == 1) return(intensity)
-  for(i in 2:intLength){
+  for(i in 2:(intLength-1)){
     int <- intensity[i + 1]
     int_vec <- intensity[1:i]
     noiEsti <- mean(int_vec) + mag * sd(int_vec)

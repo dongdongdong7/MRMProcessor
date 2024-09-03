@@ -9,9 +9,7 @@ MChromatograms <- readMRMData(files = file_path, thread = 4)
 windowInfo <- read_windowInfo(windowInfo_path = "D:/fudan/Projects/2023/MRMProcessor/Progress/Experiment1_Load raw data/231225/Data/BileAcid/windowInfo.xlsx")
 sampleInfo <- read_sampleInfo("D:/fudan/Projects/2023/MRMProcessor/Progress/Experiment1_Load raw data/231225/Data/BileAcid/sampleInfo.xlsx")
 # 2. 第一次寻峰
-MChromatograms <- peakPicking_MChromatograms(MChromatograms = MChromatograms,
-                                             noiseMag = 3, thread = 5, unit = "min",
-                                             peakPara = get_peakPara(tol_m = 10, snthresh = 0.5, xcms = "BOTH"))
+MChromatograms <- peakPicking_MChromatograms(MChromatograms = MChromatograms, thread = 5, unit = "min")
 # 3. 准备MChromatograms对象
 # 将MChromatograms与sampleInfo和windowInfo联系
 MChromatograms <- prepare_MChromatograms(MChromatograms = MChromatograms,

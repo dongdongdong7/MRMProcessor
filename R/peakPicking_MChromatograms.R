@@ -44,6 +44,7 @@ peakPicking_MChromatograms <- function(MChromatograms, noise = NA, noiseMag = 3,
   if(thread == 1){
     chrs <- lapply(1:nrow(combinations), function(l) {
       utils::setTxtProgressBar(pb, l)
+      #print(l)
       loop(l)
     })
   }else if(thread > 1){
