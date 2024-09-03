@@ -23,7 +23,23 @@
 #' noise <- noiseEs(data[1,1]@intensity)
 #' plot(data[1,1]@intensity, type = "l")
 #' lines(rep(noise, length(data[1,1]@intensity)))
-noiseEs <- function(int, prepare = FALSE, mag = 2){
+noiseEs <- function(int, prepare = TRUE, mag = 3){
+  intensity <- sort(int[int > 0])
+  if(prepare) intensity <- .prepare_noiseEs(intensity)
+  intLength <- length(intensity)
+  if(intLength == 1) return(intensity)
+  for(i in 2:intLength){
+    int <- intensity[i + 1]
+    int_vec <- intensity[1:i]
+    noiEsti <- mean(int_vec) + mag * sd(int_vec)
+    if(int > noiEsti) break
+  }
+  noise <- intensity[i]
+  return(noise)
+}
+
+# This is the previous version, which counts backwards and for a few data points will be wrong.
+.noiseEs <- function(int, prepare = FALSE, mag = 3){
   intensity <- sort(int[int > 0])
   if(prepare) intensity <- .prepare_noiseEs(intensity)
   intLength <- length(intensity)
@@ -39,3 +55,19 @@ noiseEs <- function(int, prepare = FALSE, mag = 2){
   return(noise)
 }
 
+# noiseEs_test1 <- function(int, prepare = TRUE, mag = 3){
+#   intensity <- sort(int[int > 0])
+#   if(prepare) intensity <- .prepare_noiseEs(intensity)
+#   intLength <- length(intensity)
+#   if(intLength == 1) return(intensity)
+#   tmp <- sapply(2:intLength, function(i) {
+#     int <- intensity[i + 1]
+#     int_vec <- intensity[1:i]
+#     noiEsti <- mean(int_vec) + mag * sd(int_vec)
+#   })
+#   intensity[which(intensity[c(-1, -2)] > tmp[-length(tmp)])[1] + 1]
+# }
+#
+# a <- Sys.time()
+# noiseEs_test1(MChromatograms[55,1]@intensity)
+# Sys.time() - a

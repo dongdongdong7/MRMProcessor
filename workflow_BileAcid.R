@@ -10,7 +10,7 @@ windowInfo <- read_windowInfo(windowInfo_path = "D:/fudan/Projects/2023/MRMProce
 sampleInfo <- read_sampleInfo("D:/fudan/Projects/2023/MRMProcessor/Progress/Experiment1_Load raw data/231225/Data/BileAcid/sampleInfo.xlsx")
 # 2. 第一次寻峰
 MChromatograms <- peakPicking_MChromatograms(MChromatograms = MChromatograms,
-                                             noiseMag = 3, thread = 4, unit = "min",
+                                             noiseMag = 3, thread = 5, unit = "min",
                                              peakPara = get_peakPara(tol_m = 10, snthresh = 0.5, xcms = "BOTH"))
 # 3. 准备MChromatograms对象
 # 将MChromatograms与sampleInfo和windowInfo联系
@@ -37,6 +37,8 @@ MChromatograms <- peakPicking_MChromatograms2(MChromatograms, rows = rows_IS[3],
 MChromatograms <- extractTargetPeak_MChromatograms(MChromatograms, rows = rows_IS[3], cols = cols_batchs[[1]], targetRt = NA, tolRt = 10)
 plotMChromatograms(MChromatograms, rows = rows_IS[3], cols = cols_batchs[[1]])
 # D4-CA-2
+# This is a example for noise evaluation logic,
+# The noise in the first chromatogram is high with noiseMag set to 3, but after testing, using noiseMage = 2.
 plotHeatMap_MChromatogramsRow(MChromatograms = MChromatograms, row = rows_IS[11], cols = cols_batchs[[1]])
 MChromatograms <- peakPicking_MChromatograms2(MChromatograms, rows = rows_IS[11], cols = cols_batchs[[1]][1],
                                               noiseMag = 2, peakPara = get_peakPara(xcms = "BOTH"))

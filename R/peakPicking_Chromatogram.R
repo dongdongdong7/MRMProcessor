@@ -35,11 +35,11 @@ peakPicking_Chromatogram <- function(Chromatogram, noise = NA, noiseMag = 3,
   baseline <- baselineEs(int = int, rt = rt, baselinePara = baselinePara)
   attributes(Chromatogram)$baseline <- baseline
   if(is.na(noise)){
-    noise0 <- noiseEs(int = int, prepare = FALSE, mag = noiseMag)
-    baseline_mean <- mean(baseline) + 1
-    if(noise0 > 1000 & noise0 > baseline_mean * 100){
-      noise0 <- noiseEs(int = int, prepare = FALSE, mag = 2)
-    }
+    noise0 <- noiseEs(int = int, prepare = TRUE, mag = noiseMag)
+    # baseline_mean <- mean(baseline) + 1
+    # if(noise0 > 1000 & noise0 > baseline_mean * 100){
+    #   noise0 <- noiseEs(int = int, prepare = FALSE, mag = 2)
+    # }
   }
   else if(noise > 0) noise0 <- noise
   else stop("noise should > 0 !")

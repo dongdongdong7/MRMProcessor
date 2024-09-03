@@ -4,7 +4,7 @@
 \alias{noiseEs}
 \title{noiseEs}
 \usage{
-noiseEs(int, prepare = FALSE, mag = 2)
+noiseEs(int, prepare = TRUE, mag = 3)
 }
 \arguments{
 \item{int}{intensity vector.}
