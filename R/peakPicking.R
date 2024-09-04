@@ -66,6 +66,7 @@
 #' Get peakPara list.
 #'
 #' @param sn sn threshold.
+#' @param above ZOI creating method.
 #' @param preNum preNum.
 #' @param extend extend.
 #' @param tol_m tol_m.
@@ -82,8 +83,8 @@
 #'
 #' @examples
 #' peakPara <- get_peakPara()
-get_peakPara <- function(sn = 3, preNum = 3, extend = 5, tol_m = 10, multiSmooth = TRUE, cal_ZOI_baseline = TRUE, fwhm = NA, snthresh = 0.5, peakWidth = NA, xcms = "BOTH"){
-  return(list(sn = sn, preNum = preNum, extend = extend, tol_m = tol_m, multiSmooth = multiSmooth, cal_ZOI_baseline = cal_ZOI_baseline, fwhm = fwhm, snthresh = snthresh, peakWidth = peakWidth, xcms = xcms))
+get_peakPara <- function(sn = 3, above = "baseline", preNum = 3, extend = 5, tol_m = 10, multiSmooth = TRUE, cal_ZOI_baseline = TRUE, fwhm = NA, snthresh = 0.5, peakWidth = NA, xcms = "BOTH"){
+  return(list(sn = sn, above = above, preNum = preNum, extend = extend, tol_m = tol_m, multiSmooth = multiSmooth, cal_ZOI_baseline = cal_ZOI_baseline, fwhm = fwhm, snthresh = snthresh, peakWidth = peakWidth, xcms = xcms))
 }
 
 #' @title peakPicking
@@ -123,7 +124,7 @@ get_peakPara <- function(sn = 3, preNum = 3, extend = 5, tol_m = 10, multiSmooth
 peakPicking <- function(int, rt, noise = NA, noiseMag = 3,
                         smoothPara = get_smoothPara(), baselinePara = get_baselinePara(), peakPara = get_peakPara()){
   # peakPara
-  sn <- peakPara$sn;preNum <- peakPara$preNum;extend <- peakPara$extend;tol_m <- peakPara$tol_m
+  sn <- peakPara$sn;above <- peakPara$above;preNum <- peakPara$preNum;extend <- peakPara$extend;tol_m <- peakPara$tol_m
   multiSmooth <- peakPara$multiSmooth;cal_ZOI_baseline <- peakPara$cal_ZOI_baseline
   fwhm <- peakPara$fwhm;snthresh <- peakPara$snthresh
   peakWidth <- peakPara$peakWidth;xcms <- peakPara$xcms
@@ -133,11 +134,15 @@ peakPicking <- function(int, rt, noise = NA, noiseMag = 3,
   else if(noise > 0) noise0 <- noise
   else stop("noise should > 0 !")
   baseline <- baselineEs(int = int, rt = rt, baselinePara = baselinePara)
-  aboveTHidx <- which(int > noise0)
+  if(above == "noise") th <- rep(noise0, length(int))
+  else if(above == "baseline") th <- baseline
+  else stop("above wrong!")
+  aboveTHidx <- which(int > th)
+
   if(length(aboveTHidx) == 0) return(NULL)
   candidateSegInd <- split(aboveTHidx, cumsum(c(1, diff(aboveTHidx) != 1)))
   candidateSegInd <- candidateSegInd[sapply(candidateSegInd, function(i) {
-    if(length(which(int[i] > noise0)) > preNum) return(TRUE)
+    if(length(which(int[i] > th[i])) > preNum & max(int[i]) / mean(baseline[i]) > sn) return(TRUE)
     else return(FALSE)
   })]
   if(length(candidateSegInd) == 0) return(NULL)

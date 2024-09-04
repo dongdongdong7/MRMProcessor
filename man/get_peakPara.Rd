@@ -6,6 +6,7 @@
 \usage{
 get_peakPara(
   sn = 3,
+  above = "baseline",
   preNum = 3,
   extend = 5,
   tol_m = 10,
@@ -19,6 +20,8 @@ get_peakPara(
 }
 \arguments{
 \item{sn}{sn threshold.}
+
+\item{above}{ZOI creating method.}
 
 \item{preNum}{preNum.}
 
