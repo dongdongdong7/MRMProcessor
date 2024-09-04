@@ -11,4 +11,19 @@ Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.1
 Imports: 
-    magrittr
+    doSNOW,
+    dplyr,
+    foreach,
+    ggplot2,
+    grid,
+    magrittr,
+    MSnbase,
+    mzR,
+    openxlsx,
+    plotly,
+    pracma,
+    purrr,
+    signal,
+    snow,
+    utils,
+    xcms
