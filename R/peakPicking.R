@@ -142,8 +142,8 @@ peakPicking <- function(int, rt, noise = NA, noiseMag = 3,
   if(length(aboveTHidx) == 0) return(NULL)
   candidateSegInd <- split(aboveTHidx, cumsum(c(1, diff(aboveTHidx) != 1)))
   candidateSegInd <- candidateSegInd[sapply(candidateSegInd, function(i) {
-    if(length(which(int[i] > th[i])) > preNum & max(int[i]) / mean(baseline[i]) > sn) return(TRUE)
-    else return(FALSE)
+    if(length(which(int[i] > noise0)) > preNum & (max(int[i]) / (mean(baseline[i]) + 1)) > sn) return(TRUE)
+    else return(FALSE) # th[i]
   })]
   if(length(candidateSegInd) == 0) return(NULL)
   ZOIList <- lapply(1:length(candidateSegInd), function(i) {
