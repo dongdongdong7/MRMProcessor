@@ -25,7 +25,7 @@ length(cols_batchs) # 2 这批样本共有两个批次
 MChromatograms <- extractTargetPeak_MChromatograms(MChromatograms, rows = rows_IS, cols = cols_batchs[[1]], targetRt = NA, tolRt = 10)
 # D4-LCA-2
 plotHeatMap_MChromatogramsRow(MChromatograms = MChromatograms, row = rows_IS[1], cols = cols_batchs[[1]])
-MChromatograms <- peakPicking_MChromatograms2(MChromatograms, rows = rows_IS[1], cols = cols_batchs[[1]], peakPara = get_peakPara(xcms = "BOTH", sn = 1))
+MChromatograms <- peakPicking_MChromatograms2(MChromatograms, rows = rows_IS[1], cols = cols_batchs[[1]], peakPara = get_peakPara(sn = 1))
 MChromatograms <- extractTargetPeak_MChromatograms(MChromatograms, rows = rows_IS[1], cols = cols_batchs[[1]], targetRt = NA, tolRt = 10)
 plotMChromatograms(MChromatograms, rows = rows_IS[1], cols = cols_batchs[[1]])
 # D4-CDCA-2

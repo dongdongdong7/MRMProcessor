@@ -136,3 +136,10 @@ prepare_MChromatograms <- function(MChromatograms, windowInfo = windowInfo, samp
     which(sampleNameVec_all == x)
   }))
 }
+.getCol4typeName <- function(MChromatograms, typeName){
+  ncol <- ncol(MChromatograms)
+  typeNameVec <- sapply(1:ncol, function(j) {
+    attributes(MChromatograms[1, j])$typeName
+  })
+  which(typeNameVec == typeName)
+}
