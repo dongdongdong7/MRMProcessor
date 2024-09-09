@@ -40,10 +40,9 @@ library(gridlayout)
             verbatimTextOutput(outputId = "DataLoader_text2", placeholder = TRUE),
             shinyFiles::shinyFilesButton('DataLoader_windowInfo', 'Window Information', 'Please select a windowInfo', FALSE, style="color: #000000; background-color: #FFFFFF; border-color: #555555"),
             verbatimTextOutput(outputId = "DataLoader_text3", placeholder = TRUE),
-            actionButton(
-              label = "Link Data",
-              inputId = "DataLoader_linkData"
-            )
+            shinyFiles::shinyFilesButton('DataLoader_MChromatogramsUpload', "Upload MChromatograms", 'Please upload a MChromatograms.rds', FALSE, style="color: #000000; background-color: #FFFFFF; border-color: #555555"),
+            verbatimTextOutput(outputId = "DataLoader_text4", placeholder = TRUE),
+            downloadButton("DataLoader_download", label = "Object Save")
           )
         ),
         grid_card(
@@ -66,6 +65,112 @@ library(gridlayout)
                   height = "100%"
                 )
               )
+            )
+          )
+        )
+      )
+    ),
+    nav_panel(
+      title = "IS Checking",
+      grid_container(
+        layout = c(
+          "area1 area2 area3"
+        ),
+        gap_size = "0px",
+        col_sizes = c(
+          "0.5fr",
+          "1.49fr",
+          "0.5000000000000001fr"
+        ),
+        row_sizes = c(
+          "1.5fr"
+        ),
+        grid_card(
+          area = "area1",
+          card_body(
+            tabsetPanel(
+              nav_panel(
+                title = "Window",
+                selectInput(
+                  label = "Batch Name",
+                  choices = "none",
+                  selected = "none",
+                  inputId = "ISCheck_batchName"
+                ),
+                selectInput(
+                  label = "Sample Name",
+                  choices = "none",
+                  selected = "none",
+                  inputId = "ISCheck_sampleName"
+                ),
+                selectInput(
+                  label = "Analyte Name",
+                  choices = "none",
+                  selected = "none",
+                  inputId = "ISCheck_analyteName"
+                ),
+                numericInput("ISCheck_expectRt", label = "Expect Rtime", min = 0, max = 1000, value = 100, step = 0.5),
+                radioButtons("ISCheck_targetPeak", label = "Show Target", choices = c("TRUE" = "TRUE", "FALSE" = "FALSE"), selected = "FALSE"),
+                radioButtons("ISCheck_PlotType", label = "Plot Type", choices = c("Single" = "Single", "Compare" = "Compare"), selected = "Single", inline = TRUE),
+                actionButton(
+                  label = "Prepare",
+                  inputId = "ISCheck_prepare"
+                ),
+                actionButton(
+                  label = "Extract IS",
+                  inputId = "ISCheck_extractIS_all"
+                ),
+                actionButton(
+                  label = "debug",
+                  inputId = "ISCheck_debug"
+                )
+              ),
+              nav_panel(
+                title = "Parameter",
+                sliderInput("ISCheck_sn", label = "Select sn", min = 0, max = 10, step = 1, value = 3),
+                radioButtons("ISCheck_above", label = "Select above method", choices = c("baseline" = "baseline", "noise" = "noise"), selected = "baseline"),
+                sliderInput("ISCheck_preNum", label = "Select preNum", min = 3, max = 10, step = 1, value = 3),
+                sliderInput("ISCheck_extend", label = "Select extend", min = 1, max = 10, step = 1, value = 5),
+                sliderInput("ISCheck_tolM", label = "Select tol_m", min = 0, max = 50, step = 0.5, value = 10),
+                sliderInput("ISCheck_fwhm", label = "Select fwhm", min = 0, max = 50, step = 1, value = 0),
+                sliderInput("ISCheck_peakWidth", label = "Select peak width", min = 0, max = 50, value = c(0, 10), step = 1),
+                sliderInput("ISCheck_snthresh", label = "Select snthresh", min = 0, max = 10, step = 0.5, value = 0.5),
+                radioButtons("ISCheck_xcms", label = "Select a method", choices = c("BOTH" = "BOTH", "ORIGN" = "ORIGN", "CentWave" = "CentWave", "MatchedFilter" = "MatchedFilter"), selected = "BOTH")
+              )
+            )
+          )
+        ),
+        grid_card(
+          area = "area2",
+          plotOutput(outputId = "ISCheck_Plot1", width = "100%"),
+          plotly::plotlyOutput(outputId = "ISCheck_Plot2", width = "100%")
+        ),
+        grid_card(
+          area = "area3",
+          tabsetPanel(
+            nav_panel(
+              title = "noise",
+              numericInput("ISCheck_noise", label = "Select noise", min = -1, max = 100000000, step = 1, value = -1),
+              sliderInput("ISCheck_noiseMag", label = "Select noiseMag", min = 2, max = 4, step = 1, value = 3),
+              actionButton("ISCheck_peakPicking", label = "Peak Picking"),
+              actionButton("ISCheck_extract", label = "Extract"),
+              actionButton("ISCheck_peakPickingBatch", label = "Peak Picking Batch"),
+              actionButton("ISCheck_extractBatch", label = "Extract Batch")
+            ),
+            nav_panel(
+              title = "smoothPara",
+              radioButtons("ISCheck_smooth", label = "Smooth or not", choices = c("TRUE" = "TRUE", "FALSE" = "FALSE"), selected = "TRUE"),
+              radioButtons("ISCheck_smoothMethod", label = "Select a smooth method", choices = c("mean" = "mean", "sg" = "sg"), selected = "mean"),
+              sliderInput("ISCheck_smoothSize", label = "Select smooth size", min = 3, max = 11, step = 2, value = 3),
+              sliderInput("ISCheck_smoothP", label = "Select smooth p", min = 1, max = 10, step = 1, value = 3),
+              sliderInput("ISCheck_smoothM", label = "Select smooth m", min = 0, max = 10, step = 1, value = 0),
+              sliderInput("ISCheck_smoothTs", label = "Select smooth th", min = 1, max = 10, step = 1, value = 1)
+            ),
+            nav_panel(
+              title = "baselinePara",
+              sliderInput("ISCheck_baselineThreshold", label = "Select baseline threshold", min = 1, max = 10, step = 1, value = 1),
+              sliderInput("ISCheck_baselineTolM", label = "Select baseline tol_m", min = 0, max = 50, step = 0.5, value = 10),
+              sliderInput("ISCheck_loops", label = "Select loops", min = 1, max = 10, step = 1, value = 6)
             )
           )
         )
@@ -98,13 +203,11 @@ library(gridlayout)
         values$dataPath <- NULL
         values$MChromatograms <- NULL
         values$sampleNameVector <- NULL
-        values$windowNameVector <- NULL
+        values$analyteNameVector <- NULL
         values$windowInfoPath <- NULL
         values$sampleInfoPath <- NULL
-        values$parameterInfoPath <- NULL
         values$windowInfo <- NULL
         values$sampleInfo <- NULL
-        values$parameterInfo <- NULL
         values$rows_IS <- NULL
         values$rows_Quant <- NULL
         values$rows_Qual <- NULL
@@ -126,14 +229,15 @@ library(gridlayout)
       shinyFiles::shinyFileChoose(input, 'DataLoader_sampleInfo', roots=basedir )
       shinyFiles::shinyFileChoose(input, 'DataLoader_windowInfo', roots=basedir )
       shinyFiles::shinyFileChoose(input, 'DataLoader_parameterInfo', roots=basedir )
+      shinyFiles::shinyFileChoose(input, "DataLoader_MChromatogramsUpload", roots=basedir)
 
       values$ncore <- parallel::detectCores()
 
       # DataLoader_rtUnit
       {
         observeEvent(input$DataLoader_rtUnit, {
-          if(input$DataLoader_rtUnit == "min") values$rtUnit <- 60
-          else if(input$DataLoader_rtUnit == "seconds") values$rtUnit <- 1
+          if(input$DataLoader_rtUnit == "min") values$rtUnit <- "min"
+          else if(input$DataLoader_rtUnit == "seconds") values$rtUnit <- "seconds"
           else stop("rtUnit is wrong!")
         })
       }
@@ -179,15 +283,7 @@ library(gridlayout)
             values$sampleInfoPath <- text
             values$sampleInfo <- read_sampleInfo(values$sampleInfoPath)
             values$batchNameVector <- unique(values$sampleInfo$batchName)
-            diffSampleName <- setdiff(values$sampleNameVector, values$sampleInfo$sampleName)
-            if(length(diffSampleName) != 0){
-              warning(paste0("please check: ", paste0(diffSampleName, collapse = ", ")))
-              values$sampleInfo <- NULL
-              message <- paste0("please check: ", paste0(diffSampleName, collapse = ", "))
-            }else{
-              values$sampleNameVector <- values$sampleNameVector
-              message <- text
-            }
+            message <- text
           }else message <- NULL
           output$DataLoader_text2 <- renderText({message})
           if(!is.null(values$sampleInfo)){
@@ -210,15 +306,7 @@ library(gridlayout)
             text <- paste0(root, nowsep, text, nowsep, file_name)
             values$windowInfoPath <- text
             values$windowInfo <- read_windowInfo(values$windowInfoPath)
-            diffWindowName <- setdiff(values$windowNameVector, values$windowInfo$windowName)
-            if(length(diffWindowName) != 0){
-              warning(paste0("please check: ", paste0(diffWindowName, collapse = ", ")))
-              values$windowInfo <- NULL
-              message <- paste0("please check: ", paste0(diffWindowName, collapse = ", "))
-            }else{
-              values$windowNameVector <- values$windowNameVector
-              message <- text
-            }
+            message <- text
           }else message <- NULL
           output$DataLoader_text3 <- renderText({message})
           if(!is.null(values$windowInfo)){
@@ -229,23 +317,233 @@ library(gridlayout)
         })
       }
 
-      # DataLoader_linkData
+      # DataLoader_MChromatogramsUpload
       {
-        observeEvent(input$DataLoader_linkData, {
-          id <- notify("Update parameterInfo...")
-          on.exit(removeNotification(id), add = TRUE)
-          if(!is.null(values$MChromatograms) & !is.null(values$windowInfo) & !is.null(values$sampleInfo)){
-            values$MChromatograms <- prepare_MChromatograms(MChromatograms = MChromatograms,
-                                                            windowInfo = values$windowInfo,
-                                                            sampleInfo = values$sampleInfo,
-                                                            thread = round(values$ncore * 0.2))
-            values$cols_batchs <- lapply(values$batchNameVector, function(x) .getCol4batchName(MChromatograms = MChromatograms, batchName = x))
-            names(values$cols_batchs) <- values$batchNameVector
-            values$rows_IS <- .getRow4analyteType(MChromatograms = MChromatograms, analyteType = "IS")
-            values$rows_Quant <- .getRow4analyteType(MChromatograms = MChromatograms, analyteType = "Quant")
-            values$rows_Qual <- .getRow4analyteType(MChromatograms = MChromatograms, analyteType = "Qual")
-            values$prepared <- TRUE
+        observeEvent(input$DataLoader_MChromatogramsUpload, {
+          if("files" %in% names(input$DataLoader_MChromatogramsUpload)){
+            n <- length(input$DataLoader_MChromatogramsUpload$files$`0`)
+            file <- input$DataLoader_MChromatogramsUpload$files$`0`
+            file_name <- input$DataLoader_MChromatogramsUpload$files$`0`[[n]]
+            root <- paste0(input$DataLoader_MChromatogramsUpload$root, ":")
+            text <- paste0(file[2:(n-1)], collapse = nowsep)
+            text <- paste0(root, nowsep, text, nowsep, file_name)
+            if(is.null(values$MChromatograms)){
+              values$MChromatograms <- readRDS(text)
+              message <- text
+              if(!is.null(attributes(values$MChromatograms)$prepared)) values$prepared <- attributes(values$MChromatograms)$prepared
+            }
+          }else message <- NULL
+          output$DataLoader_text4 <- renderText({message})
+        })
+      }
+
+      # DataLoader_download
+      {
+        output$DataLoader_download <- downloadHandler(
+          filename = function() {
+            paste0("MChromatograms", ".rds")
+          },
+          content = function(file){
+            if(!is.null(values$MChromatograms)){
+              saveRDS(values$MChromatograms, file = file)
+            }
           }
+        )
+      }
+    }
+
+    # IS checking
+    {
+      # ISCheck_prepare
+      {
+        observeEvent(input$ISCheck_prepare, {
+          id <- notify("Peak picking and prepare...")
+          on.exit(removeNotification(id), add = TRUE)
+          if(!is.null(values$MChromatograms) & !is.null(values$windowInfo) & !is.null(values$sampleInfo) & !values$prepared){
+            if(input$ISCheck_fwhm == 0) fwhm <- NA
+            else fwhm <- input$ISCheck_fwhm
+            if(any(input$ISCheck_peakWidth == 0)) peakWidth <- NA
+            else peakWidth <- input$ISCheck_peakWidth
+            peakPara <- get_peakPara(sn = input$ISCheck_sn, above = input$ISCheck_above, preNum = input$ISCheck_preNum, extend = input$ISCheck_extend, tol_m = input$ISCheck_tolM, fwhm = fwhm, peakWidth = peakWidth, snthresh = input$ISCheck_snthresh, xcms = input$ISCheck_xcms)
+            smoothPara <- get_smoothPara(smooth = as.logical(input$ISCheck_smooth), method = input$ISCheck_smoothMethod, size = input$ISCheck_smoothSize, p = input$ISCheck_smoothP, m = input$ISCheck_smoothM, ts = input$ISCheck_smoothTs)
+            baselinePara <- get_baselinePara(threshold = input$ISCheck_baselineThreshold, tol_m = input$ISCheck_baselineTolM, loops = input$ISCheck_loops)
+            if(input$ISCheck_noise < 0) noise <- NA
+            else noise <- input$ISCheck_noise
+            #browser()
+            values$MChromatograms <- peakPicking_MChromatograms(MChromatograms = values$MChromatograms, thread = round(values$ncore * 0.8), unit = values$rtUnit, noise = noise, noiseMag = input$ISCheck_noiseMag, smoothPara = smoothPara, baselinePara = baselinePara, peakPara = peakPara)
+            values$MChromatograms <- prepare_MChromatograms(MChromatograms = values$MChromatograms,
+                                                            windowInfo = values$windowInfo, sampleInfo = values$sampleInfo,
+                                                            unit = values$rtUnit, thread = round(values$ncore * 0.4))
+            values$prepared <- TRUE
+            attributes(values$MChromatograms)$prepared <- TRUE
+          }
+        })
+        observeEvent(values$prepared, {
+          if(values$prepared & !is.null(values$batchNameVector)){
+            values$cols_batchs <- lapply(values$batchNameVector, function(x) .getCol4batchName(MChromatograms = values$MChromatograms, batchName = x))
+            names(values$cols_batchs) <- values$batchNameVector
+            values$rows_IS <- .getRow4analyteType(MChromatograms = values$MChromatograms, analyteType = "IS")
+            values$rows_Quant <- .getRow4analyteType(MChromatograms = values$MChromatograms, analyteType = "Quant")
+            values$rows_Qual <- .getRow4analyteType(MChromatograms = values$MChromatograms, analyteType = "Qual")
+            updateSelectInput(session, "ISCheck_batchName", choices = values$batchNameVector, selected = values$batchNameVector[1])
+            values$sampleNameVector <- sapply(1:ncol(values$MChromatograms), function(j) {
+              strsplit(basename(attributes(values$MChromatograms[1, j])$sample_name), split = ".", fixed = TRUE)[[1]][1]
+            })
+            values$analyteNameVector <- sapply(1:nrow(values$MChromatograms), function(i) {
+              attributes(values$MChromatograms[i, 1])$analyteName
+            })
+            updateSelectInput(session, "ISCheck_analyteName", choices = values$analyteNameVector[values$rows_IS], selected = values$analyteNameVector[values$rows_IS][1])
+          }
+        })
+      }
+      # ISCheck_sampleName
+      {
+        observeEvent(input$ISCheck_batchName, {
+          if(input$ISCheck_batchName != "none" & !is.null(values$sampleNameVector)){
+            updateSelectInput(session, "ISCheck_sampleName", choices = values$sampleNameVector[values$cols_batchs[[input$ISCheck_batchName]]], selected = values$sampleNameVector[values$cols_batchs[[input$ISCheck_batchName]]][1])
+          }
+        })
+      }
+      # ISCheck_Plot and update UI
+      {
+        observe({
+          if(values$prepared & input$ISCheck_sampleName != "none" & input$ISCheck_analyteName != "none" & !is.null(values$MChromatograms)){
+            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
+            col <- .getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$ISCheck_sampleName)
+            peakPara <- attributes(values$MChromatograms[row, col])$peakPara
+            updateSliderInput(session, inputId = "ISCheck_sn", value = peakPara$sn)
+            updateRadioButtons(session, inputId = "ISCheck_above", selected = peakPara$above)
+            updateSliderInput(session, inputId = "ISCheck_preNum", value = peakPara$preNum)
+            updateSliderInput(session, inputId = "ISCheck_extend", value = peakPara$extend)
+            updateSliderInput(session, inputId = "ISCheck_tolM", value = peakPara$tol_m)
+            if(is.na(peakPara$fwhm)) fwhm <- 0
+            else fwhm <- peakPara$fwhm
+            updateSliderInput(session, inputId = "ISCheck_fwhm", value = fwhm)
+            if(is.na(peakPara$peakWidth)) peakWidth <- c(0, 0)
+            else peakWidth <- peakPara$peakWidth
+            updateSliderInput(session, inputId = "ISCheck_peakWidth", value = peakWidth)
+            updateSliderInput(session, inputId = "ISCheck_snthresh", value = peakPara$snthresh)
+            updateRadioButtons(session, inputId = "ISCheck_xcms", selected = peakPara$xcms)
+            smoothPara <- attributes(values$MChromatograms[row, col])$smoothPara
+            updateRadioButtons(session, inputId = "ISCheck_smooth", selected = as.character(smoothPara$smooth))
+            updateRadioButtons(session, inputId = "ISCheck_smoothMethod", selected = smoothPara$method)
+            updateSliderInput(session, inputId = "ISCheck_smoothSize", value = smoothPara$size)
+            updateSliderInput(session, inputId = "ISCheck_smoothP", value = smoothPara$p)
+            updateSliderInput(session, inputId = "ISCheck_smoothM", value = smoothPara$m)
+            updateSliderInput(session, inputId = "ISCheck_smoothTs", value = smoothPara$ts)
+            baselinePara <- attributes(values$MChromatograms[row, col])$baselinePara
+            updateSliderInput(session, inputId = "ISCheck_baselineThreshold", value = baselinePara$threshold)
+            updateSliderInput(session, inputId = "ISCheck_baselineTolM", value = baselinePara$tol_m)
+            updateSliderInput(session, inputId = "ISCheck_loops", value = baselinePara$loops)
+            updateNumericInput(session, inputId = "ISCheck_expectRt", value = attributes(values$MChromatograms[row, col])$expectRt)
+            updateNumericInput(session, inputId = "ISCheck_noise", value = round(attributes(values$MChromatograms[row, col])$noise))
+            updateSliderInput(session, inputId = "ISCheck_noiseMag", value = attributes(values$MChromatograms[row, col])$noiseMag)
+            output$ISCheck_Plot1 <- renderPlot({
+              if(input$ISCheck_PlotType == "Single"){
+                plotMChromatograms(MChromatograms = values$MChromatograms, rows = row, cols = col, targetPeak = as.logical(input$ISCheck_targetPeak))
+              }else{
+                cols <- values$cols_batchs[[input$ISCheck_batchName]]
+                areaVec <- sapply(cols, function(j) {
+                  if(!is.null(attributes(values$MChromatograms[row, j])$targetPeak)){
+                    targetPeak_tmp <- attributes(values$MChromatograms[row, j])$targetPeak[[1]]
+                    as.numeric(targetPeak_tmp["area"])
+                  }else return(0)
+                })
+                standard_cols <- cols[which.max(areaVec)]
+                plotMChromatograms(MChromatograms = values$MChromatograms, rows = row, cols = c(standard_cols, col), targetPeak = as.logical(input$ISCheck_targetPeak))
+              }
+            })
+            output$ISCheck_Plot2 <- plotly::renderPlotly({
+              plotHeatMap_MChromatogramsRow(MChromatograms = values$MChromatograms, row = row,cols = values$cols_batchs[[input$ISCheck_batchName]])
+            })
+          }
+        })
+      }
+      # ISCheck_extractIS_all
+      {
+        observeEvent(input$ISCheck_extractIS_all, {
+          id <- notify("Extract IS...")
+          on.exit(removeNotification(id), add = TRUE)
+          if(values$prepared & !is.null(values$MChromatograms)){
+            values$MChromatograms <- extractTargetPeak_MChromatograms(values$MChromatograms, rows = values$rows_IS, cols = 1:ncol(values$MChromatograms), targetRt = NA, tolRt = 10)
+          }
+        })
+      }
+      # ISCheck_peakPicking
+      {
+        observeEvent(input$ISCheck_peakPicking, {
+          id <- notify("Peak Picking...")
+          on.exit(removeNotification(id), add = TRUE)
+          if(values$prepared & input$ISCheck_sampleName != "none" & input$ISCheck_analyteName != "none" & !is.null(values$MChromatograms)){
+            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
+            col <- .getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$ISCheck_sampleName)
+            if(input$ISCheck_fwhm == 0) fwhm <- NA
+            else fwhm <- input$ISCheck_fwhm
+            if(any(input$ISCheck_peakWidth == 0)) peakWidth <- NA
+            else peakWidth <- input$ISCheck_peakWidth
+            peakPara <- get_peakPara(sn = input$ISCheck_sn, above = input$ISCheck_above, preNum = input$ISCheck_preNum, extend = input$ISCheck_extend, tol_m = input$ISCheck_tolM, fwhm = fwhm, peakWidth = peakWidth, snthresh = input$ISCheck_snthresh, xcms = input$ISCheck_xcms)
+            smoothPara <- get_smoothPara(smooth = as.logical(input$ISCheck_smooth), method = input$ISCheck_smoothMethod, size = input$ISCheck_smoothSize, p = input$ISCheck_smoothP, m = input$ISCheck_smoothM, ts = input$ISCheck_smoothTs)
+            baselinePara <- get_baselinePara(threshold = input$ISCheck_baselineThreshold, tol_m = input$ISCheck_baselineTolM, loops = input$ISCheck_loops)
+            if(input$ISCheck_noise < 0) noise <- NA
+            else noise <- input$ISCheck_noise
+            values$MChromatograms <- peakPicking_MChromatograms2(MChromatograms = values$MChromatograms,
+                                                                 rows = row, cols = col, noise = noise, noiseMag = input$ISCheck_noiseMag,
+                                                                 peakPara = peakPara, smoothPara = smoothPara, baselinePara = baselinePara)
+            #browser()
+          }
+        })
+      }
+      # ISCheck_extract
+      {
+        observeEvent(input$ISCheck_extract, {
+          id <- notify("Extract target peak...")
+          on.exit(removeNotification(id), add = TRUE)
+          if(values$prepared & input$ISCheck_sampleName != "none" & input$ISCheck_analyteName != "none" & !is.null(values$MChromatograms)){
+            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
+            col <- .getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$ISCheck_sampleName)
+            values$MChromatograms <- extractTargetPeak_MChromatograms(values$MChromatograms, rows = row, cols = col, targetRt = input$ISCheck_expectRt)
+          }
+        })
+      }
+      # ISCheck_peakPickingBatch
+      {
+        observeEvent(input$ISCheck_peakPickingBatch, {
+          id <- notify("Peak Picking Batch...")
+          on.exit(removeNotification(id), add = TRUE)
+          if(values$prepared & input$ISCheck_sampleName != "none" & input$ISCheck_analyteName != "none" & !is.null(values$MChromatograms)){
+            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
+            cols <- values$cols_batchs[[input$ISCheck_batchName]]
+            if(input$ISCheck_fwhm == 0) fwhm <- NA
+            else fwhm <- input$ISCheck_fwhm
+            if(any(input$ISCheck_peakWidth == 0)) peakWidth <- NA
+            else peakWidth <- input$ISCheck_peakWidth
+            peakPara <- get_peakPara(sn = input$ISCheck_sn, above = input$ISCheck_above, preNum = input$ISCheck_preNum, extend = input$ISCheck_extend, tol_m = input$ISCheck_tolM, fwhm = fwhm, peakWidth = peakWidth, snthresh = input$ISCheck_snthresh, xcms = input$ISCheck_xcms)
+            smoothPara <- get_smoothPara(smooth = as.logical(input$ISCheck_smooth), method = input$ISCheck_smoothMethod, size = input$ISCheck_smoothSize, p = input$ISCheck_smoothP, m = input$ISCheck_smoothM, ts = input$ISCheck_smoothTs)
+            baselinePara <- get_baselinePara(threshold = input$ISCheck_baselineThreshold, tol_m = input$ISCheck_baselineTolM, loops = input$ISCheck_loops)
+            if(input$ISCheck_noise < 0) noise <- NA
+            else noise <- input$ISCheck_noise
+            values$MChromatograms <- peakPicking_MChromatograms2(MChromatograms = values$MChromatograms,
+                                                                 rows = row, cols = cols, noise = noise, noiseMag = input$ISCheck_noiseMag,
+                                                                 peakPara = peakPara, smoothPara = smoothPara, baselinePara = baselinePara)
+          }
+        })
+      }
+      # ISCheck_extractBatch
+      {
+        observeEvent(input$ISCheck_extractBatch, {
+          id <- notify("Extract Batch...")
+          on.exit(removeNotification(id), add = TRUE)
+          if(values$prepared & input$ISCheck_sampleName != "none" & input$ISCheck_analyteName != "none" & !is.null(values$MChromatograms)){
+            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
+            cols <- values$cols_batchs[[input$ISCheck_batchName]]
+            values$MChromatograms <- extractTargetPeak_MChromatograms(values$MChromatograms, rows = row, cols = cols, targetRt = input$ISCheck_expectRt)
+          }
+        })
+      }
+      # ISCheck_debug
+      {
+        observeEvent(input$ISCheck_debug, {
+          browser()
         })
       }
     }
