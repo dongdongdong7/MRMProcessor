@@ -157,3 +157,52 @@ plotMChromatograms <- function(MChromatograms, rows, cols, ncol = NA,
   else ncol <- ncol
   cowplot::plot_grid(plotlist = p_list, ncol = ncol)
 }
+
+.plotChromatogram_interactive <- function(Chromatogram,
+                                         xlim = NA, ylim = NA,
+                                         intColour = "black", intLinewidth = 1,
+                                         axis.title.size = 15, axis.text.size = 10,
+                                         title.size = 15, text.size = 15, text.colour = "red",
+                                         fillColour = "gray", targetPeak = TRUE){
+  p <- .plotFun(int = Chromatogram@intensity, rt = Chromatogram@rtime,
+                xlim = xlim, ylim = ylim,
+                intColour = intColour, intLinewidth = intLinewidth,
+                axis.title.size = axis.title.size, axis.text.size = axis.text.size)
+  p$data$baseline <- attributes(Chromatogram)$baseline
+  sample_name <- strsplit(basename(attributes(Chromatogram)$sample_name), ".", fixed = TRUE)[[1]][1]
+  chrInfo <- attributes(Chromatogram)$chrInfo
+  if(!is.null(attributes(Chromatogram)$analyteName)) analyte_name <- attributes(Chromatogram)$analyteName
+  else analyte_name <- purrr::pluck(strsplit(regmatches(chrInfo$chromatogramId, regexpr("name=(.+)", chrInfo$chromatogramId, perl = TRUE)), "name=")[[1]], 2)
+  p <- p +
+    ggplot2::labs(title = analyte_name, subtitle = sample_name) +
+    ggplot2::theme(title = ggplot2::element_text(size = title.size)) +
+    ggplot2::annotate("text",
+                      x = min(Chromatogram@rtime) + (max(Chromatogram@rtime) - min(Chromatogram@rtime)) * 0.1,
+                      y = min(Chromatogram@intensity) + (max(Chromatogram@intensity) - min(Chromatogram@intensity)) * 0.9,
+                      label = paste0(Chromatogram@precursorMz[1], " - ", Chromatogram@productMz[1]),
+                      color = text.colour) +
+    ggplot2::geom_line(ggplot2::aes(y = baseline), col = "red", linewidth = 1, linetype = "dashed") +
+    ggplot2::annotate("segment", x = min(Chromatogram@rtime), xend = max(Chromatogram@rtime), y = attributes(Chromatogram)$noise, yend = attributes(Chromatogram)$noise, linetype = "dashed")
+  if(targetPeak){
+    peaksInfo <- attributes(Chromatogram)$targetPeak
+  }else{
+    peaksInfo <- attributes(Chromatogram)$peaksInfo
+  }
+  if(!is.null(peaksInfo)){
+    for(i in 1:length(peaksInfo)){
+      #browser()
+      df <- p$data
+      peakInfo <- peaksInfo[[i]]
+      x_start <- peakInfo["start"];x_end <- peakInfo["end"]
+      df_new <- subset(df, rt == x_start | rt == x_end)
+      p <- p +
+        ggplot2::geom_ribbon(data = subset(df, rt >= x_start & rt <= x_end),
+                             ggplot2::aes(ymin = baseline, ymax = int), fill = fillColour, alpha = 0.5) +
+        ggplot2::geom_point(data = subset(df, rt == x_start | rt == x_end),
+                            ggplot2::aes(x = rt, y = int), col = "black") +
+        ggplot2::annotate("segment", x = df_new$rt, xend = df_new$rt, y = df_new$baseline, yend = df_new$int, linetype = "dashed")
+    }
+  }
+  plotly::ggplotly(p)
+}
+

@@ -121,6 +121,10 @@ library(gridlayout)
                   inputId = "ISCheck_extractIS_all"
                 ),
                 actionButton(
+                  label = "Correction IS",
+                  inputId = "ISCheck_correctionIS_all"
+                ),
+                actionButton(
                   label = "debug",
                   inputId = "ISCheck_debug"
                 )
@@ -142,7 +146,8 @@ library(gridlayout)
         ),
         grid_card(
           area = "area2",
-          plotOutput(outputId = "ISCheck_Plot1", width = "100%"),
+          uiOutput("ISCheck_Plot1UI"),
+          #plotly::plotlyOutput(outputId = "ISCheck_Plot1", width = "100%"),
           plotly::plotlyOutput(outputId = "ISCheck_Plot2", width = "100%")
         ),
         grid_card(
@@ -153,9 +158,11 @@ library(gridlayout)
               numericInput("ISCheck_noise", label = "Select noise", min = -1, max = 100000000, step = 1, value = -1),
               sliderInput("ISCheck_noiseMag", label = "Select noiseMag", min = 2, max = 4, step = 1, value = 3),
               actionButton("ISCheck_peakPicking", label = "Peak Picking"),
-              actionButton("ISCheck_extract", label = "Extract"),
               actionButton("ISCheck_peakPickingBatch", label = "Peak Picking Batch"),
-              actionButton("ISCheck_extractBatch", label = "Extract Batch")
+              actionButton("ISCheck_extract", label = "Extract"),
+              actionButton("ISCheck_extractBatch", label = "Extract Batch"),
+              actionButton("ISCheck_correction", label = "Correction"),
+              actionButton("ISCheck_correctionBatch", label = "Correction Batch")
             ),
             nav_panel(
               title = "smoothPara",
@@ -171,6 +178,114 @@ library(gridlayout)
               sliderInput("ISCheck_baselineThreshold", label = "Select baseline threshold", min = 1, max = 10, step = 1, value = 1),
               sliderInput("ISCheck_baselineTolM", label = "Select baseline tol_m", min = 0, max = 50, step = 0.5, value = 10),
               sliderInput("ISCheck_loops", label = "Select loops", min = 1, max = 10, step = 1, value = 6)
+            )
+          )
+        )
+      )
+    ),
+    nav_panel(
+      title = "Analyte Checking",
+      grid_container(
+        layout = c(
+          "area1 area2 area3"
+        ),
+        gap_size = "0px",
+        col_sizes = c(
+          "0.5fr",
+          "1.49fr",
+          "0.5000000000000001fr"
+        ),
+        row_sizes = c(
+          "1.5fr"
+        ),
+        grid_card(
+          area = "area1",
+          card_body(
+            tabsetPanel(
+              nav_panel(
+                title = "Window",
+                selectInput(
+                  label = "Batch Name",
+                  choices = "none",
+                  selected = "none",
+                  inputId = "AnalyteCheck_batchName"
+                ),
+                selectInput(
+                  label = "Sample Name",
+                  choices = "none",
+                  selected = "none",
+                  inputId = "AnalyteCheck_sampleName"
+                ),
+                selectInput(
+                  label = "Analyte Name",
+                  choices = "none",
+                  selected = "none",
+                  inputId = "AnalyteCheck_analyteName"
+                ),
+                numericInput("AnalyteCheck_expectRt", label = "Expect Rtime", min = 0, max = 1000, value = 100, step = 0.5),
+                radioButtons("AnalyteCheck_targetPeak", label = "Show Target", choices = c("TRUE" = "TRUE", "FALSE" = "FALSE"), selected = "FALSE"),
+                radioButtons("AnalyteCheck_PlotType", label = "Plot Type", choices = c("Single" = "Single", "Compare" = "Compare"), selected = "Single", inline = TRUE),
+                actionButton(
+                  label = "Correction Analyte",
+                  inputId = "AnalyteCheck_correctionAnalyte_all"
+                ),
+                actionButton(
+                  label = "Extract Analyte",
+                  inputId = "AnalyteCheck_extractAnalyte_all"
+                ),
+                actionButton(
+                  label = "debug",
+                  inputId = "AnalyteCheck_debug"
+                )
+              ),
+              nav_panel(
+                title = "Parameter",
+                sliderInput("AnalyteCheck_sn", label = "Select sn", min = 0, max = 10, step = 1, value = 3),
+                radioButtons("AnalyteCheck_above", label = "Select above method", choices = c("baseline" = "baseline", "noise" = "noise"), selected = "baseline"),
+                sliderInput("AnalyteCheck_preNum", label = "Select preNum", min = 3, max = 10, step = 1, value = 3),
+                sliderInput("AnalyteCheck_extend", label = "Select extend", min = 1, max = 10, step = 1, value = 5),
+                sliderInput("AnalyteCheck_tolM", label = "Select tol_m", min = 0, max = 50, step = 0.5, value = 10),
+                sliderInput("AnalyteCheck_fwhm", label = "Select fwhm", min = 0, max = 50, step = 1, value = 0),
+                sliderInput("AnalyteCheck_peakWidth", label = "Select peak width", min = 0, max = 50, value = c(0, 10), step = 1),
+                sliderInput("AnalyteCheck_snthresh", label = "Select snthresh", min = 0, max = 10, step = 0.5, value = 0.5),
+                radioButtons("AnalyteCheck_xcms", label = "Select a method", choices = c("BOTH" = "BOTH", "ORIGN" = "ORIGN", "CentWave" = "CentWave", "MatchedFilter" = "MatchedFilter"), selected = "BOTH")
+              )
+            )
+          )
+        ),
+        grid_card(
+          area = "area2",
+          uiOutput("AnalyteCheck_Plot1UI"),
+          plotly::plotlyOutput(outputId = "AnalyteCheck_Plot2", width = "100%")
+        ),
+        grid_card(
+          area = "area3",
+          tabsetPanel(
+            nav_panel(
+              title = "noise",
+              numericInput("AnalyteCheck_noise", label = "Select noise", min = -1, max = 100000000, step = 1, value = -1),
+              sliderInput("AnalyteCheck_noiseMag", label = "Select noiseMag", min = 2, max = 4, step = 1, value = 3),
+              actionButton("AnalyteCheck_peakPicking", label = "Peak Picking"),
+              actionButton("AnalyteCheck_peakPickingBatch", label = "Peak Picking Batch"),
+              actionButton("AnalyteCheck_correction", label = "Correction"),
+              actionButton("AnalyteCheck_correctionBatch", label = "Correction Batch"),
+              actionButton("AnalyteCheck_extract", label = "Extract"),
+              actionButton("AnalyteCheck_extractBatch", label = "Extract Batch")
+            ),
+            nav_panel(
+              title = "smoothPara",
+              radioButtons("AnalyteCheck_smooth", label = "Smooth or not", choices = c("TRUE" = "TRUE", "FALSE" = "FALSE"), selected = "TRUE"),
+              radioButtons("AnalyteCheck_smoothMethod", label = "Select a smooth method", choices = c("mean" = "mean", "sg" = "sg"), selected = "mean"),
+              sliderInput("AnalyteCheck_smoothSize", label = "Select smooth size", min = 3, max = 11, step = 2, value = 3),
+              sliderInput("AnalyteCheck_smoothP", label = "Select smooth p", min = 1, max = 10, step = 1, value = 3),
+              sliderInput("AnalyteCheck_smoothM", label = "Select smooth m", min = 0, max = 10, step = 1, value = 0),
+              sliderInput("AnalyteCheck_smoothTs", label = "Select smooth th", min = 1, max = 10, step = 1, value = 1)
+            ),
+            nav_panel(
+              title = "baselinePara",
+              sliderInput("AnalyteCheck_baselineThreshold", label = "Select baseline threshold", min = 1, max = 10, step = 1, value = 1),
+              sliderInput("AnalyteCheck_baselineTolM", label = "Select baseline tol_m", min = 0, max = 50, step = 0.5, value = 10),
+              sliderInput("AnalyteCheck_loops", label = "Select loops", min = 1, max = 10, step = 1, value = 6)
             )
           )
         )
@@ -214,6 +329,16 @@ library(gridlayout)
         values$cols_batchs <- NULL
         values$batchNameVector <- NULL
         values$prepared <- FALSE
+      }
+      # IS Checking
+      {
+        values$IS_extracted <- FALSE
+        values$IS_corrected <- FALSE
+      }
+      # Analyte Checking
+      {
+        values$Analyte_corrected <- FALSE
+        values$Analyte_extracted <- FALSE
       }
     }
 
@@ -331,6 +456,8 @@ library(gridlayout)
               values$MChromatograms <- readRDS(text)
               message <- text
               if(!is.null(attributes(values$MChromatograms)$prepared)) values$prepared <- attributes(values$MChromatograms)$prepared
+              if(!is.null(attributes(values$MChromatograms)$IS_extracted)) values$IS_extracted <- attributes(values$MChromatograms)$IS_extracted
+              if(!is.null(attributes(values$MChromatograms)$IS_corrected)) values$IS_corrected <- attributes(values$MChromatograms)$IS_corrected
             }
           }else message <- NULL
           output$DataLoader_text4 <- renderText({message})
@@ -345,6 +472,9 @@ library(gridlayout)
           },
           content = function(file){
             if(!is.null(values$MChromatograms)){
+              if(values$prepared) attributes(values$MChromatograms)$prepared <- TRUE
+              if(values$IS_extracted) attributes(values$MChromatograms)$IS_extracted <- TRUE
+              if(values$IS_corrected) attributes(values$MChromatograms)$IS_corrected <- TRUE
               saveRDS(values$MChromatograms, file = file)
             }
           }
@@ -375,7 +505,6 @@ library(gridlayout)
                                                             windowInfo = values$windowInfo, sampleInfo = values$sampleInfo,
                                                             unit = values$rtUnit, thread = round(values$ncore * 0.4))
             values$prepared <- TRUE
-            attributes(values$MChromatograms)$prepared <- TRUE
           }
         })
         observeEvent(values$prepared, {
@@ -419,7 +548,7 @@ library(gridlayout)
             if(is.na(peakPara$fwhm)) fwhm <- 0
             else fwhm <- peakPara$fwhm
             updateSliderInput(session, inputId = "ISCheck_fwhm", value = fwhm)
-            if(is.na(peakPara$peakWidth)) peakWidth <- c(0, 0)
+            if(any(is.na(peakPara$peakWidth))) peakWidth <- c(0, 0)
             else peakWidth <- peakPara$peakWidth
             updateSliderInput(session, inputId = "ISCheck_peakWidth", value = peakWidth)
             updateSliderInput(session, inputId = "ISCheck_snthresh", value = peakPara$snthresh)
@@ -438,10 +567,14 @@ library(gridlayout)
             updateNumericInput(session, inputId = "ISCheck_expectRt", value = attributes(values$MChromatograms[row, col])$expectRt)
             updateNumericInput(session, inputId = "ISCheck_noise", value = round(attributes(values$MChromatograms[row, col])$noise))
             updateSliderInput(session, inputId = "ISCheck_noiseMag", value = attributes(values$MChromatograms[row, col])$noiseMag)
-            output$ISCheck_Plot1 <- renderPlot({
+            output$ISCheck_Plot1UI <- renderUI({
               if(input$ISCheck_PlotType == "Single"){
-                plotMChromatograms(MChromatograms = values$MChromatograms, rows = row, cols = col, targetPeak = as.logical(input$ISCheck_targetPeak))
+                plotly::plotlyOutput(outputId = "ISCheck_Plot1", width = "100%")
+                output$ISCheck_Plot1 <- plotly::renderPlotly({
+                  .plotChromatogram_interactive(Chromatogram = values$MChromatograms[row, col], targetPeak = as.logical(input$ISCheck_targetPeak))
+                })
               }else{
+                plotOutput(outputId = "ISCheck_Plot1")
                 cols <- values$cols_batchs[[input$ISCheck_batchName]]
                 areaVec <- sapply(cols, function(j) {
                   if(!is.null(attributes(values$MChromatograms[row, j])$targetPeak)){
@@ -450,7 +583,9 @@ library(gridlayout)
                   }else return(0)
                 })
                 standard_cols <- cols[which.max(areaVec)]
-                plotMChromatograms(MChromatograms = values$MChromatograms, rows = row, cols = c(standard_cols, col), targetPeak = as.logical(input$ISCheck_targetPeak))
+                output$ISCheck_Plot1 <- renderPlot({
+                  plotMChromatograms(MChromatograms = values$MChromatograms, rows = row, cols = c(standard_cols, col), targetPeak = as.logical(input$ISCheck_targetPeak))
+                })
               }
             })
             output$ISCheck_Plot2 <- plotly::renderPlotly({
@@ -466,6 +601,7 @@ library(gridlayout)
           on.exit(removeNotification(id), add = TRUE)
           if(values$prepared & !is.null(values$MChromatograms)){
             values$MChromatograms <- extractTargetPeak_MChromatograms(values$MChromatograms, rows = values$rows_IS, cols = 1:ncol(values$MChromatograms), targetRt = NA, tolRt = 10)
+            values$IS_extracted <- TRUE
           }
         })
       }
@@ -537,6 +673,41 @@ library(gridlayout)
             row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
             cols <- values$cols_batchs[[input$ISCheck_batchName]]
             values$MChromatograms <- extractTargetPeak_MChromatograms(values$MChromatograms, rows = row, cols = cols, targetRt = input$ISCheck_expectRt)
+          }
+        })
+      }
+      # ISCheck_correctionIS_all
+      {
+        observeEvent(input$ISCheck_correctionIS_all, {
+          id <- notify("Correction IS...")
+          on.exit(removeNotification(id), add = TRUE)
+          if(values$prepared & values$IS_extracted & input$ISCheck_sampleName != "none" & input$ISCheck_analyteName != "none" & !is.null(values$MChromatograms)){
+            values$MChromatograms <- rtCorrection_IS(MChromatograms = values$MChromatograms, rows = NA, cols = 1:ncol(values$MChromatograms))
+            values$IS_corrected <- TRUE
+          }
+        })
+      }
+      # ISCheck_correcrion
+      {
+        observeEvent(input$ISCheck_correction, {
+          id <- notify("Correction...")
+          on.exit(removeNotification(id), add = TRUE)
+          if(values$prepared & values$IS_extracted & input$ISCheck_sampleName != "none" & input$ISCheck_analyteName != "none" & !is.null(values$MChromatograms)){
+            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
+            col <- .getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$ISCheck_sampleName)
+            values$MChromatograms <- rtCorrection_IS(MChromatograms = values$MChromatograms, rows = row, cols = col)
+          }
+        })
+      }
+      # ISCheck_correctionBatch
+      {
+        observeEvent(input$ISCheck_correctionBatch, {
+          id <- notify("Correction Batch...")
+          on.exit(removeNotification(id), add = TRUE)
+          if(values$prepared & values$IS_extracted & input$ISCheck_sampleName != "none" & input$ISCheck_analyteName != "none" & !is.null(values$MChromatograms)){
+            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
+            cols <- values$cols_batchs[[input$ISCheck_batchName]]
+            values$MChromatograms <- rtCorrection_IS(MChromatograms = values$MChromatograms, rows = row, cols = cols)
           }
         })
       }
