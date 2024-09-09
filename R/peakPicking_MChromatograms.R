@@ -103,13 +103,9 @@ peakPicking_MChromatograms2 <- function(MChromatograms, rows, cols, noise = NA, 
   loop <- function(l){
     i <- combinations[l, ]$i;j <- combinations[l, ]$j
     Chromatogram <- MChromatograms[i, j]
-    smoothPara_old <- attributes(Chromatogram)$smoothPara
-    if(smoothPara$smooth) smoothPara_new <- smoothPara
-    else smoothPara_new <- smoothPara_old
     Chromatogram <- peakPicking_Chromatogram(Chromatogram = Chromatogram, noise = noise, noiseMag = noiseMag,
                                              smoothPara = smoothPara, baselinePara = baselinePara,
                                              peakPara = peakPara)
-    attributes(Chromatogram)$smoothPara <- smoothPara_new
     return(Chromatogram)
   }
   if((length(rows) * length(cols)) < 20) thread <- 1 # If the number of peakPicking objects is small, force the number of threads to be 1
