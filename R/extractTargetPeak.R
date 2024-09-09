@@ -20,7 +20,6 @@ extractTargetPeak_Chromatogram <- function(Chromatogram, targetRt = NA, tolRt = 
     if(!is.null(attributes(Chromatogram)$expectRt)) targetRt <- attributes(Chromatogram)$expectRt
     else stop("You should run prepare_MChromatograms function first!")
   }
-  attributes(Chromatogram)$expectRt <- targetRt
   if(!is.null(attributes(Chromatogram)$peaksInfo)){
     apex_rt <- sapply(attributes(Chromatogram)$peaksInfo, function(x) {x["apex"]})
     target_idx <- which(seq.int(length(apex_rt)) == which.min(abs(apex_rt - targetRt)) & abs(apex_rt - targetRt) < tolRt)
