@@ -4,7 +4,7 @@
 \alias{rtCorrection_analyte}
 \title{rtCorrection_analyte}
 \usage{
-rtCorrection_analyte(MChromatograms, rows = NA, cols, thread = 4)
+rtCorrection_analyte(MChromatograms, rows = NA, cols, thread = 4, deltaRt = NA)
 }
 \arguments{
 \item{MChromatograms}{MChromatograms.}
@@ -14,6 +14,8 @@ rtCorrection_analyte(MChromatograms, rows = NA, cols, thread = 4)
 \item{cols}{cols.}
 
 \item{thread}{thread.}
+
+\item{deltaRt}{deltaRt.}
 }
 \value{
 MChromatograms object.

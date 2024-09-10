@@ -89,13 +89,14 @@ rtCorrection_IS <- function(MChromatograms, rows = NA, cols){
 #' @param rows rows.
 #' @param cols cols.
 #' @param thread thread.
+#' @param deltaRt deltaRt.
 #'
 #' @return MChromatograms object.
 #' @export
 #'
 #' @examples
 #' MChromatograms_new <- rtCorrection_analyte(MChromatograms = MChromatograms_new, rows = NA, cols = cols_batch1)
-rtCorrection_analyte <- function(MChromatograms, rows = NA, cols, thread = 4){
+rtCorrection_analyte <- function(MChromatograms, rows = NA, cols, thread = 4, deltaRt = NA){
   nrow <- nrow(MChromatograms)
   ncol <- ncol(MChromatograms)
   if(any(is.na(rows))) rows <- c(.getRow4analyteType(MChromatograms, analyteType = "Quant"), .getRow4analyteType(MChromatograms, analyteType = "Qual"))
@@ -112,11 +113,20 @@ rtCorrection_analyte <- function(MChromatograms, rows = NA, cols, thread = 4){
   loop <- function(l){
     i <- combinations[l, ]$i;j <- combinations[l, ]$j
     Chromatogram <- MChromatograms[i, j]
+    if(!is.null(attributes(Chromatogram)$deltaRt)) return(Chromatogram)
     relatedIS <- attributes(Chromatogram)$relatedIS
     row_IS <- .getRow4analyteName(MChromatograms, analyteNameVec = relatedIS)
     if(length(row_IS) > 1) stop("analytyName cannot have duplicates!")
     Chromatogram_IS <- MChromatograms[row_IS, j]
-    deltaRt <- attributes(Chromatogram_IS)$deltaRt
+    if(is.null(attributes(Chromatogram_IS)$deltaRt) & is.na(deltaRt)) return(Chromatogram)
+    else{
+      if(is.na(deltaRt)){
+        deltaRt <- attributes(Chromatogram_IS)$deltaRt
+        attributes(Chromatogram)$deltaRt <- deltaRt
+      }else{
+        attributes(Chromatogram)$deltaRt <- deltaRt
+      }
+    }
     if(!is.null(attributes(Chromatogram)$peaksInfo)){
       peaks_idx <- lapply(attributes(Chromatogram)$peaksInfo, function(x) {
         apex_idx <- which(x["apex"] == attributes(Chromatogram)$rtime)
