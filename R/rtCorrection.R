@@ -162,7 +162,7 @@ rtCorrection_analyte <- function(MChromatograms, rows = NA, cols, thread = 4, de
     opts <- list(progress = function(n) utils::setTxtProgressBar(pb,
                                                                  n))
     chrs <- unlist(foreach::`%dopar%`(foreach::foreach(l = 1:nrow(combinations),
-                                                       .export = c(".getRow4analyteName"),
+                                                       .export = c(".getRow4analyteName", "deltaRt"),
                                                        .packages = c("MSnbase"),
                                                        .options.snow = opts),
                                       {
