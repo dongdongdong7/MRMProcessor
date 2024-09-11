@@ -34,9 +34,9 @@
   #browser()
   int_norm <- (int_new - min(int_new)) / (max(int_new) - min(int_new))
   rt_norm <- (rt_new - min(rt_new)) / (max(rt_new) - min(rt_new))
-  a_start <- apex_idx - ((preNum - 1) / 2) - 1
+  a_start <- apex_idx - round((preNum - 1) / 2) - 1
   if(a_start <= 1) a_start <- 1
-  b_start <- apex_idx + ((preNum - 1) / 2) + 1
+  b_start <- apex_idx + round((preNum - 1) / 2) + 1
   if(b_start >= length(int_norm)) b_start <- length(int_norm)
   a <- a_start;b <- b_start
   while(a!=1){
