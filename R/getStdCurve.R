@@ -76,6 +76,27 @@ GetStdCurve <- function(MChromatograms, row, batchName, weights = "1/x^2", delet
   return(stdCurveRes)
 }
 
+GetStdCurve_MChromatograms <- function(MChromatograms, sampleInfo, weights = "1/x^2"){
+  rows_Quant <- .getRow4analyteType(MChromatograms, analyteType = c("Quant"))
+  batchNameVector <- unique(sampleInfo$batchName)
+  cols_batchs <- lapply(batchNameVector, function(x) .getCol4batchName(MChromatograms = MChromatograms, batchName = x))
+  names(cols_batchs) <- batchNameVector
+  stdCurveResList <- lapply(rows_Quant, function(i) {
+    lapply(batchNameVector, function(x) {
+      GetStdCurve(MChromatograms, row = i, batchName = x)
+    })
+  })
+  stdCurveResList <- purrr::list_flatten(stdCurveResList)
+  k <- 1
+  for(i in rows_Quant){
+    for(j in sapply(cols_batchs, function(x) purrr::pluck(x, 1))){
+      attributes(MChromatograms[i, j])$stdCurveRes <- stdCurveResList[[k]]
+      k <- k + 1
+    }
+  }
+  return(MChromatograms)
+}
+
 #' @title plotStdCurve
 #' @description
 #' Plotting the standard curve.
