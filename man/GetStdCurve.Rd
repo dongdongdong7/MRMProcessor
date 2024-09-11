@@ -4,7 +4,14 @@
 \alias{GetStdCurve}
 \title{GetStdCurve}
 \usage{
-GetStdCurve(MChromatograms, row, batchName, weights = "1/x^2", delete = c())
+GetStdCurve(
+  MChromatograms,
+  row,
+  batchName,
+  weights = "1/x^2",
+  delete = c(),
+  zero = FALSE
+)
 }
 \arguments{
 \item{MChromatograms}{MChromatograms object.}
@@ -16,6 +23,8 @@ GetStdCurve(MChromatograms, row, batchName, weights = "1/x^2", delete = c())
 \item{weights}{weights.None, 1/x, 1/x^2.}
 
 \item{delete}{Serial numbers of the samples to be deleted, sorted in the order of injection.}
+
+\item{zero}{Whether the marking curve passes the zero point.}
 }
 \value{
 A stdCurve list.

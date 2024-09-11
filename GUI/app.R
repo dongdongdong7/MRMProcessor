@@ -110,7 +110,7 @@ library(gridlayout)
                   inputId = "ISCheck_analyteName"
                 ),
                 numericInput("ISCheck_expectRt", label = "Expect Rtime", min = 0, max = 1000, value = 100, step = 0.5),
-                radioButtons("ISCheck_targetPeak", label = "Show Target", choices = c("TRUE" = "TRUE", "FALSE" = "FALSE"), selected = "FALSE"),
+                radioButtons("ISCheck_targetPeak", label = "Show Target", choices = c("TRUE" = "TRUE", "FALSE" = "FALSE"), selected = "FALSE", inline = TRUE),
                 radioButtons("ISCheck_PlotType", label = "Plot Type", choices = c("Single" = "Single", "Compare" = "Compare"), selected = "Single", inline = TRUE),
                 actionButton(
                   label = "Prepare",
@@ -223,15 +223,20 @@ library(gridlayout)
                   inputId = "AnalyteCheck_analyteName"
                 ),
                 numericInput("AnalyteCheck_expectRt", label = "Expect Rtime", min = 0, max = 1000, value = 100, step = 0.5),
-                radioButtons("AnalyteCheck_targetPeak", label = "Show Target", choices = c("TRUE" = "TRUE", "FALSE" = "FALSE"), selected = "FALSE"),
+                numericInput("AnalyteCheck_deltaRt", label = "Delta Rtime", min = 0, max = 100, value = 5, step = 0.5),
+                radioButtons("AnalyteCheck_targetPeak", label = "Show Target", choices = c("TRUE" = "TRUE", "FALSE" = "FALSE"), selected = "FALSE", inline = TRUE),
                 radioButtons("AnalyteCheck_PlotType", label = "Plot Type", choices = c("Single" = "Single", "Compare" = "Compare"), selected = "Single", inline = TRUE),
                 actionButton(
-                  label = "Correction Analyte",
+                  label = "Correct Analyte",
                   inputId = "AnalyteCheck_correctionAnalyte_all"
                 ),
                 actionButton(
                   label = "Extract Analyte",
                   inputId = "AnalyteCheck_extractAnalyte_all"
+                ),
+                actionButton(
+                  label = "Standard Curve",
+                  inputId = "AnalyteCheck_standardCurve"
                 ),
                 actionButton(
                   label = "debug",
@@ -240,7 +245,7 @@ library(gridlayout)
               ),
               nav_panel(
                 title = "Parameter",
-                sliderInput("AnalyteCheck_sn", label = "Select sn", min = 0, max = 10, step = 1, value = 3),
+                sliderInput("AnalyteCheck_sn", label = "Select sn", min = 0, max = 10, step = 0.5, value = 3),
                 radioButtons("AnalyteCheck_above", label = "Select above method", choices = c("baseline" = "baseline", "noise" = "noise"), selected = "baseline"),
                 sliderInput("AnalyteCheck_preNum", label = "Select preNum", min = 3, max = 10, step = 1, value = 3),
                 sliderInput("AnalyteCheck_extend", label = "Select extend", min = 1, max = 10, step = 1, value = 5),
@@ -255,8 +260,21 @@ library(gridlayout)
         ),
         grid_card(
           area = "area2",
-          uiOutput("AnalyteCheck_Plot1UI"),
-          plotly::plotlyOutput(outputId = "AnalyteCheck_Plot2", width = "100%")
+          tabsetPanel(
+            nav_panel(
+              title = "Chromatogram",
+              uiOutput("AnalyteCheck_Plot1UI"),
+              plotly::plotlyOutput(outputId = "AnalyteCheck_Plot2", width = "100%")
+            ),
+            nav_panel(
+              title = "Standard Curve",
+              plotly::plotlyOutput(outputId = "AnalyteCheck_Plot3", width = "100%"),
+              checkboxGroupInput(inputId = "AnalyteCheck_delete", label = "Delete Points", choices = NULL, selected = NULL, inline = TRUE),
+              radioButtons(inputId = "AnalyteCheck_weights", label = "Weights", choices = c("none" = "none", "1/x" = "1/x", "1/x^2" = "1/x^2"), selected = "1/x^2", inline = TRUE),
+              radioButtons(inputId = "AnalyteCheck_zero", label = "Zero Point", choices = c("TRUE" = "TRUE", "FALSE" = "FALSE"), selected = "FALSE"),
+              actionButton(inputId = "AnalyteCheck_stdCurve_single", label = "Update stdCurve", width = "20%")
+            )
+          )
         ),
         grid_card(
           area = "area3",
@@ -286,6 +304,39 @@ library(gridlayout)
               sliderInput("AnalyteCheck_baselineThreshold", label = "Select baseline threshold", min = 1, max = 10, step = 1, value = 1),
               sliderInput("AnalyteCheck_baselineTolM", label = "Select baseline tol_m", min = 0, max = 50, step = 0.5, value = 10),
               sliderInput("AnalyteCheck_loops", label = "Select loops", min = 1, max = 10, step = 1, value = 6)
+            )
+          )
+        )
+      )
+    ),
+    nav_panel(
+      title = "Result Output",
+      grid_container(
+        layout = c(
+          "area1 area2"
+        ),
+        gap_size = "0px",
+        col_sizes = c(
+          "250px",
+          "1fr"
+        ),
+        row_sizes = c(
+          "1.50fr"
+        ),
+        grid_card(
+          area = "area1",
+          card_body(
+            actionButton("ResultOutput_calculateCon", label = "Calculate concentration"),
+            downloadButton("ResultOutput_download", label = "Download Concentration Table")
+          )
+        ),
+        grid_card(
+          area = "area2",
+          card_body(
+            DTOutput(
+              outputId = "ResultOutput_conTb",
+              width = "100%",
+              height = "100%"
             )
           )
         )
@@ -339,6 +390,11 @@ library(gridlayout)
       {
         values$Analyte_corrected <- FALSE
         values$Analyte_extracted <- FALSE
+        values$stdCurved <- FALSE
+      }
+      # Result Output
+      {
+        values$conTb <- NULL
       }
     }
 
@@ -458,6 +514,9 @@ library(gridlayout)
               if(!is.null(attributes(values$MChromatograms)$prepared)) values$prepared <- attributes(values$MChromatograms)$prepared
               if(!is.null(attributes(values$MChromatograms)$IS_extracted)) values$IS_extracted <- attributes(values$MChromatograms)$IS_extracted
               if(!is.null(attributes(values$MChromatograms)$IS_corrected)) values$IS_corrected <- attributes(values$MChromatograms)$IS_corrected
+              if(!is.null(attributes(values$MChromatograms)$Analyte_corrected)) values$Analyte_corrected <- attributes(values$MChromatograms)$Analyte_corrected
+              if(!is.null(attributes(values$MChromatograms)$Analyte_extracted)) values$Analyte_extracted <-attributes(values$MChromatograms)$Analyte_extracted
+              if(!is.null(attributes(values$MChromatograms)$stdCurved)) values$stdCurved <- attributes(values$MChromatograms)$stdCurved
             }
           }else message <- NULL
           output$DataLoader_text4 <- renderText({message})
@@ -475,6 +534,9 @@ library(gridlayout)
               if(values$prepared) attributes(values$MChromatograms)$prepared <- TRUE
               if(values$IS_extracted) attributes(values$MChromatograms)$IS_extracted <- TRUE
               if(values$IS_corrected) attributes(values$MChromatograms)$IS_corrected <- TRUE
+              if(values$Analyte_corrected) attributes(values$MChromatograms)$Analyte_corrected <- TRUE
+              if(values$Analyte_extracted) attributes(values$MChromatograms)$Analyte_extracted <- TRUE
+              if(values$stdCurved) attributes(values$MChromatograms)$stdCurved <- TRUE
               saveRDS(values$MChromatograms, file = file)
             }
           }
@@ -482,7 +544,7 @@ library(gridlayout)
       }
     }
 
-    # IS checking
+    # IS Checking
     {
       # ISCheck_prepare
       {
@@ -717,6 +779,288 @@ library(gridlayout)
           browser()
         })
       }
+    }
+
+    # Analyte Checking
+    {
+      # Analyte Checking initial
+      {
+        observeEvent(values$IS_corrected, {
+          if(values$IS_corrected & !is.null(values$MChromatograms)){
+            updateSelectInput(session, "AnalyteCheck_batchName", choices = values$batchNameVector, selected = values$batchNameVector[1])
+            updateSelectInput(session, "AnalyteCheck_analyteName", choices = values$analyteNameVector[c(values$rows_Quant, values$rows_Qual)], selected = values$analyteNameVector[c(values$rows_Quant, values$rows_Qual)][1])
+          }
+        })
+      }
+      # AnalyteCheck_sampleName
+      {
+        observeEvent(input$AnalyteCheck_batchName, {
+          if(input$AnalyteCheck_batchName != "none" & !is.null(values$sampleNameVector)){
+            updateSelectInput(session, "AnalyteCheck_sampleName", choices = values$sampleNameVector[values$cols_batchs[[input$AnalyteCheck_batchName]]], selected = values$sampleNameVector[values$cols_batchs[[input$AnalyteCheck_batchName]]][1])
+          }
+        })
+      }
+      # AnalyteCheck_correctionAnalyte_all
+      {
+        observeEvent(input$AnalyteCheck_correctionAnalyte_all, {
+          id <- notify("Correct Analyte...")
+          on.exit(removeNotification(id), add = TRUE)
+          if(values$IS_corrected & !is.null(values$MChromatograms)){
+            values$MChromatograms <- rtCorrection_analyte(MChromatograms = values$MChromatograms, rows = NA, cols = 1:ncol(values$MChromatograms), thread = round(values$ncore * 0.8))
+            values$Analyte_corrected <- TRUE
+          }
+        })
+      }
+      # AnalyteCheck_extractAnalyte_all
+      {
+        observeEvent(input$AnalyteCheck_extractAnalyte_all, {
+          id <- notify("Extract Analyte...")
+          on.exit(removeNotification(id), add = TRUE)
+          if(values$Analyte_corrected & !is.null(values$MChromatograms)){
+            values$MChromatograms <- extractTargetPeak_MChromatograms(MChromatograms = values$MChromatograms, rows = c(values$rows_Quant, values$rows_Qual), cols = 1:ncol(values$MChromatograms), targetRt = NA, tolRt = 5)
+            values$Analyte_extracted <- TRUE
+          }
+        })
+      }
+      # AnalyteCheck_standardCurve
+      {
+        observeEvent(input$AnalyteCheck_standardCurve, {
+          id <- notify("Calculate standard curve...")
+          on.exit(removeNotification(id), add = TRUE)
+          if(values$IS_corrected & values$IS_extracted){
+            values$MChromatograms <- GetStdCurve_MChromatograms(values$MChromatograms, sampleInfo = values$sampleInfo)
+            values$stdCurved <- TRUE
+          }
+        })
+      }
+      # AnalyteCheck_plot and update UI
+      {
+        observe({
+          if(values$IS_corrected & values$Analyte_corrected & !is.null(values$MChromatograms) & input$AnalyteCheck_sampleName != "none" & input$AnalyteCheck_analyteName != "none"){
+            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
+            col <- .getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$AnalyteCheck_sampleName)
+            peakPara <- attributes(values$MChromatograms[row, col])$peakPara
+            updateSliderInput(session, inputId = "AnalyteCheck_sn", value = peakPara$sn)
+            updateRadioButtons(session, inputId = "AnalyteCheck_above", selected = peakPara$above)
+            updateSliderInput(session, inputId = "AnalyteCheck_preNum", value = peakPara$preNum)
+            updateSliderInput(session, inputId = "AnalyteCheck_extend", value = peakPara$extend)
+            updateSliderInput(session, inputId = "AnalyteCheck_tolM", value = peakPara$tol_m)
+            if(is.na(peakPara$fwhm)) fwhm <- 0
+            else fwhm <- peakPara$fwhm
+            updateSliderInput(session, inputId = "AnalyteCheck_fwhm", value = fwhm)
+            if(any(is.na(peakPara$peakWidth))) peakWidth <- c(0, 0)
+            else peakWidth <- peakPara$peakWidth
+            updateSliderInput(session, inputId = "AnalyteCheck_peakWidth", value = peakWidth)
+            updateSliderInput(session, inputId = "AnalyteCheck_snthresh", value = peakPara$snthresh)
+            updateRadioButtons(session, inputId = "AnalyteCheck_xcms", selected = peakPara$xcms)
+            smoothPara <- attributes(values$MChromatograms[row, col])$smoothPara
+            updateRadioButtons(session, inputId = "AnalyteCheck_smooth", selected = as.character(smoothPara$smooth))
+            updateRadioButtons(session, inputId = "AnalyteCheck_smoothMethod", selected = smoothPara$method)
+            updateSliderInput(session, inputId = "AnalyteCheck_smoothSize", value = smoothPara$size)
+            updateSliderInput(session, inputId = "AnalyteCheck_smoothP", value = smoothPara$p)
+            updateSliderInput(session, inputId = "AnalyteCheck_smoothM", value = smoothPara$m)
+            updateSliderInput(session, inputId = "AnalyteCheck_smoothTs", value = smoothPara$ts)
+            baselinePara <- attributes(values$MChromatograms[row, col])$baselinePara
+            updateSliderInput(session, inputId = "AnalyteCheck_baselineThreshold", value = baselinePara$threshold)
+            updateSliderInput(session, inputId = "AnalyteCheck_baselineTolM", value = baselinePara$tol_m)
+            updateSliderInput(session, inputId = "AnalyteCheck_loops", value = baselinePara$loops)
+            updateNumericInput(session, inputId = "AnalyteCheck_expectRt", value = attributes(values$MChromatograms[row, col])$expectRt)
+            if(is.null(attributes(values$MChromatograms[row, col])$deltaRt)) deltaRt <- 0
+            else deltaRt <- round(attributes(values$MChromatograms[row, col])$deltaRt, 4)
+            updateNumericInput(session, inputId = "AnalyteCheck_deltaRt", value = deltaRt)
+            updateNumericInput(session, inputId = "AnalyteCheck_noise", value = round(attributes(values$MChromatograms[row, col])$noise))
+            updateSliderInput(session, inputId = "AnalyteCheck_noiseMag", value = attributes(values$MChromatograms[row, col])$noiseMag)
+            output$AnalyteCheck_Plot1UI <- renderUI({
+              if(input$AnalyteCheck_PlotType == "Single"){
+                plotly::plotlyOutput(outputId = "AnalyteCheck_Plot1", width = "100%")
+                output$AnalyteCheck_Plot1 <- plotly::renderPlotly({
+                  .plotChromatogram_interactive(Chromatogram = values$MChromatograms[row, col], targetPeak = as.logical(input$AnalyteCheck_targetPeak))
+                })
+              }else{
+                plotOutput(outputId = "AnalyteCheck_Plot1")
+                cols <- values$cols_batchs[[input$AnalyteCheck_batchName]]
+                areaVec <- sapply(cols, function(j) {
+                  if(!is.null(attributes(values$MChromatograms[row, j])$targetPeak)){
+                    targetPeak_tmp <- attributes(values$MChromatograms[row, j])$targetPeak[[1]]
+                    as.numeric(targetPeak_tmp["area"])
+                  }else return(0)
+                })
+                standard_cols <- cols[which.max(areaVec)]
+                output$AnalyteCheck_Plot1 <- renderPlot({
+                  plotMChromatograms(MChromatograms = values$MChromatograms, rows = row, cols = c(standard_cols, col), targetPeak = as.logical(input$AnalyteCheck_targetPeak))
+                })
+              }
+            })
+            output$AnalyteCheck_Plot2 <- plotly::renderPlotly({
+              plotHeatMap_MChromatogramsRow(MChromatograms = values$MChromatograms, row = row, cols = values$cols_batchs[[input$AnalyteCheck_batchName]])
+            })
+          }
+          if(values$stdCurved){
+            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
+            batchName <- input$AnalyteCheck_batchName
+            if(row %in% values$rows_Quant){
+              stdCurveRes <- attributes(values$MChromatograms[row, values$cols_batchs[[batchName]][1]])$stdCurveRes
+              delete_injectOrder <- stdCurveRes$df$injectOrder
+              names(delete_injectOrder) <- as.character(stdCurveRes$df$injectOrder)
+              delete_injectOrder <- c("none" = "none", delete_injectOrder)
+              if(is.null(stdCurveRes$delete)) select <- "none"
+              else{
+                select <- as.character(stdCurveRes$delete)
+              }
+              updateCheckboxGroupInput(session, inputId = "AnalyteCheck_delete", choices = delete_injectOrder, selected = select)
+              updateRadioButtons(session, inputId = "AnalyteCheck_weights", selected = stdCurveRes$weights)
+              updateRadioButtons(session, inputId = "AnalyteCheck_zero", selected = as.character(stdCurveRes$zero))
+              output$AnalyteCheck_Plot3 <- plotly::renderPlotly({
+                plotStdCurve(attributes(values$MChromatograms[row, values$cols_batchs[[batchName]][1]])$stdCurveRes)
+              })
+            }else{
+              output$AnalyteCheck_Plot3 <- plotly::renderPlotly({
+                plotly::ggplotly(ggplot2::ggplot(data = NULL))
+              })
+            }
+          }
+        })
+      }
+      # AnalyteCheck_peakPicking
+      {
+        observeEvent(input$AnalyteCheck_peakPicking, {
+          id <- notify("Peak Picking...")
+          on.exit(removeNotification(id), add = TRUE)
+          if(values$Analyte_corrected & values$Analyte_extracted & input$AnalyteCheck_sampleName != "none" & input$AnalyteCheck_analyteName != "none" & !is.null(values$MChromatograms)){
+            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
+            col <- .getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$AnalyteCheck_sampleName)
+            if(input$AnalyteCheck_fwhm == 0) fwhm <- NA
+            else fwhm <- input$AnalyteCheck_fwhm
+            if(any(input$AnalyteCheck_peakWidth == 0)) peakWidth <- NA
+            else peakWidth <- input$AnalyteCheck_peakWidth
+            peakPara <- get_peakPara(sn = input$AnalyteCheck_sn, above = input$AnalyteCheck_above, preNum = input$AnalyteCheck_preNum, extend = input$AnalyteCheck_extend, tol_m = input$AnalyteCheck_tolM, fwhm = fwhm, peakWidth = peakWidth, snthresh = input$AnalyteCheck_snthresh, xcms = input$AnalyteCheck_xcms)
+            smoothPara <- get_smoothPara(smooth = as.logical(input$AnalyteCheck_smooth), method = input$AnalyteCheck_smoothMethod, size = input$AnalyteCheck_smoothSize, p = input$AnalyteCheck_smoothP, m = input$AnalyteCheck_smoothM, ts = input$AnalyteCheck_smoothTs)
+            baselinePara <- get_baselinePara(threshold = input$AnalyteCheck_baselineThreshold, tol_m = input$AnalyteCheck_baselineTolM, loops = input$AnalyteCheck_loops)
+            if(input$AnalyteCheck_noise < 0) noise <- NA
+            else noise <- input$AnalyteCheck_noise
+            values$MChromatograms <- peakPicking_MChromatograms2(MChromatograms = values$MChromatograms,
+                                                                 rows = row, cols = col, noise = noise, noiseMag = input$AnalyteCheck_noiseMag,
+                                                                 peakPara = peakPara, smoothPara = smoothPara, baselinePara = baselinePara)
+          }
+        })
+      }
+      # AnalyteCheck_peakPickingBatch
+      {
+        observeEvent(input$AnalyteCheck_peakPickingBatch, {
+          id <- notify("Peak Picking Batch...")
+          on.exit(removeNotification(id), add = TRUE)
+          if(values$Analyte_corrected & values$Analyte_extracted & input$AnalyteCheck_sampleName != "none" & input$AnalyteCheck_analyteName != "none" & !is.null(values$MChromatograms)){
+            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
+            cols <- values$cols_batchs[[input$AnalyteCheck_batchName]]
+            if(input$AnalyteCheck_fwhm == 0) fwhm <- NA
+            else fwhm <- input$AnalyteCheck_fwhm
+            if(any(input$AnalyteCheck_peakWidth == 0)) peakWidth <- NA
+            else peakWidth <- input$AnalyteCheck_peakWidth
+            peakPara <- get_peakPara(sn = input$AnalyteCheck_sn, above = input$AnalyteCheck_above, preNum = input$AnalyteCheck_preNum, extend = input$AnalyteCheck_extend, tol_m = input$AnalyteCheck_tolM, fwhm = fwhm, peakWidth = peakWidth, snthresh = input$AnalyteCheck_snthresh, xcms = input$AnalyteCheck_xcms)
+            smoothPara <- get_smoothPara(smooth = as.logical(input$AnalyteCheck_smooth), method = input$AnalyteCheck_smoothMethod, size = input$AnalyteCheck_smoothSize, p = input$AnalyteCheck_smoothP, m = input$AnalyteCheck_smoothM, ts = input$AnalyteCheck_smoothTs)
+            baselinePara <- get_baselinePara(threshold = input$AnalyteCheck_baselineThreshold, tol_m = input$AnalyteCheck_baselineTolM, loops = input$AnalyteCheck_loops)
+            if(input$AnalyteCheck_noise < 0) noise <- NA
+            else noise <- input$AnalyteCheck_noise
+            values$MChromatograms <- peakPicking_MChromatograms2(MChromatograms = values$MChromatograms,
+                                                                 rows = row, cols = cols, noise = noise, noiseMag = input$AnalyteCheck_noiseMag,
+                                                                 peakPara = peakPara, smoothPara = smoothPara, baselinePara = baselinePara)
+          }
+        })
+      }
+      # AnalyteCheck_correction
+      {
+        observeEvent(input$AnalyteCheck_correction, {
+          id <- notify("Correction...")
+          on.exit(removeNotification(id), add = TRUE)
+          if(values$Analyte_corrected & values$Analyte_extracted & input$AnalyteCheck_sampleName != "none" & input$AnalyteCheck_analyteName != "none" & !is.null(values$MChromatograms)){
+            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
+            col <- .getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$AnalyteCheck_sampleName)
+            values$MChromatograms <- rtCorrection_analyte(MChromatograms = values$MChromatograms, rows = row, cols = col, thread = 1,deltaRt = input$AnalyteCheck_deltaRt)
+          }
+        })
+      }
+      # AnalyteCheck_correctionBatch
+      {
+        observeEvent(input$AnalyteCheck_correctionBatch, {
+          id <- notify("Correction Batch...")
+          on.exit(removeNotification(id), add = TRUE)
+          if(values$prepared & values$IS_extracted & input$AnalyteCheck_sampleName != "none" & input$AnalyteCheck_analyteName != "none" & !is.null(values$MChromatograms)){
+            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
+            cols <- values$cols_batchs[[input$AnalyteCheck_batchName]]
+            values$MChromatograms <- rtCorrection_analyte(MChromatograms = values$MChromatograms, rows = row, cols = cols, thread = round(values$ncore) * 0.2, deltaRt = input$AnalyteCheck_deltaRt)
+          }
+        })
+      }
+      # AnalyteCheck_extract
+      {
+        observeEvent(input$AnalyteCheck_extract, {
+          id <- notify("Extract target peak...")
+          on.exit(removeNotification(id), add = TRUE)
+          if(values$prepared & input$AnalyteCheck_sampleName != "none" & input$AnalyteCheck_analyteName != "none" & !is.null(values$MChromatograms)){
+            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
+            col <- .getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$AnalyteCheck_sampleName)
+            values$MChromatograms <- extractTargetPeak_MChromatograms(values$MChromatograms, rows = row, cols = col, targetRt = input$AnalyteCheck_expectRt, tolRt = 5)
+          }
+        })
+      }
+      # AnalyteCheck_extractBatch
+      {
+        observeEvent(input$AnalyteCheck_extractBatch, {
+          id <- notify("Extract Batch...")
+          on.exit(removeNotification(id), add = TRUE)
+          if(values$prepared & input$AnalyteCheck_sampleName != "none" & input$AnalyteCheck_analyteName != "none" & !is.null(values$MChromatograms)){
+            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
+            cols <- values$cols_batchs[[input$AnalyteCheck_batchName]]
+            values$MChromatograms <- extractTargetPeak_MChromatograms(values$MChromatograms, rows = row, cols = cols, targetRt = input$AnalyteCheck_expectRt, tolRt = 5)
+          }
+        })
+      }
+      # AnalyteCheck_stdCurve_single
+      {
+        observeEvent(input$AnalyteCheck_stdCurve_single, {
+          id <- notify("Update stdCurve...")
+          on.exit(removeNotification(id), add = TRUE)
+          row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
+          batchName <- input$AnalyteCheck_batchName
+          if(row %in% values$rows_Quant & values$stdCurved){
+            if(any(input$AnalyteCheck_delete == "none")){
+              delete <- c()
+            }else{
+              delete <- as.integer(input$AnalyteCheck_delete)
+            }
+            stdCurveRes_new <- GetStdCurve(values$MChromatograms, row = row, batchName = batchName, weights = input$AnalyteCheck_weights, delete = delete, zero = as.logical(input$AnalyteCheck_zero))
+            attributes(values$MChromatograms[row, values$cols_batchs[[batchName]][1]])$stdCurveRes <- stdCurveRes_new
+          }
+        })
+      }
+      # AnalyteCheck debug
+      {
+        observeEvent(input$AnalyteCheck_debug, {
+          browser()
+        })
+      }
+    }
+
+    # Result Output
+    {
+      observeEvent(input$ResultOutput_calculateCon, {
+        id <- notify("Calculate Concentration...")
+        on.exit(removeNotification(id), add = TRUE)
+        if(values$stdCurved){
+          values$conTb <- cal_concentration(values$MChromatograms, sampleInfo = values$sampleInfo)
+          output$ResultOutput_conTb <- renderDT({
+            values$conTb
+          }, options = list(columnDefs = list(list(className = "dt-center", targets = "_all")), pageLength = 12))
+        }
+      })
+      output$ResultOutput_download <- downloadHandler(
+        filename = function() {
+          paste0("concentration", ".xlsx")
+        },
+        content = function(file){
+          if(!is.null(values$conTb)) openxlsx::write.xlsx(values$conTb, file = file)
+        }
+      )
     }
   }
 }

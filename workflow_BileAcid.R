@@ -202,3 +202,9 @@ plotHeatMap_MChromatogramsRow(MChromatograms = MChromatograms, row = rows_IS[29]
 MChromatograms <- extractTargetPeak_MChromatograms(MChromatograms, rows = rows_IS[29], cols = cols_batchs[[2]],
                                                    targetRt = 275, tolRt = 10)
 plotMChromatograms(MChromatograms, rows = rows_IS[29], cols = cols_batchs[[2]])
+
+# new plot fun test
+MChromatograms_test <- readRDS("D:/fudan/tmp/MChromatograms_prepared.rds")
+plotChromatogram(MChromatograms_test[1,2])
+
+
