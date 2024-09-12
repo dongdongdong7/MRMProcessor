@@ -74,3 +74,33 @@ extractTargetPeak_MChromatograms <- function(MChromatograms, rows, cols, targetR
   MSnbase::MChromatograms(chrs_all,
                           ncol = ncol)
 }
+
+extractTargetPeak_IS <- function(MChromatograms){
+  rows_IS <- .getRow4analyteType(MChromatograms, analyteType = c("IS"))
+  nrow <- nrow(MChromatograms)
+  ncol <- ncol(MChromatograms)
+  chrs_all <- MChromatograms[,1:ncol , drop = TRUE]
+  combinations <- expand.grid(rows_IS, 1:ncol)
+  colnames(combinations) <- c("i", "j")
+  chrs_idx <- sapply(1:nrow(combinations), function(l) {
+    i <- combinations[l, ]$i;j <- combinations[l, ]$j
+    (j - 1) * nrow + i
+  })
+  chrs <- lapply(1:nrow(combinations), function(l) {
+    i <- combinations[l, ]$i;j <- combinations[l, ]$j
+    Chromatogram <- MChromatograms[i, j]
+    peaksInfo <- attributes(Chromatogram)$peaksInfo
+    if(is.null(peaksInfo)) targetRt <- NA
+    else{
+      areaVec <- sapply(1:length(peaksInfo), function(m) {
+        peaksInfo[[m]]["area"]
+      })
+      targetRt <- peaksInfo[[which.max(areaVec)]]["apex"]
+    }
+    Chromatogram <- extractTargetPeak_Chromatogram(Chromatogram, targetRt = targetRt, tolRt = 5)
+    return(Chromatogram)
+  })
+  chrs_all[chrs_idx] <- chrs
+  MSnbase::MChromatograms(chrs_all,
+                          ncol = ncol)
+}

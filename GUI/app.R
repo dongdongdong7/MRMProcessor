@@ -133,7 +133,7 @@ library(gridlayout)
                 title = "Parameter",
                 sliderInput("ISCheck_sn", label = "Select sn", min = 0, max = 10, step = 1, value = 3),
                 radioButtons("ISCheck_above", label = "Select above method", choices = c("baseline" = "baseline", "noise" = "noise"), selected = "baseline"),
-                sliderInput("ISCheck_preNum", label = "Select preNum", min = 3, max = 10, step = 1, value = 3),
+                sliderInput("ISCheck_preNum", label = "Select preNum", min = 3, max = 10, step = 1, value = 8),
                 sliderInput("ISCheck_extend", label = "Select extend", min = 1, max = 10, step = 1, value = 5),
                 sliderInput("ISCheck_tolM", label = "Select tol_m", min = 0, max = 50, step = 0.5, value = 10),
                 sliderInput("ISCheck_fwhm", label = "Select fwhm", min = 0, max = 50, step = 1, value = 0),
@@ -176,7 +176,7 @@ library(gridlayout)
             nav_panel(
               title = "baselinePara",
               sliderInput("ISCheck_baselineThreshold", label = "Select baseline threshold", min = 1, max = 10, step = 1, value = 1),
-              sliderInput("ISCheck_baselineTolM", label = "Select baseline tol_m", min = 0, max = 50, step = 0.5, value = 10),
+              sliderInput("ISCheck_baselineTolM", label = "Select baseline tol_m", min = 0, max = 50, step = 0.5, value = 30),
               sliderInput("ISCheck_loops", label = "Select loops", min = 1, max = 10, step = 1, value = 6)
             )
           )
@@ -326,6 +326,8 @@ library(gridlayout)
         grid_card(
           area = "area1",
           card_body(
+            actionButton("ResultOutput_areaOutput", label = "Generate Area Table"),
+            downloadButton("ResultOutput_download_areaTb", label = "Download Area Table"),
             actionButton("ResultOutput_calculateCon", label = "Calculate concentration"),
             downloadButton("ResultOutput_download", label = "Download Concentration Table")
           )
@@ -333,10 +335,23 @@ library(gridlayout)
         grid_card(
           area = "area2",
           card_body(
-            DTOutput(
-              outputId = "ResultOutput_conTb",
-              width = "100%",
-              height = "100%"
+            tabsetPanel(
+              nav_panel(
+                title = "Area Table",
+                DTOutput(
+                  outputId = "ResultOutput_areaTb",
+                  width = "100%",
+                  height = "100%"
+                )
+              ),
+              nav_panel(
+                title = "Concentration Table",
+                DTOutput(
+                  outputId = "ResultOutput_conTb",
+                  width = "100%",
+                  height = "100%"
+                )
+              )
             )
           )
         )
@@ -394,6 +409,7 @@ library(gridlayout)
       }
       # Result Output
       {
+        values$areaTb <- NULL
         values$conTb <- NULL
       }
     }
@@ -662,7 +678,8 @@ library(gridlayout)
           id <- notify("Extract IS...")
           on.exit(removeNotification(id), add = TRUE)
           if(values$prepared & !is.null(values$MChromatograms)){
-            values$MChromatograms <- extractTargetPeak_MChromatograms(values$MChromatograms, rows = values$rows_IS, cols = 1:ncol(values$MChromatograms), targetRt = NA, tolRt = 10)
+            #values$MChromatograms <- extractTargetPeak_MChromatograms(values$MChromatograms, rows = values$rows_IS, cols = 1:ncol(values$MChromatograms), targetRt = NA, tolRt = 10)
+            values$MChromatograms <- extractTargetPeak_IS(MChromatograms = values$MChromatograms)
             values$IS_extracted <- TRUE
           }
         })
@@ -1059,6 +1076,24 @@ library(gridlayout)
         },
         content = function(file){
           if(!is.null(values$conTb)) openxlsx::write.xlsx(values$conTb, file = file)
+        }
+      )
+      observeEvent(input$ResultOutput_areaOutput, {
+        id <- notify("Generate Area Table...")
+        on.exit(removeNotification(id), add = TRUE)
+        if(!is.null(values$MChromatograms) & values$Analyte_extracted){
+          values$areaTb <- generate_area(values$MChromatograms)
+          output$ResultOutput_areaTb <- renderDT({
+            values$areaTb
+          }, options = list(columnDefs = list(list(className = "dt-center", targets = "_all")), pageLength = 12))
+        }
+      })
+      output$ResultOutput_download_areaTb <- downloadHandler(
+        filename = function() {
+          paste0("area", ".xlsx")
+        },
+        content = function(file){
+          if(!is.null(values$areaTb)) openxlsx::write.xlsx(values$areaTb, file = file)
         }
       )
     }
