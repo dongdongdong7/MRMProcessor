@@ -111,10 +111,6 @@ cal_concentration <- function(MChromatograms, sampleInfo){
   sampleNameVector <- sapply(cols_real, function(j) {
     strsplit(basename(attributes(MChromatograms[1, j])$sample_name), split = ".", fixed = TRUE)[[1]][1]
   })
-  mat <- matrix(data = NA, ncol = 1+length(cols_real), nrow = length(analyteNameVector))
-  df <- as.data.frame(mat)
-  colnames(df) <- c("analyteName", sampleNameVector)
-  df$analyteName <- analyteNameVector
   dfList <- lapply(rows_Quant, function(i) {
     conVec <- sapply(cols_real, function(j) {
       if(is.null(attributes(MChromatograms[i, j])$targetPeak)) area_analyte <- 0
@@ -132,6 +128,27 @@ cal_concentration <- function(MChromatograms, sampleInfo){
       return(con)
     })
     df <- as.data.frame(matrix(conVec, nrow = 1))
+    return(df)
+  })
+  df <- purrr::list_rbind(dfList)
+  rownames(df) <- analyteNameVector
+  colnames(df) <- sampleNameVector
+  tb <- df %>%
+    tibble::rownames_to_column("analyteName")
+}
+
+generate_area <- function(MChromatograms){
+  analyteNameVector <- sapply(1:nrow(MChromatograms), function(i) {attributes(MChromatograms[i, 1])$analyteName})
+  sampleNameVector <- sapply(1:ncol(MChromatograms), function(j) {
+    strsplit(basename(attributes(MChromatograms[1, j])$sample_name), split = ".", fixed = TRUE)[[1]][1]
+  })
+  dfList <- lapply(1:nrow(MChromatograms), function(i) {
+    areaVec <- sapply(1:ncol(MChromatograms), function(j) {
+      if(is.null(attributes(MChromatograms[i, j])$targetPeak)) area <- 0
+      else area <- as.numeric(attributes(MChromatograms[i, j])$targetPeak[[1]]["area"])
+      return(area)
+    })
+    df <- as.data.frame(matrix(areaVec, nrow = 1))
     return(df)
   })
   df <- purrr::list_rbind(dfList)
