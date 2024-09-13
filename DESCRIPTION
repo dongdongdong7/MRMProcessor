@@ -24,6 +24,8 @@ Imports:
     plotly,
     pracma,
     purrr,
+    shiny,
+    shinyFiles,
     signal,
     snow,
     utils,

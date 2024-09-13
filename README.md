@@ -1,3 +1,13 @@
+# MRMProcessor
+
+## Install
+
+```R
+# install.packages("devtools")
+devtools::install_github("dongdongdong7/MRMProcessor")
+devtools::install_github("rstudio/gridlayout")
+```
+
 # Workflow
 
 ```R
