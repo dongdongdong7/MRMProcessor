@@ -3,7 +3,6 @@ library(shiny)
 library(bslib)
 library(DT)
 library(gridlayout)
-library(MRMProcessor)
 
 # UI
 {
@@ -464,7 +463,7 @@ library(MRMProcessor)
               message <- folderPath;values$dataDir <- folderPath;values$dataPath <- file_path
               id <- notify("Loading Raw Data...")
               on.exit(removeNotification(id), add = TRUE)
-              values$MChromatograms <- readMRMData(file_path, thread = round(values$ncore * 0.4))
+              values$MChromatograms <- MRMProcessor::readMRMData(file_path, thread = round(values$ncore * 0.4))
             }
           }
           else message <- NULL
@@ -483,7 +482,7 @@ library(MRMProcessor)
             text <- paste0(file[2:(n-1)], collapse = nowsep)
             text <- paste0(root, nowsep, text, nowsep, file_name)
             values$sampleInfoPath <- text
-            values$sampleInfo <- read_sampleInfo(values$sampleInfoPath)
+            values$sampleInfo <- MRMProcessor::read_sampleInfo(values$sampleInfoPath)
             values$batchNameVector <- unique(values$sampleInfo$batchName)
             message <- text
           }else message <- NULL
@@ -507,7 +506,7 @@ library(MRMProcessor)
             text <- paste0(file[2:(n-1)], collapse = nowsep)
             text <- paste0(root, nowsep, text, nowsep, file_name)
             values$windowInfoPath <- text
-            values$windowInfo <- read_windowInfo(values$windowInfoPath)
+            values$windowInfo <- MRMProcessor::read_windowInfo(values$windowInfoPath)
             message <- text
           }else message <- NULL
           output$DataLoader_text3 <- renderText({message})
@@ -577,14 +576,14 @@ library(MRMProcessor)
             else fwhm <- input$ISCheck_fwhm
             if(any(input$ISCheck_peakWidth == 0)) peakWidth <- NA
             else peakWidth <- input$ISCheck_peakWidth
-            peakPara <- get_peakPara(sn = input$ISCheck_sn, above = input$ISCheck_above, preNum = input$ISCheck_preNum, extend = input$ISCheck_extend, tol_m = input$ISCheck_tolM, fwhm = fwhm, peakWidth = peakWidth, snthresh = input$ISCheck_snthresh, xcms = input$ISCheck_xcms)
-            smoothPara <- get_smoothPara(smooth = as.logical(input$ISCheck_smooth), method = input$ISCheck_smoothMethod, size = input$ISCheck_smoothSize, p = input$ISCheck_smoothP, m = input$ISCheck_smoothM, ts = input$ISCheck_smoothTs)
-            baselinePara <- get_baselinePara(threshold = input$ISCheck_baselineThreshold, tol_m = input$ISCheck_baselineTolM, loops = input$ISCheck_loops)
+            peakPara <- MRMProcessor::get_peakPara(sn = input$ISCheck_sn, above = input$ISCheck_above, preNum = input$ISCheck_preNum, extend = input$ISCheck_extend, tol_m = input$ISCheck_tolM, fwhm = fwhm, peakWidth = peakWidth, snthresh = input$ISCheck_snthresh, xcms = input$ISCheck_xcms)
+            smoothPara <- MRMProcessor::get_smoothPara(smooth = as.logical(input$ISCheck_smooth), method = input$ISCheck_smoothMethod, size = input$ISCheck_smoothSize, p = input$ISCheck_smoothP, m = input$ISCheck_smoothM, ts = input$ISCheck_smoothTs)
+            baselinePara <- MRMProcessor::get_baselinePara(threshold = input$ISCheck_baselineThreshold, tol_m = input$ISCheck_baselineTolM, loops = input$ISCheck_loops)
             if(input$ISCheck_noise < 0) noise <- NA
             else noise <- input$ISCheck_noise
             #browser()
-            values$MChromatograms <- peakPicking_MChromatograms(MChromatograms = values$MChromatograms, thread = round(values$ncore * 0.8), unit = values$rtUnit, noise = noise, noiseMag = input$ISCheck_noiseMag, smoothPara = smoothPara, baselinePara = baselinePara, peakPara = peakPara)
-            values$MChromatograms <- prepare_MChromatograms(MChromatograms = values$MChromatograms,
+            values$MChromatograms <- MRMProcessor::peakPicking_MChromatograms(MChromatograms = values$MChromatograms, thread = round(values$ncore * 0.8), unit = values$rtUnit, noise = noise, noiseMag = input$ISCheck_noiseMag, smoothPara = smoothPara, baselinePara = baselinePara, peakPara = peakPara)
+            values$MChromatograms <- MRMProcessor::prepare_MChromatograms(MChromatograms = values$MChromatograms,
                                                             windowInfo = values$windowInfo, sampleInfo = values$sampleInfo,
                                                             unit = values$rtUnit, thread = round(values$ncore * 0.4))
             values$prepared <- TRUE
@@ -594,9 +593,9 @@ library(MRMProcessor)
           if(values$prepared & !is.null(values$batchNameVector)){
             values$cols_batchs <- lapply(values$batchNameVector, function(x) .getCol4batchName(MChromatograms = values$MChromatograms, batchName = x))
             names(values$cols_batchs) <- values$batchNameVector
-            values$rows_IS <- .getRow4analyteType(MChromatograms = values$MChromatograms, analyteType = "IS")
-            values$rows_Quant <- .getRow4analyteType(MChromatograms = values$MChromatograms, analyteType = "Quant")
-            values$rows_Qual <- .getRow4analyteType(MChromatograms = values$MChromatograms, analyteType = "Qual")
+            values$rows_IS <- MRMProcessor:::.getRow4analyteType(MChromatograms = values$MChromatograms, analyteType = "IS")
+            values$rows_Quant <- MRMProcessor:::.getRow4analyteType(MChromatograms = values$MChromatograms, analyteType = "Quant")
+            values$rows_Qual <- MRMProcessor:::.getRow4analyteType(MChromatograms = values$MChromatograms, analyteType = "Qual")
             updateSelectInput(session, "ISCheck_batchName", choices = values$batchNameVector, selected = values$batchNameVector[1])
             values$sampleNameVector <- sapply(1:ncol(values$MChromatograms), function(j) {
               strsplit(basename(attributes(values$MChromatograms[1, j])$sample_name), split = ".", fixed = TRUE)[[1]][1]
@@ -620,8 +619,8 @@ library(MRMProcessor)
       {
         observe({
           if(values$prepared & input$ISCheck_sampleName != "none" & input$ISCheck_analyteName != "none" & !is.null(values$MChromatograms)){
-            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
-            col <- .getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$ISCheck_sampleName)
+            row <- MRMProcessor:::.getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
+            col <- MRMProcessor:::.getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$ISCheck_sampleName)
             peakPara <- attributes(values$MChromatograms[row, col])$peakPara
             updateSliderInput(session, inputId = "ISCheck_sn", value = peakPara$sn)
             updateRadioButtons(session, inputId = "ISCheck_above", selected = peakPara$above)
@@ -654,7 +653,7 @@ library(MRMProcessor)
               if(input$ISCheck_PlotType == "Single"){
                 plotly::plotlyOutput(outputId = "ISCheck_Plot1", width = "100%")
                 output$ISCheck_Plot1 <- plotly::renderPlotly({
-                  .plotChromatogram_interactive(Chromatogram = values$MChromatograms[row, col], targetPeak = as.logical(input$ISCheck_targetPeak))
+                  MRMProcessor:::.plotChromatogram_interactive(Chromatogram = values$MChromatograms[row, col], targetPeak = as.logical(input$ISCheck_targetPeak))
                 })
               }else{
                 plotOutput(outputId = "ISCheck_Plot1")
@@ -667,12 +666,12 @@ library(MRMProcessor)
                 })
                 standard_cols <- cols[which.max(areaVec)]
                 output$ISCheck_Plot1 <- renderPlot({
-                  plotMChromatograms(MChromatograms = values$MChromatograms, rows = row, cols = c(standard_cols, col), targetPeak = as.logical(input$ISCheck_targetPeak))
+                  MRMProcessor::plotMChromatograms(MChromatograms = values$MChromatograms, rows = row, cols = c(standard_cols, col), targetPeak = as.logical(input$ISCheck_targetPeak))
                 })
               }
             })
             output$ISCheck_Plot2 <- plotly::renderPlotly({
-              plotHeatMap_MChromatogramsRow(MChromatograms = values$MChromatograms, row = row,cols = values$cols_batchs[[input$ISCheck_batchName]])
+              MRMProcessor::plotHeatMap_MChromatogramsRow(MChromatograms = values$MChromatograms, row = row,cols = values$cols_batchs[[input$ISCheck_batchName]])
             })
           }
         })
@@ -684,7 +683,7 @@ library(MRMProcessor)
           on.exit(removeNotification(id), add = TRUE)
           if(values$prepared & !is.null(values$MChromatograms)){
             #values$MChromatograms <- extractTargetPeak_MChromatograms(values$MChromatograms, rows = values$rows_IS, cols = 1:ncol(values$MChromatograms), targetRt = NA, tolRt = 10)
-            values$MChromatograms <- extractTargetPeak_IS(MChromatograms = values$MChromatograms)
+            values$MChromatograms <- MRMProcessor:::extractTargetPeak_IS(MChromatograms = values$MChromatograms)
             values$IS_extracted <- TRUE
           }
         })
@@ -695,18 +694,18 @@ library(MRMProcessor)
           id <- notify("Peak Picking...")
           on.exit(removeNotification(id), add = TRUE)
           if(values$prepared & input$ISCheck_sampleName != "none" & input$ISCheck_analyteName != "none" & !is.null(values$MChromatograms)){
-            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
-            col <- .getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$ISCheck_sampleName)
+            row <- MRMProcessor:::.getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
+            col <- MRMProcessor:::.getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$ISCheck_sampleName)
             if(input$ISCheck_fwhm == 0) fwhm <- NA
             else fwhm <- input$ISCheck_fwhm
             if(any(input$ISCheck_peakWidth == 0)) peakWidth <- NA
             else peakWidth <- input$ISCheck_peakWidth
-            peakPara <- get_peakPara(sn = input$ISCheck_sn, above = input$ISCheck_above, preNum = input$ISCheck_preNum, extend = input$ISCheck_extend, tol_m = input$ISCheck_tolM, fwhm = fwhm, peakWidth = peakWidth, snthresh = input$ISCheck_snthresh, xcms = input$ISCheck_xcms)
-            smoothPara <- get_smoothPara(smooth = as.logical(input$ISCheck_smooth), method = input$ISCheck_smoothMethod, size = input$ISCheck_smoothSize, p = input$ISCheck_smoothP, m = input$ISCheck_smoothM, ts = input$ISCheck_smoothTs)
-            baselinePara <- get_baselinePara(threshold = input$ISCheck_baselineThreshold, tol_m = input$ISCheck_baselineTolM, loops = input$ISCheck_loops)
+            peakPara <- MRMProcessor::get_peakPara(sn = input$ISCheck_sn, above = input$ISCheck_above, preNum = input$ISCheck_preNum, extend = input$ISCheck_extend, tol_m = input$ISCheck_tolM, fwhm = fwhm, peakWidth = peakWidth, snthresh = input$ISCheck_snthresh, xcms = input$ISCheck_xcms)
+            smoothPara <- MRMProcessor::get_smoothPara(smooth = as.logical(input$ISCheck_smooth), method = input$ISCheck_smoothMethod, size = input$ISCheck_smoothSize, p = input$ISCheck_smoothP, m = input$ISCheck_smoothM, ts = input$ISCheck_smoothTs)
+            baselinePara <- MRMProcessor::get_baselinePara(threshold = input$ISCheck_baselineThreshold, tol_m = input$ISCheck_baselineTolM, loops = input$ISCheck_loops)
             if(input$ISCheck_noise < 0) noise <- NA
             else noise <- input$ISCheck_noise
-            values$MChromatograms <- peakPicking_MChromatograms2(MChromatograms = values$MChromatograms,
+            values$MChromatograms <- MRMProcessor::peakPicking_MChromatograms2(MChromatograms = values$MChromatograms,
                                                                  rows = row, cols = col, noise = noise, noiseMag = input$ISCheck_noiseMag,
                                                                  peakPara = peakPara, smoothPara = smoothPara, baselinePara = baselinePara)
             #browser()
@@ -719,9 +718,9 @@ library(MRMProcessor)
           id <- notify("Extract target peak...")
           on.exit(removeNotification(id), add = TRUE)
           if(values$prepared & input$ISCheck_sampleName != "none" & input$ISCheck_analyteName != "none" & !is.null(values$MChromatograms)){
-            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
-            col <- .getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$ISCheck_sampleName)
-            values$MChromatograms <- extractTargetPeak_MChromatograms(values$MChromatograms, rows = row, cols = col, targetRt = input$ISCheck_expectRt)
+            row <- MRMProcessor:::.getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
+            col <- MRMProcessor:::.getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$ISCheck_sampleName)
+            values$MChromatograms <- MRMProcessor::extractTargetPeak_MChromatograms(values$MChromatograms, rows = row, cols = col, targetRt = input$ISCheck_expectRt)
           }
         })
       }
@@ -731,18 +730,18 @@ library(MRMProcessor)
           id <- notify("Peak Picking Batch...")
           on.exit(removeNotification(id), add = TRUE)
           if(values$prepared & input$ISCheck_sampleName != "none" & input$ISCheck_analyteName != "none" & !is.null(values$MChromatograms)){
-            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
+            row <- MRMProcessor:::.getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
             cols <- values$cols_batchs[[input$ISCheck_batchName]]
             if(input$ISCheck_fwhm == 0) fwhm <- NA
             else fwhm <- input$ISCheck_fwhm
             if(any(input$ISCheck_peakWidth == 0)) peakWidth <- NA
             else peakWidth <- input$ISCheck_peakWidth
-            peakPara <- get_peakPara(sn = input$ISCheck_sn, above = input$ISCheck_above, preNum = input$ISCheck_preNum, extend = input$ISCheck_extend, tol_m = input$ISCheck_tolM, fwhm = fwhm, peakWidth = peakWidth, snthresh = input$ISCheck_snthresh, xcms = input$ISCheck_xcms)
-            smoothPara <- get_smoothPara(smooth = as.logical(input$ISCheck_smooth), method = input$ISCheck_smoothMethod, size = input$ISCheck_smoothSize, p = input$ISCheck_smoothP, m = input$ISCheck_smoothM, ts = input$ISCheck_smoothTs)
-            baselinePara <- get_baselinePara(threshold = input$ISCheck_baselineThreshold, tol_m = input$ISCheck_baselineTolM, loops = input$ISCheck_loops)
+            peakPara <- MRMProcessor::get_peakPara(sn = input$ISCheck_sn, above = input$ISCheck_above, preNum = input$ISCheck_preNum, extend = input$ISCheck_extend, tol_m = input$ISCheck_tolM, fwhm = fwhm, peakWidth = peakWidth, snthresh = input$ISCheck_snthresh, xcms = input$ISCheck_xcms)
+            smoothPara <- MRMProcessor::get_smoothPara(smooth = as.logical(input$ISCheck_smooth), method = input$ISCheck_smoothMethod, size = input$ISCheck_smoothSize, p = input$ISCheck_smoothP, m = input$ISCheck_smoothM, ts = input$ISCheck_smoothTs)
+            baselinePara <- MRMProcessor::get_baselinePara(threshold = input$ISCheck_baselineThreshold, tol_m = input$ISCheck_baselineTolM, loops = input$ISCheck_loops)
             if(input$ISCheck_noise < 0) noise <- NA
             else noise <- input$ISCheck_noise
-            values$MChromatograms <- peakPicking_MChromatograms2(MChromatograms = values$MChromatograms,
+            values$MChromatograms <- MRMProcessor::peakPicking_MChromatograms2(MChromatograms = values$MChromatograms,
                                                                  rows = row, cols = cols, noise = noise, noiseMag = input$ISCheck_noiseMag,
                                                                  peakPara = peakPara, smoothPara = smoothPara, baselinePara = baselinePara)
           }
@@ -754,9 +753,9 @@ library(MRMProcessor)
           id <- notify("Extract Batch...")
           on.exit(removeNotification(id), add = TRUE)
           if(values$prepared & input$ISCheck_sampleName != "none" & input$ISCheck_analyteName != "none" & !is.null(values$MChromatograms)){
-            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
+            row <- MRMProcessor:::.getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
             cols <- values$cols_batchs[[input$ISCheck_batchName]]
-            values$MChromatograms <- extractTargetPeak_MChromatograms(values$MChromatograms, rows = row, cols = cols, targetRt = input$ISCheck_expectRt)
+            values$MChromatograms <-MRMProcessor:: extractTargetPeak_MChromatograms(values$MChromatograms, rows = row, cols = cols, targetRt = input$ISCheck_expectRt)
           }
         })
       }
@@ -766,7 +765,7 @@ library(MRMProcessor)
           id <- notify("Correction IS...")
           on.exit(removeNotification(id), add = TRUE)
           if(values$prepared & values$IS_extracted & input$ISCheck_sampleName != "none" & input$ISCheck_analyteName != "none" & !is.null(values$MChromatograms)){
-            values$MChromatograms <- rtCorrection_IS(MChromatograms = values$MChromatograms, rows = NA, cols = 1:ncol(values$MChromatograms))
+            values$MChromatograms <- MRMProcessor::rtCorrection_IS(MChromatograms = values$MChromatograms, rows = NA, cols = 1:ncol(values$MChromatograms))
             values$IS_corrected <- TRUE
           }
         })
@@ -777,9 +776,9 @@ library(MRMProcessor)
           id <- notify("Correction...")
           on.exit(removeNotification(id), add = TRUE)
           if(values$prepared & values$IS_extracted & input$ISCheck_sampleName != "none" & input$ISCheck_analyteName != "none" & !is.null(values$MChromatograms)){
-            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
-            col <- .getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$ISCheck_sampleName)
-            values$MChromatograms <- rtCorrection_IS(MChromatograms = values$MChromatograms, rows = row, cols = col)
+            row <- MRMProcessor:::.getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
+            col <- MRMProcessor:::.getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$ISCheck_sampleName)
+            values$MChromatograms <- MRMProcessor::rtCorrection_IS(MChromatograms = values$MChromatograms, rows = row, cols = col)
           }
         })
       }
@@ -789,9 +788,9 @@ library(MRMProcessor)
           id <- notify("Correction Batch...")
           on.exit(removeNotification(id), add = TRUE)
           if(values$prepared & values$IS_extracted & input$ISCheck_sampleName != "none" & input$ISCheck_analyteName != "none" & !is.null(values$MChromatograms)){
-            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
+            row <- MRMProcessor:::.getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
             cols <- values$cols_batchs[[input$ISCheck_batchName]]
-            values$MChromatograms <- rtCorrection_IS(MChromatograms = values$MChromatograms, rows = row, cols = cols)
+            values$MChromatograms <- MRMProcessor::rtCorrection_IS(MChromatograms = values$MChromatograms, rows = row, cols = cols)
           }
         })
       }
@@ -801,9 +800,9 @@ library(MRMProcessor)
           id <- notify("Blank...")
           on.exit(removeNotification(id), add = TRUE)
           if(values$prepared & values$IS_extracted & input$ISCheck_sampleName != "none" & input$ISCheck_analyteName != "none" & !is.null(values$MChromatograms)){
-            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
-            col <- .getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$ISCheck_sampleName)
-            values$MChromatograms <- blank_MChromatograms(MChromatograms, rows = row, cols = col)
+            row <- MRMProcessor:::.getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
+            col <- MRMProcessor:::.getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$ISCheck_sampleName)
+            values$MChromatograms <- MRMProcessor:::blank_MChromatograms(MChromatograms, rows = row, cols = col)
           }
         })
       }
@@ -812,9 +811,9 @@ library(MRMProcessor)
         id <- notify("Blank Batch...")
         on.exit(removeNotification(id), add = TRUE)
         if(values$prepared & values$IS_extracted & input$ISCheck_sampleName != "none" & input$ISCheck_analyteName != "none" & !is.null(values$MChromatograms)){
-          row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
+          row <- MRMProcessor:::.getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
           cols <- values$cols_batchs[[input$ISCheck_batchName]]
-          values$MChromatograms <- blank_MChromatograms(MChromatograms, rows = row, cols = cols)
+          values$MChromatograms <- MRMProcessor:::blank_MChromatograms(MChromatograms, rows = row, cols = cols)
         }
       })
       # ISCheck_debug
@@ -850,7 +849,7 @@ library(MRMProcessor)
           id <- notify("Correct Analyte...")
           on.exit(removeNotification(id), add = TRUE)
           if(values$IS_corrected & !is.null(values$MChromatograms)){
-            values$MChromatograms <- rtCorrection_analyte(MChromatograms = values$MChromatograms, rows = NA, cols = 1:ncol(values$MChromatograms), thread = round(values$ncore * 0.8))
+            values$MChromatograms <- MRMProcessor::rtCorrection_analyte(MChromatograms = values$MChromatograms, rows = NA, cols = 1:ncol(values$MChromatograms), thread = round(values$ncore * 0.8))
             values$Analyte_corrected <- TRUE
           }
         })
@@ -861,7 +860,7 @@ library(MRMProcessor)
           id <- notify("Extract Analyte...")
           on.exit(removeNotification(id), add = TRUE)
           if(values$Analyte_corrected & !is.null(values$MChromatograms)){
-            values$MChromatograms <- extractTargetPeak_MChromatograms(MChromatograms = values$MChromatograms, rows = c(values$rows_Quant, values$rows_Qual), cols = 1:ncol(values$MChromatograms), targetRt = NA, tolRt = 5)
+            values$MChromatograms <- MRMProcessor::extractTargetPeak_MChromatograms(MChromatograms = values$MChromatograms, rows = c(values$rows_Quant, values$rows_Qual), cols = 1:ncol(values$MChromatograms), targetRt = NA, tolRt = 5)
             values$Analyte_extracted <- TRUE
           }
         })
@@ -872,7 +871,7 @@ library(MRMProcessor)
           id <- notify("Calculate standard curve...")
           on.exit(removeNotification(id), add = TRUE)
           if(values$IS_corrected & values$IS_extracted){
-            values$MChromatograms <- GetStdCurve_MChromatograms(values$MChromatograms, sampleInfo = values$sampleInfo)
+            values$MChromatograms <- MRMProcessor:::GetStdCurve_MChromatograms(values$MChromatograms, sampleInfo = values$sampleInfo)
             values$stdCurved <- TRUE
           }
         })
@@ -881,8 +880,8 @@ library(MRMProcessor)
       {
         observe({
           if(values$IS_corrected & values$Analyte_corrected & !is.null(values$MChromatograms) & input$AnalyteCheck_sampleName != "none" & input$AnalyteCheck_analyteName != "none"){
-            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
-            col <- .getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$AnalyteCheck_sampleName)
+            row <- MRMProcessor:::.getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
+            col <- MRMProcessor:::.getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$AnalyteCheck_sampleName)
             peakPara <- attributes(values$MChromatograms[row, col])$peakPara
             updateSliderInput(session, inputId = "AnalyteCheck_sn", value = peakPara$sn)
             updateRadioButtons(session, inputId = "AnalyteCheck_above", selected = peakPara$above)
@@ -918,7 +917,7 @@ library(MRMProcessor)
               if(input$AnalyteCheck_PlotType == "Single"){
                 plotly::plotlyOutput(outputId = "AnalyteCheck_Plot1", width = "100%")
                 output$AnalyteCheck_Plot1 <- plotly::renderPlotly({
-                  .plotChromatogram_interactive(Chromatogram = values$MChromatograms[row, col], targetPeak = as.logical(input$AnalyteCheck_targetPeak))
+                  MRMProcessor:::.plotChromatogram_interactive(Chromatogram = values$MChromatograms[row, col], targetPeak = as.logical(input$AnalyteCheck_targetPeak))
                 })
               }else{
                 plotOutput(outputId = "AnalyteCheck_Plot1")
@@ -931,16 +930,16 @@ library(MRMProcessor)
                 })
                 standard_cols <- cols[which.max(areaVec)]
                 output$AnalyteCheck_Plot1 <- renderPlot({
-                  plotMChromatograms(MChromatograms = values$MChromatograms, rows = row, cols = c(standard_cols, col), targetPeak = as.logical(input$AnalyteCheck_targetPeak))
+                  MRMProcessor::plotMChromatograms(MChromatograms = values$MChromatograms, rows = row, cols = c(standard_cols, col), targetPeak = as.logical(input$AnalyteCheck_targetPeak))
                 })
               }
             })
             output$AnalyteCheck_Plot2 <- plotly::renderPlotly({
-              plotHeatMap_MChromatogramsRow(MChromatograms = values$MChromatograms, row = row, cols = values$cols_batchs[[input$AnalyteCheck_batchName]])
+              MRMProcessor::plotHeatMap_MChromatogramsRow(MChromatograms = values$MChromatograms, row = row, cols = values$cols_batchs[[input$AnalyteCheck_batchName]])
             })
           }
           if(values$stdCurved){
-            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
+            row <- MRMProcessor:::.getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
             batchName <- input$AnalyteCheck_batchName
             if(row %in% values$rows_Quant){
               stdCurveRes <- attributes(values$MChromatograms[row, values$cols_batchs[[batchName]][1]])$stdCurveRes
@@ -955,7 +954,7 @@ library(MRMProcessor)
               updateRadioButtons(session, inputId = "AnalyteCheck_weights", selected = stdCurveRes$weights)
               updateRadioButtons(session, inputId = "AnalyteCheck_zero", selected = as.character(stdCurveRes$zero))
               output$AnalyteCheck_Plot3 <- plotly::renderPlotly({
-                plotStdCurve(attributes(values$MChromatograms[row, values$cols_batchs[[batchName]][1]])$stdCurveRes)
+                MRMProcessor::plotStdCurve(attributes(values$MChromatograms[row, values$cols_batchs[[batchName]][1]])$stdCurveRes)
               })
             }else{
               output$AnalyteCheck_Plot3 <- plotly::renderPlotly({
@@ -971,18 +970,18 @@ library(MRMProcessor)
           id <- notify("Peak Picking...")
           on.exit(removeNotification(id), add = TRUE)
           if(values$Analyte_corrected & values$Analyte_extracted & input$AnalyteCheck_sampleName != "none" & input$AnalyteCheck_analyteName != "none" & !is.null(values$MChromatograms)){
-            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
-            col <- .getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$AnalyteCheck_sampleName)
+            row <- MRMProcessor:::.getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
+            col <- MRMProcessor:::.getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$AnalyteCheck_sampleName)
             if(input$AnalyteCheck_fwhm == 0) fwhm <- NA
             else fwhm <- input$AnalyteCheck_fwhm
             if(any(input$AnalyteCheck_peakWidth == 0)) peakWidth <- NA
             else peakWidth <- input$AnalyteCheck_peakWidth
-            peakPara <- get_peakPara(sn = input$AnalyteCheck_sn, above = input$AnalyteCheck_above, preNum = input$AnalyteCheck_preNum, extend = input$AnalyteCheck_extend, tol_m = input$AnalyteCheck_tolM, fwhm = fwhm, peakWidth = peakWidth, snthresh = input$AnalyteCheck_snthresh, xcms = input$AnalyteCheck_xcms)
-            smoothPara <- get_smoothPara(smooth = as.logical(input$AnalyteCheck_smooth), method = input$AnalyteCheck_smoothMethod, size = input$AnalyteCheck_smoothSize, p = input$AnalyteCheck_smoothP, m = input$AnalyteCheck_smoothM, ts = input$AnalyteCheck_smoothTs)
-            baselinePara <- get_baselinePara(threshold = input$AnalyteCheck_baselineThreshold, tol_m = input$AnalyteCheck_baselineTolM, loops = input$AnalyteCheck_loops)
+            peakPara <- MRMProcessor::get_peakPara(sn = input$AnalyteCheck_sn, above = input$AnalyteCheck_above, preNum = input$AnalyteCheck_preNum, extend = input$AnalyteCheck_extend, tol_m = input$AnalyteCheck_tolM, fwhm = fwhm, peakWidth = peakWidth, snthresh = input$AnalyteCheck_snthresh, xcms = input$AnalyteCheck_xcms)
+            smoothPara <- MRMProcessor::get_smoothPara(smooth = as.logical(input$AnalyteCheck_smooth), method = input$AnalyteCheck_smoothMethod, size = input$AnalyteCheck_smoothSize, p = input$AnalyteCheck_smoothP, m = input$AnalyteCheck_smoothM, ts = input$AnalyteCheck_smoothTs)
+            baselinePara <- MRMProcessor::get_baselinePara(threshold = input$AnalyteCheck_baselineThreshold, tol_m = input$AnalyteCheck_baselineTolM, loops = input$AnalyteCheck_loops)
             if(input$AnalyteCheck_noise < 0) noise <- NA
             else noise <- input$AnalyteCheck_noise
-            values$MChromatograms <- peakPicking_MChromatograms2(MChromatograms = values$MChromatograms,
+            values$MChromatograms <- MRMProcessor::peakPicking_MChromatograms2(MChromatograms = values$MChromatograms,
                                                                  rows = row, cols = col, noise = noise, noiseMag = input$AnalyteCheck_noiseMag,
                                                                  peakPara = peakPara, smoothPara = smoothPara, baselinePara = baselinePara)
           }
@@ -994,18 +993,18 @@ library(MRMProcessor)
           id <- notify("Peak Picking Batch...")
           on.exit(removeNotification(id), add = TRUE)
           if(values$Analyte_corrected & values$Analyte_extracted & input$AnalyteCheck_sampleName != "none" & input$AnalyteCheck_analyteName != "none" & !is.null(values$MChromatograms)){
-            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
+            row <- MRMProcessor:::.getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
             cols <- values$cols_batchs[[input$AnalyteCheck_batchName]]
             if(input$AnalyteCheck_fwhm == 0) fwhm <- NA
             else fwhm <- input$AnalyteCheck_fwhm
             if(any(input$AnalyteCheck_peakWidth == 0)) peakWidth <- NA
             else peakWidth <- input$AnalyteCheck_peakWidth
-            peakPara <- get_peakPara(sn = input$AnalyteCheck_sn, above = input$AnalyteCheck_above, preNum = input$AnalyteCheck_preNum, extend = input$AnalyteCheck_extend, tol_m = input$AnalyteCheck_tolM, fwhm = fwhm, peakWidth = peakWidth, snthresh = input$AnalyteCheck_snthresh, xcms = input$AnalyteCheck_xcms)
-            smoothPara <- get_smoothPara(smooth = as.logical(input$AnalyteCheck_smooth), method = input$AnalyteCheck_smoothMethod, size = input$AnalyteCheck_smoothSize, p = input$AnalyteCheck_smoothP, m = input$AnalyteCheck_smoothM, ts = input$AnalyteCheck_smoothTs)
-            baselinePara <- get_baselinePara(threshold = input$AnalyteCheck_baselineThreshold, tol_m = input$AnalyteCheck_baselineTolM, loops = input$AnalyteCheck_loops)
+            peakPara <- MRMProcessor::get_peakPara(sn = input$AnalyteCheck_sn, above = input$AnalyteCheck_above, preNum = input$AnalyteCheck_preNum, extend = input$AnalyteCheck_extend, tol_m = input$AnalyteCheck_tolM, fwhm = fwhm, peakWidth = peakWidth, snthresh = input$AnalyteCheck_snthresh, xcms = input$AnalyteCheck_xcms)
+            smoothPara <- MRMProcessor::get_smoothPara(smooth = as.logical(input$AnalyteCheck_smooth), method = input$AnalyteCheck_smoothMethod, size = input$AnalyteCheck_smoothSize, p = input$AnalyteCheck_smoothP, m = input$AnalyteCheck_smoothM, ts = input$AnalyteCheck_smoothTs)
+            baselinePara <- MRMProcessor::get_baselinePara(threshold = input$AnalyteCheck_baselineThreshold, tol_m = input$AnalyteCheck_baselineTolM, loops = input$AnalyteCheck_loops)
             if(input$AnalyteCheck_noise < 0) noise <- NA
             else noise <- input$AnalyteCheck_noise
-            values$MChromatograms <- peakPicking_MChromatograms2(MChromatograms = values$MChromatograms,
+            values$MChromatograms <- MRMProcessor::peakPicking_MChromatograms2(MChromatograms = values$MChromatograms,
                                                                  rows = row, cols = cols, noise = noise, noiseMag = input$AnalyteCheck_noiseMag,
                                                                  peakPara = peakPara, smoothPara = smoothPara, baselinePara = baselinePara)
           }
@@ -1017,9 +1016,9 @@ library(MRMProcessor)
           id <- notify("Correction...")
           on.exit(removeNotification(id), add = TRUE)
           if(values$Analyte_corrected & values$Analyte_extracted & input$AnalyteCheck_sampleName != "none" & input$AnalyteCheck_analyteName != "none" & !is.null(values$MChromatograms)){
-            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
-            col <- .getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$AnalyteCheck_sampleName)
-            values$MChromatograms <- rtCorrection_analyte(MChromatograms = values$MChromatograms, rows = row, cols = col, thread = 1,deltaRt = input$AnalyteCheck_deltaRt)
+            row <- MRMProcessor:::.getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
+            col <- MRMProcessor:::.getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$AnalyteCheck_sampleName)
+            values$MChromatograms <- MRMProcessor::rtCorrection_analyte(MChromatograms = values$MChromatograms, rows = row, cols = col, thread = 1,deltaRt = input$AnalyteCheck_deltaRt)
           }
         })
       }
@@ -1029,9 +1028,9 @@ library(MRMProcessor)
           id <- notify("Correction Batch...")
           on.exit(removeNotification(id), add = TRUE)
           if(values$prepared & values$IS_extracted & input$AnalyteCheck_sampleName != "none" & input$AnalyteCheck_analyteName != "none" & !is.null(values$MChromatograms)){
-            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
+            row <- MRMProcessor:::.getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
             cols <- values$cols_batchs[[input$AnalyteCheck_batchName]]
-            values$MChromatograms <- rtCorrection_analyte(MChromatograms = values$MChromatograms, rows = row, cols = cols, thread = round(values$ncore) * 0.2, deltaRt = input$AnalyteCheck_deltaRt)
+            values$MChromatograms <- MRMProcessor::rtCorrection_analyte(MChromatograms = values$MChromatograms, rows = row, cols = cols, thread = round(values$ncore) * 0.2, deltaRt = input$AnalyteCheck_deltaRt)
           }
         })
       }
@@ -1041,9 +1040,9 @@ library(MRMProcessor)
           id <- notify("Extract target peak...")
           on.exit(removeNotification(id), add = TRUE)
           if(values$prepared & input$AnalyteCheck_sampleName != "none" & input$AnalyteCheck_analyteName != "none" & !is.null(values$MChromatograms)){
-            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
-            col <- .getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$AnalyteCheck_sampleName)
-            values$MChromatograms <- extractTargetPeak_MChromatograms(values$MChromatograms, rows = row, cols = col, targetRt = input$AnalyteCheck_expectRt, tolRt = 5)
+            row <- MRMProcessor:::.getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
+            col <- MRMProcessor:::.getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$AnalyteCheck_sampleName)
+            values$MChromatograms <- MRMProcessor::extractTargetPeak_MChromatograms(values$MChromatograms, rows = row, cols = col, targetRt = input$AnalyteCheck_expectRt, tolRt = 5)
           }
         })
       }
@@ -1053,9 +1052,9 @@ library(MRMProcessor)
           id <- notify("Extract Batch...")
           on.exit(removeNotification(id), add = TRUE)
           if(values$prepared & input$AnalyteCheck_sampleName != "none" & input$AnalyteCheck_analyteName != "none" & !is.null(values$MChromatograms)){
-            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
+            row <- MRMProcessor:::.getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
             cols <- values$cols_batchs[[input$AnalyteCheck_batchName]]
-            values$MChromatograms <- extractTargetPeak_MChromatograms(values$MChromatograms, rows = row, cols = cols, targetRt = input$AnalyteCheck_expectRt, tolRt = 5)
+            values$MChromatograms <- MRMProcessor::extractTargetPeak_MChromatograms(values$MChromatograms, rows = row, cols = cols, targetRt = input$AnalyteCheck_expectRt, tolRt = 5)
           }
         })
       }
@@ -1064,7 +1063,7 @@ library(MRMProcessor)
         observeEvent(input$AnalyteCheck_stdCurve_single, {
           id <- notify("Update stdCurve...")
           on.exit(removeNotification(id), add = TRUE)
-          row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
+          row <- MRMProcessor:::.getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
           batchName <- input$AnalyteCheck_batchName
           if(row %in% values$rows_Quant & values$stdCurved){
             if(any(input$AnalyteCheck_delete == "none")){
@@ -1072,7 +1071,7 @@ library(MRMProcessor)
             }else{
               delete <- as.integer(input$AnalyteCheck_delete)
             }
-            stdCurveRes_new <- GetStdCurve(values$MChromatograms, row = row, batchName = batchName, weights = input$AnalyteCheck_weights, delete = delete, zero = as.logical(input$AnalyteCheck_zero))
+            stdCurveRes_new <- MRMProcessor::GetStdCurve(values$MChromatograms, row = row, batchName = batchName, weights = input$AnalyteCheck_weights, delete = delete, zero = as.logical(input$AnalyteCheck_zero))
             attributes(values$MChromatograms[row, values$cols_batchs[[batchName]][1]])$stdCurveRes <- stdCurveRes_new
           }
         })
@@ -1083,9 +1082,9 @@ library(MRMProcessor)
           id <- notify("Blank...")
           on.exit(removeNotification(id), add = TRUE)
           if(values$Analyte_extracted & input$AnalyteCheck_sampleName != "none" & input$AnalyteCheck_analyteName != "none" & !is.null(values$MChromatograms)){
-            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
-            col <- .getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$AnalyteCheck_sampleName)
-            values$MChromatograms <- blank_MChromatograms(MChromatograms, rows = row, cols = col)
+            row <- MRMProcessor:::.getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
+            col <- MRMProcessor:::.getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$AnalyteCheck_sampleName)
+            values$MChromatograms <- MRMProcessor:::blank_MChromatograms(MChromatograms, rows = row, cols = col)
           }
         })
       }
@@ -1094,9 +1093,9 @@ library(MRMProcessor)
         id <- notify("Blank Batch...")
         on.exit(removeNotification(id), add = TRUE)
         if(values$Analyte_extracted & input$AnalyteCheck_sampleName != "none" & input$AnalyteCheck_analyteName != "none" & !is.null(values$MChromatograms)){
-          row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
+          row <- MRMProcessor:::.getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
           cols <- values$cols_batchs[[input$AnalyteCheck_batchName]]
-          values$MChromatograms <- blank_MChromatograms(MChromatograms, rows = row, cols = cols)
+          values$MChromatograms <- MRMProcessor:::blank_MChromatograms(MChromatograms, rows = row, cols = cols)
         }
       })
       # AnalyteCheck debug
@@ -1113,7 +1112,7 @@ library(MRMProcessor)
         id <- notify("Calculate Concentration...")
         on.exit(removeNotification(id), add = TRUE)
         if(values$stdCurved){
-          values$conTb <- cal_concentration(values$MChromatograms, sampleInfo = values$sampleInfo)
+          values$conTb <- MRMProcessor:::cal_concentration(values$MChromatograms, sampleInfo = values$sampleInfo)
           output$ResultOutput_conTb <- renderDT({
             values$conTb
           }, options = list(columnDefs = list(list(className = "dt-center", targets = "_all")), pageLength = 12))
@@ -1131,7 +1130,7 @@ library(MRMProcessor)
         id <- notify("Generate Area Table...")
         on.exit(removeNotification(id), add = TRUE)
         if(!is.null(values$MChromatograms) & values$Analyte_extracted){
-          values$areaTb <- generate_area(values$MChromatograms)
+          values$areaTb <- MRMProcessor:::generate_area(values$MChromatograms)
           output$ResultOutput_areaTb <- renderDT({
             values$areaTb
           }, options = list(columnDefs = list(list(className = "dt-center", targets = "_all")), pageLength = 12))
