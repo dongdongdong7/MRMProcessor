@@ -17,7 +17,6 @@ Imports:
     foreach,
     ggplot2,
     grid,
-    gridlayout,
     magrittr,
     MSnbase,
     mzR,
