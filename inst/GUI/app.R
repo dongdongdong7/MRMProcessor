@@ -1150,22 +1150,47 @@ library(gridlayout)
 
 .getVolumes <- function(){
   if(Sys.info()["sysname"] != 'Windows') stop("OS must be Windows!")
-  volumes_info <- system2("powershell", "$dvr=[System.IO.DriveInfo]::GetDrives();Write-Output $dvr.length $dvr.name $dvr.VolumeLabel;",
-                          stdout = TRUE)
-  num = as.integer(volumes_info[1])
-  if (num == 0)
-    return(NULL)
-  mat <- matrix(volumes_info[-1], nrow = num, ncol = 2)
-  mat[, 1] <- gsub(":\\\\$", ":/", mat[, 1])
-  sel <- mat[, 2] == ""
-  mat[sel, 2] <- mat[sel, 1]
-  volumes <- mat[, 1]
-  volNames <- mat[, 2]
-  volNames <- paste0(volNames, " (", gsub(":/$", ":",
-                                          volumes), ")")
-  names(volumes) <- volNames
-  volumes <- gsub(":$", ":/", volumes)
-  return(volumes)
+  else if(Sys.info()["sysname"] == 'Windows'){
+    wmic <- paste0(Sys.getenv("SystemRoot"), "\\System32\\Wbem\\WMIC.exe")
+    tmp <- tryCatch({
+      volumes <- system(paste(wmic, "logicaldisk get Caption"),
+                        intern = TRUE, ignore.stderr = TRUE)
+      volumes <- sub(" *\\r$", "", volumes)
+      keep <- !tolower(volumes) %in% c("caption",
+                                       "")
+      volumes <- volumes[keep]
+      volNames <- system(paste(wmic, "/FAILFAST:1000 logicaldisk get VolumeName"),
+                         intern = TRUE, ignore.stderr = TRUE)
+      volNames <- sub(" *\\r$", "", volNames)
+      volNames <- volNames[keep]
+      volNames <- paste0(volNames, ifelse(volNames == "",
+                                          "", " "))
+      volNames <- paste0(volNames, "(", volumes,
+                         ")")
+      list(volumes, volNames)
+    }, error = function(e) {
+      warnings(e)
+      volumes_info <- system2("powershell", "$dvr=[System.IO.DriveInfo]::GetDrives();Write-Output $dvr.length $dvr.name $dvr.VolumeLabel;",
+                              stdout = TRUE)
+      num = as.integer(volumes_info[1])
+      if (num == 0)
+        return(NULL)
+      mat <- matrix(volumes_info[-1], nrow = num, ncol = 2)
+      mat[, 1] <- gsub(":\\\\$", ":/", mat[,
+                                           1])
+      sel <- mat[, 2] == ""
+      mat[sel, 2] <- mat[sel, 1]
+      volumes <- mat[, 1]
+      volNames <- mat[, 2]
+      volNames <- paste0(volNames, " (", gsub(":/$",
+                                              ":", volumes), ")")
+      list(volumes, volNames)
+    })
+    volumes <- tmp[[1]]
+    names(volumes) <- tmp[[2]]
+    volumes <- gsub(":$", ":/", volumes)
+  }else stop("Do not know sysname!")
+  volumes
 }
 
 # Run the application
