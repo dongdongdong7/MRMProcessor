@@ -3,6 +3,7 @@ library(shiny)
 library(bslib)
 library(DT)
 library(gridlayout)
+library(MRMProcessor)
 
 # UI
 {
@@ -162,7 +163,9 @@ library(gridlayout)
               actionButton("ISCheck_extract", label = "Extract"),
               actionButton("ISCheck_extractBatch", label = "Extract Batch"),
               actionButton("ISCheck_correction", label = "Correction"),
-              actionButton("ISCheck_correctionBatch", label = "Correction Batch")
+              actionButton("ISCheck_correctionBatch", label = "Correction Batch"),
+              actionButton("ISCheck_blank", label = "Blank"),
+              actionButton("ISCheck_blankBatch", label = "Blank Batch")
             ),
             nav_panel(
               title = "smoothPara",
@@ -288,7 +291,9 @@ library(gridlayout)
               actionButton("AnalyteCheck_correction", label = "Correction"),
               actionButton("AnalyteCheck_correctionBatch", label = "Correction Batch"),
               actionButton("AnalyteCheck_extract", label = "Extract"),
-              actionButton("AnalyteCheck_extractBatch", label = "Extract Batch")
+              actionButton("AnalyteCheck_extractBatch", label = "Extract Batch"),
+              actionButton("AnalyteCheck_blank", label = "Blank"),
+              actionButton("AnalyteCheck_blankBatch", label = "Blank Batch")
             ),
             nav_panel(
               title = "smoothPara",
@@ -790,6 +795,28 @@ library(gridlayout)
           }
         })
       }
+      # ISCheck_blank
+      {
+        observeEvent(input$ISCheck_blank, {
+          id <- notify("Blank...")
+          on.exit(removeNotification(id), add = TRUE)
+          if(values$prepared & values$IS_extracted & input$ISCheck_sampleName != "none" & input$ISCheck_analyteName != "none" & !is.null(values$MChromatograms)){
+            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
+            col <- .getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$ISCheck_sampleName)
+            values$MChromatograms <- blank_MChromatograms(MChromatograms, rows = row, cols = col)
+          }
+        })
+      }
+      # ISCheck_blankBatch
+      observeEvent(input$ISCheck_blankBatch, {
+        id <- notify("Blank Batch...")
+        on.exit(removeNotification(id), add = TRUE)
+        if(values$prepared & values$IS_extracted & input$ISCheck_sampleName != "none" & input$ISCheck_analyteName != "none" & !is.null(values$MChromatograms)){
+          row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
+          cols <- values$cols_batchs[[input$ISCheck_batchName]]
+          values$MChromatograms <- blank_MChromatograms(MChromatograms, rows = row, cols = cols)
+        }
+      })
       # ISCheck_debug
       {
         observeEvent(input$ISCheck_debug, {
@@ -1050,6 +1077,28 @@ library(gridlayout)
           }
         })
       }
+      # AnalyteCheck_blank
+      {
+        observeEvent(input$AnalyteCheck_blank, {
+          id <- notify("Blank...")
+          on.exit(removeNotification(id), add = TRUE)
+          if(values$Analyte_extracted & input$AnalyteCheck_sampleName != "none" & input$AnalyteCheck_analyteName != "none" & !is.null(values$MChromatograms)){
+            row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
+            col <- .getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$AnalyteCheck_sampleName)
+            values$MChromatograms <- blank_MChromatograms(MChromatograms, rows = row, cols = col)
+          }
+        })
+      }
+      # AnalyteCheck_blankBatch
+      observeEvent(input$AnalyteCheck_blankBatch, {
+        id <- notify("Blank Batch...")
+        on.exit(removeNotification(id), add = TRUE)
+        if(values$Analyte_extracted & input$AnalyteCheck_sampleName != "none" & input$AnalyteCheck_analyteName != "none" & !is.null(values$MChromatograms)){
+          row <- .getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
+          cols <- values$cols_batchs[[input$AnalyteCheck_batchName]]
+          values$MChromatograms <- blank_MChromatograms(MChromatograms, rows = row, cols = cols)
+        }
+      })
       # AnalyteCheck debug
       {
         observeEvent(input$AnalyteCheck_debug, {

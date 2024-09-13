@@ -104,3 +104,24 @@ extractTargetPeak_IS <- function(MChromatograms){
   MSnbase::MChromatograms(chrs_all,
                           ncol = ncol)
 }
+
+blank_MChromatograms <- function(MChromatograms, rows, cols){
+  nrow <- nrow(MChromatograms)
+  ncol <- ncol(MChromatograms)
+  chrs_all <- MChromatograms[,1:ncol , drop = TRUE]
+  combinations <- expand.grid(rows, cols)
+  colnames(combinations) <- c("i", "j")
+  chrs_idx <- sapply(1:nrow(combinations), function(l) {
+    i <- combinations[l, ]$i;j <- combinations[l, ]$j
+    (j - 1) * nrow + i
+  })
+  chrs <- lapply(1:nrow(combinations), function(l) {
+    i <- combinations[l, ]$i;j <- combinations[l, ]$j
+    Chromatogram <- MChromatograms[i, j]
+    attributes(Chromatogram)$targetPeak <- NULL
+    return(Chromatogram)
+  })
+  chrs_all[chrs_idx] <- chrs
+  MSnbase::MChromatograms(chrs_all,
+                          ncol = ncol)
+}
