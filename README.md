@@ -3,12 +3,14 @@
 ## Install
 
 ```R
+# install.packages("BiocManager")
 # install.packages("devtools")
+BiocManager::install("xcms")
 devtools::install_github("dongdongdong7/MRMProcessor")
 devtools::install_github("rstudio/gridlayout")
 ```
 
-# Workflow
+### Workflow
 
 ```R
 readMRMData
@@ -18,5 +20,5 @@ extractTargetPeak_MChromatograms # IS
 rtCorrection_IS
 ```
 
-（1）对于```peakPicking_MChromatograms```函数，我们需要一个它的可指定rows和cols的版本。
+
 
