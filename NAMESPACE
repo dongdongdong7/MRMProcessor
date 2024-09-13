@@ -2,6 +2,7 @@
 
 export("%>%")
 export(GetStdCurve)
+export(MRMProcessor_GUI)
 export(align2Chromatogram)
 export(align2ChromatogramVstandard)
 export(baselineEs)
