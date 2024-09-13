@@ -591,7 +591,7 @@ library(gridlayout)
         })
         observeEvent(values$prepared, {
           if(values$prepared & !is.null(values$batchNameVector)){
-            values$cols_batchs <- lapply(values$batchNameVector, function(x) .getCol4batchName(MChromatograms = values$MChromatograms, batchName = x))
+            values$cols_batchs <- lapply(values$batchNameVector, function(x) MRMProcessor:::.getCol4batchName(MChromatograms = values$MChromatograms, batchName = x))
             names(values$cols_batchs) <- values$batchNameVector
             values$rows_IS <- MRMProcessor:::.getRow4analyteType(MChromatograms = values$MChromatograms, analyteType = "IS")
             values$rows_Quant <- MRMProcessor:::.getRow4analyteType(MChromatograms = values$MChromatograms, analyteType = "Quant")
