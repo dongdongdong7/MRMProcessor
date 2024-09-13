@@ -156,7 +156,7 @@ library(MRMProcessor)
           tabsetPanel(
             nav_panel(
               title = "noise",
-              numericInput("ISCheck_noise", label = "Select noise", min = -1, max = 100000000, step = 1, value = -1),
+              numericInput("ISCheck_noise", label = "Select noise", min = -1, max = 100000000, step = 1, value = 200),
               sliderInput("ISCheck_noiseMag", label = "Select noiseMag", min = 2, max = 4, step = 1, value = 3),
               actionButton("ISCheck_peakPicking", label = "Peak Picking"),
               actionButton("ISCheck_peakPickingBatch", label = "Peak Picking Batch"),
@@ -284,7 +284,7 @@ library(MRMProcessor)
           tabsetPanel(
             nav_panel(
               title = "noise",
-              numericInput("AnalyteCheck_noise", label = "Select noise", min = -1, max = 100000000, step = 1, value = -1),
+              numericInput("AnalyteCheck_noise", label = "Select noise", min = -1, max = 100000000, step = 1, value = 200),
               sliderInput("AnalyteCheck_noiseMag", label = "Select noiseMag", min = 2, max = 4, step = 1, value = 3),
               actionButton("AnalyteCheck_peakPicking", label = "Peak Picking"),
               actionButton("AnalyteCheck_peakPickingBatch", label = "Peak Picking Batch"),
