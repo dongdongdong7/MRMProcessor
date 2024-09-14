@@ -670,6 +670,17 @@ library(gridlayout)
                 })
               }
             })
+            # output$ISCheck_Plot2 <- plotly::renderPlotly({
+            #   MRMProcessor::plotHeatMap_MChromatogramsRow(MChromatograms = values$MChromatograms, row = row,cols = values$cols_batchs[[input$ISCheck_batchName]])
+            # })
+          }
+        })
+      }
+      # ISCheck_Plot2
+      {
+        observe({
+          if(values$prepared & input$ISCheck_batchName != "none" & input$ISCheck_analyteName != "none" & !is.null(values$MChromatograms)){
+            row <- MRMProcessor:::.getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
             output$ISCheck_Plot2 <- plotly::renderPlotly({
               MRMProcessor::plotHeatMap_MChromatogramsRow(MChromatograms = values$MChromatograms, row = row,cols = values$cols_batchs[[input$ISCheck_batchName]])
             })
@@ -802,7 +813,7 @@ library(gridlayout)
           if(values$prepared & values$IS_extracted & input$ISCheck_sampleName != "none" & input$ISCheck_analyteName != "none" & !is.null(values$MChromatograms)){
             row <- MRMProcessor:::.getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
             col <- MRMProcessor:::.getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$ISCheck_sampleName)
-            values$MChromatograms <- MRMProcessor:::blank_MChromatograms(MChromatograms, rows = row, cols = col)
+            values$MChromatograms <- MRMProcessor:::blank_MChromatograms(values$MChromatograms, rows = row, cols = col)
           }
         })
       }
@@ -813,7 +824,7 @@ library(gridlayout)
         if(values$prepared & values$IS_extracted & input$ISCheck_sampleName != "none" & input$ISCheck_analyteName != "none" & !is.null(values$MChromatograms)){
           row <- MRMProcessor:::.getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
           cols <- values$cols_batchs[[input$ISCheck_batchName]]
-          values$MChromatograms <- MRMProcessor:::blank_MChromatograms(MChromatograms, rows = row, cols = cols)
+          values$MChromatograms <- MRMProcessor:::blank_MChromatograms(values$MChromatograms, rows = row, cols = cols)
         }
       })
       # ISCheck_debug
@@ -934,9 +945,9 @@ library(gridlayout)
                 })
               }
             })
-            output$AnalyteCheck_Plot2 <- plotly::renderPlotly({
-              MRMProcessor::plotHeatMap_MChromatogramsRow(MChromatograms = values$MChromatograms, row = row, cols = values$cols_batchs[[input$AnalyteCheck_batchName]])
-            })
+            # output$AnalyteCheck_Plot2 <- plotly::renderPlotly({
+            #   MRMProcessor::plotHeatMap_MChromatogramsRow(MChromatograms = values$MChromatograms, row = row, cols = values$cols_batchs[[input$AnalyteCheck_batchName]])
+            # })
           }
           if(values$stdCurved){
             row <- MRMProcessor:::.getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
@@ -961,6 +972,17 @@ library(gridlayout)
                 plotly::ggplotly(ggplot2::ggplot(data = NULL))
               })
             }
+          }
+        })
+      }
+      # AnalyteCheck_Plot2
+      {
+        observe({
+          if(values$IS_corrected & values$Analyte_corrected & !is.null(values$MChromatograms) & input$AnalyteCheck_batchName != "none" & input$AnalyteCheck_analyteName != "none"){
+            row <- MRMProcessor:::.getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
+            output$AnalyteCheck_Plot2 <- plotly::renderPlotly({
+              MRMProcessor::plotHeatMap_MChromatogramsRow(MChromatograms = values$MChromatograms, row = row, cols = values$cols_batchs[[input$AnalyteCheck_batchName]])
+            })
           }
         })
       }
@@ -1084,7 +1106,7 @@ library(gridlayout)
           if(values$Analyte_extracted & input$AnalyteCheck_sampleName != "none" & input$AnalyteCheck_analyteName != "none" & !is.null(values$MChromatograms)){
             row <- MRMProcessor:::.getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
             col <- MRMProcessor:::.getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$AnalyteCheck_sampleName)
-            values$MChromatograms <- MRMProcessor:::blank_MChromatograms(MChromatograms, rows = row, cols = col)
+            values$MChromatograms <- MRMProcessor:::blank_MChromatograms(values$MChromatograms, rows = row, cols = col)
           }
         })
       }
@@ -1095,7 +1117,7 @@ library(gridlayout)
         if(values$Analyte_extracted & input$AnalyteCheck_sampleName != "none" & input$AnalyteCheck_analyteName != "none" & !is.null(values$MChromatograms)){
           row <- MRMProcessor:::.getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
           cols <- values$cols_batchs[[input$AnalyteCheck_batchName]]
-          values$MChromatograms <- MRMProcessor:::blank_MChromatograms(MChromatograms, rows = row, cols = cols)
+          values$MChromatograms <- MRMProcessor:::blank_MChromatograms(values$MChromatograms, rows = row, cols = cols)
         }
       })
       # AnalyteCheck debug
