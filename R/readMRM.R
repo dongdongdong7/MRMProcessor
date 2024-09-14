@@ -63,6 +63,7 @@ readMRMData <- function(files, thread = 1){
       stop("Can only extract chromatogram information from a mzML file",
            " using the 'proteowizard' backend")
     hdr <- mzR::chromatogramHeader(msf)
+    Encoding(hdr[, 1]) <- "UTF-8"
     mzR::close(msf)
     hdr[!is.na(hdr$precursorIsolationWindowTargetMZ) | !is.na(hdr$productIsolationWindowTargetMZ), , drop = FALSE]
   })
