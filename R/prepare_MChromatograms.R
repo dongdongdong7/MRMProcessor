@@ -47,7 +47,7 @@ prepare_MChromatograms <- function(MChromatograms, windowInfo = windowInfo, samp
         attributes(Chromatogram_new)$dilutionRatio <- sampleInfo_tmp$dilutionRatio
         Chromatogram_new
       })
-    }else stop(paste0(windowName, ", windowName maybe wrong!"))
+    }else stop(paste0(windowName, " | ",sample_name,  ", windowName or sampleName maybe wrong!"))
     tmpList
   }
   if(thread == 1){
