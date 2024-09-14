@@ -25,7 +25,7 @@ prepare_MChromatograms <- function(MChromatograms, windowInfo = windowInfo, samp
     i <- combinations[l, ]$i;j <- combinations[l, ]$j
     Chromatogram <- MChromatograms[i, j]
     chrInfo <- attributes(Chromatogram)$chrInfo
-    windowName <- purrr::pluck(strsplit(regmatches(chrInfo$chromatogramId, regexpr("name=(.+)", chrInfo$chromatogramId, perl = TRUE)), "name=")[[1]], 2)
+    windowName <- trimws(purrr::pluck(strsplit(regmatches(chrInfo$chromatogramId, regexpr("name=(.+)", chrInfo$chromatogramId, perl = TRUE)), "name=")[[1]], 2))
     attributes(Chromatogram)$windowName <- windowName
     windowInfo_tmp <- windowInfo[windowInfo$windowName == windowName, ]
     sample_name <- strsplit(basename(attributes(Chromatogram)$sample_name), ".", fixed = TRUE)[[1]][1]
