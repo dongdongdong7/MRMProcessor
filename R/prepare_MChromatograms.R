@@ -109,14 +109,21 @@ prepare_MChromatograms <- function(MChromatograms, windowInfo = windowInfo, samp
   analyteTypeVec <- sapply(1:nrow, function(i) {
     attributes(MChromatograms[i,1])$analyteType
   })
-  which(analyteTypeVec %in% analyteType)
+  analyteNameVec_all <- sapply(1:nrow, function(i) {
+    attributes(MChromatograms[i, 1])$analyteName
+  })
+  rows <- which(analyteTypeVec %in% analyteType)
+  names(rows) <- analyteNameVec_all[rows]
+  return(rows)
 }
 .getCol4batchName <- function(MChromatograms, batchName){
   ncol <- ncol(MChromatograms)
   batchNameVec <- sapply(1:ncol, function(j) {
     attributes(MChromatograms[1, j])$batchName
   })
-  which(batchNameVec %in% batchName)
+  cols <- which(batchNameVec %in% batchName)
+  names(cols) <- batchNameVec[cols]
+  return(cols)
 }
 .getRow4analyteName <- function(MChromatograms, analyteNameVec){
   nrow <- nrow(MChromatograms)
