@@ -597,7 +597,6 @@ library(gridlayout)
         })
         observeEvent(values$prepared, {
           if(values$prepared & !is.null(values$batchNameVector)){
-            browser()
             values$cols_batchs <- lapply(values$batchNameVector, function(x) MRMProcessor:::.getCol4batchName(MChromatograms = values$MChromatograms, batchName = x))
             names(values$cols_batchs) <- values$batchNameVector
             values$rows_IS <- MRMProcessor:::.getRow4analyteType(MChromatograms = values$MChromatograms, analyteType = "IS")
