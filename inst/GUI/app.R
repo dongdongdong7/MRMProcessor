@@ -687,9 +687,10 @@ library(gridlayout)
       # ISCheck_Plot2
       {
         observe({
-          if(values$prepared & input$ISCheck_batchName != "none" & input$ISCheck_analyteName != "none" & !is.null(isolate(values$MChromatograms))){
+          if(values$prepared & values$IS_extracted & input$ISCheck_batchName != "none" & input$ISCheck_analyteName != "none" & !is.null(isolate(values$MChromatograms))){
             #row <- MRMProcessor:::.getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$ISCheck_analyteName)
             row <- which(values$analyteNameVector == input$ISCheck_analyteName)
+            input$ISCheck_blank;input$ISCheck_blankBatch;input$ISCheck_correction;input$ISCheck_correctionBatch;input$ISCheck_extract;input$ISCheck_extractBatch;values$IS_corrected
             output$ISCheck_Plot2 <- plotly::renderPlotly({
               MRMProcessor::plotHeatMap_MChromatogramsRow(MChromatograms = isolate(values$MChromatograms), row = row,cols = values$cols_batchs[[input$ISCheck_batchName]])
             })
