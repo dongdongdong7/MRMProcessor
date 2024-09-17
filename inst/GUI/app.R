@@ -1003,11 +1003,12 @@ library(gridlayout)
       # AnalyteCheck_Plot2
       {
         observe({
-          if(values$IS_corrected & values$Analyte_corrected & !is.null(values$MChromatograms) & input$AnalyteCheck_batchName != "none" & input$AnalyteCheck_analyteName != "none"){
+          if(values$IS_corrected & values$Analyte_corrected & !is.null(isolate(values$MChromatograms)) & input$AnalyteCheck_batchName != "none" & input$AnalyteCheck_analyteName != "none"){
             #row <- MRMProcessor:::.getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
             row <- which(values$analyteNameVector == input$AnalyteCheck_analyteName)
+            input$AnalyteCheck_blank;input$AnalyteCheck_blankBatch;input$AnalyteCheck_correction;input$AnalyteCheck_correctionBatch;input$AnalyteCheck_extract;input$AnalyteCheck_extractBatch;values$Analyte_extracted
             output$AnalyteCheck_Plot2 <- plotly::renderPlotly({
-              MRMProcessor::plotHeatMap_MChromatogramsRow(MChromatograms = values$MChromatograms, row = row, cols = values$cols_batchs[[input$AnalyteCheck_batchName]])
+              MRMProcessor::plotHeatMap_MChromatogramsRow(MChromatograms = isolate(values$MChromatograms), row = row, cols = values$cols_batchs[[input$AnalyteCheck_batchName]])
             })
           }
         })
