@@ -95,6 +95,19 @@ peakPicking_MChromatograms2 <- function(MChromatograms, rows, cols, noise = NA, 
   chrs_all <- MChromatograms[,1:ncol , drop = TRUE]
   combinations <- expand.grid(rows, cols)
   colnames(combinations) <- c("i", "j")
+
+  if((length(rows) * length(cols)) < 10){ # if target object number is small, use for.
+    for(l in 1:nrow(combinations)){
+      i <- combinations[l, ]$i;j <- combinations[l, ]$j
+      Chromatogram <- MChromatograms[i, j]
+      Chromatogram <- peakPicking_Chromatogram(Chromatogram = Chromatogram, noise = noise, noiseMag = noiseMag,
+                                               smoothPara = smoothPara, baselinePara = baselinePara,
+                                               peakPara = peakPara)
+      MChromatograms[i, j] <- Chromatogram
+    }
+    return(MChromatograms)
+  }
+
   chrs_idx <- sapply(1:nrow(combinations), function(l) {
     i <- combinations[l, ]$i;j <- combinations[l, ]$j
     (j - 1) * nrow + i
@@ -108,7 +121,6 @@ peakPicking_MChromatograms2 <- function(MChromatograms, rows, cols, noise = NA, 
                                              peakPara = peakPara)
     return(Chromatogram)
   }
-  if((length(rows) * length(cols)) < 20) thread <- 1 # If the number of peakPicking objects is small, force the number of threads to be 1
   if(thread == 1){
     chrs <- lapply(1:nrow(combinations), function(l) {
       utils::setTxtProgressBar(pb, l)

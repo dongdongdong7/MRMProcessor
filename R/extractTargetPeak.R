@@ -60,6 +60,17 @@ extractTargetPeak_MChromatograms <- function(MChromatograms, rows, cols, targetR
   chrs_all <- MChromatograms[,1:ncol , drop = TRUE]
   combinations <- expand.grid(rows, cols)
   colnames(combinations) <- c("i", "j")
+
+  if((length(rows) * length(cols)) < 10){ # if target object number is small, use for.
+    for(l in 1:nrow(combinations)){
+      i <- combinations[l, ]$i;j <- combinations[l, ]$j
+      Chromatogram <- MChromatograms[i, j]
+      Chromatogram <- extractTargetPeak_Chromatogram(Chromatogram, targetRt = targetRt, tolRt = tolRt)
+      MChromatograms[i, j] <- Chromatogram
+    }
+    return(MChromatograms)
+  }
+
   chrs_idx <- sapply(1:nrow(combinations), function(l) {
     i <- combinations[l, ]$i;j <- combinations[l, ]$j
     (j - 1) * nrow + i
@@ -111,6 +122,17 @@ blank_MChromatograms <- function(MChromatograms, rows, cols){
   chrs_all <- MChromatograms[,1:ncol , drop = TRUE]
   combinations <- expand.grid(rows, cols)
   colnames(combinations) <- c("i", "j")
+
+  if((length(rows) * length(cols)) < 10){ # if target object number is small, use for.
+    for(l in 1:nrow(combinations)){
+      i <- combinations[l, ]$i;j <- combinations[l, ]$j
+      Chromatogram <- MChromatograms[i, j]
+      attributes(Chromatogram)$targetPeak <- NULL
+      MChromatograms[i, j] <- Chromatogram
+    }
+    return(MChromatograms)
+  }
+
   chrs_idx <- sapply(1:nrow(combinations), function(l) {
     i <- combinations[l, ]$i;j <- combinations[l, ]$j
     (j - 1) * nrow + i
