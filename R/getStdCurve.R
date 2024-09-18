@@ -127,6 +127,7 @@ cal_concentration <- function(MChromatograms, sampleInfo){
       batchTmp <- batchNameVector[sapply(cols_batchs, function(x) {j %in% x})]
       idx <- cols_batchs[[batchTmp]][1]
       stdCurveRes_tmp <- attributes(MChromatograms[i, idx])$stdCurveRes
+      if(is.null(stdCurveRes_tmp)) return(NA)
       slope <- stdCurveRes_tmp$slope
       intercept <- stdCurveRes_tmp$intercept
       con <- round((((area_analyte / area_IS) - intercept) / slope) * attributes(MChromatograms[row_IS, j])$initialCon, 4)
