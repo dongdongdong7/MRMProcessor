@@ -101,6 +101,7 @@ GetStdCurve_MChromatograms <- function(MChromatograms, sampleInfo, weights = "1/
     i <- combinations[l, ]$i;j <- combinations[l, ]$j
     (j - 1) * nrow + i
   })
+  browser()
   chrs <- lapply(1:nrow(combinations), function(l) {
     utils::setTxtProgressBar(pb, l)
     i <- combinations[l, ]$i;j <- combinations[l, ]$j
