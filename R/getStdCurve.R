@@ -44,7 +44,7 @@ GetStdCurve <- function(MChromatograms, row, batchName, weights = "1/x^2", delet
   # IS
   ISName <- attributes(MChromatograms[row, cols_std[1]])$relatedIS
   if(is.null(rows_IS)) row_IS <- .getRow4analyteName(MChromatograms, analyteNameVec = c(ISName))
-  else row_IS <- rows_IS[names(rows_IS) == relatedIS]
+  else row_IS <- rows_IS[names(rows_IS) == ISName]
   areaVec <- as.numeric(sapply(cols_std, function(j) {
     if(is.null(attributes(MChromatograms[row_IS, j])$targetPeak)) return(NA)
     else return(attributes(MChromatograms[row_IS, j])$targetPeak[[1]]["area"])
@@ -120,7 +120,7 @@ cal_concentration <- function(MChromatograms, sampleInfo){
     conVec <- sapply(cols_real, function(j) {
       if(is.null(attributes(MChromatograms[i, j])$targetPeak)) area_analyte <- 0
       else area_analyte <- as.numeric(attributes(MChromatograms[i, j])$targetPeak[[1]]["area"])
-      row_IS <- rows_IS[names(rows_IS) == relatedIS]
+      row_IS <- rows_IS[names(rows_IS) == attributes(MChromatograms[i, j])$relatedIS]
       if(is.null(attributes(MChromatograms[row_IS, j])$targetPeak)) area_IS <- 0
       else area_IS <- as.numeric(attributes(MChromatograms[row_IS, j])$targetPeak[[1]]["area"])
       if(area_analyte == 0 | area_IS == 0) return(NA)
