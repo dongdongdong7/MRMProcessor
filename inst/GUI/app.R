@@ -225,6 +225,7 @@ library(gridlayout)
                   inputId = "AnalyteCheck_analyteName"
                 ),
                 numericInput("AnalyteCheck_expectRt", label = "Expect Rtime", min = 0, max = 1000, value = 100, step = 0.5),
+                numericInput("AnalyteCheck_tolRt", label = "Tolerable Rtime Gap", min = 0, max = 100, value = 5, step = 1),
                 numericInput("AnalyteCheck_deltaRt", label = "Delta Rtime", min = 0, max = 100, value = 5, step = 0.5),
                 radioButtons("AnalyteCheck_targetPeak", label = "Show Target", choices = c("TRUE" = "TRUE", "FALSE" = "FALSE"), selected = "FALSE", inline = TRUE),
                 radioButtons("AnalyteCheck_PlotType", label = "Plot Type", choices = c("Single" = "Single", "Compare" = "Compare"), selected = "Single", inline = TRUE),
@@ -1099,7 +1100,7 @@ library(gridlayout)
             row <- which(values$analyteNameVector == input$AnalyteCheck_analyteName)
             #col <- MRMProcessor:::.getCol4sampleName(MChromatograms = values$MChromatograms, sampleNameVec = input$AnalyteCheck_sampleName)
             col <- which(values$sampleNameVector == input$AnalyteCheck_sampleName)
-            values$MChromatograms <- MRMProcessor::extractTargetPeak_MChromatograms(values$MChromatograms, rows = row, cols = col, targetRt = input$AnalyteCheck_expectRt, tolRt = 5)
+            values$MChromatograms <- MRMProcessor::extractTargetPeak_MChromatograms(values$MChromatograms, rows = row, cols = col, targetRt = input$AnalyteCheck_expectRt, tolRt = input$AnalyteCheck_tolRt)
           }
         })
       }
@@ -1112,7 +1113,7 @@ library(gridlayout)
             #row <- MRMProcessor:::.getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
             row <- which(values$analyteNameVector == input$AnalyteCheck_analyteName)
             cols <- values$cols_batchs[[input$AnalyteCheck_batchName]]
-            values$MChromatograms <- MRMProcessor::extractTargetPeak_MChromatograms(values$MChromatograms, rows = row, cols = cols, targetRt = input$AnalyteCheck_expectRt, tolRt = 5)
+            values$MChromatograms <- MRMProcessor::extractTargetPeak_MChromatograms(values$MChromatograms, rows = row, cols = cols, targetRt = input$AnalyteCheck_expectRt, tolRt = input$AnalyteCheck_tolRt)
           }
         })
       }
