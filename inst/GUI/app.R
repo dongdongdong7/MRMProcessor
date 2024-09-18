@@ -882,7 +882,7 @@ library(gridlayout)
           id <- notify("Correct Analyte...")
           on.exit(removeNotification(id), add = TRUE)
           if(values$IS_corrected & !is.null(values$MChromatograms)){
-            values$MChromatograms <- MRMProcessor::rtCorrection_analyte(MChromatograms = values$MChromatograms, rows = NA, cols = 1:ncol(values$MChromatograms), thread = round(values$ncore * 0.8))
+            values$MChromatograms <- MRMProcessor::rtCorrection_analyte(MChromatograms = values$MChromatograms, rows = NA, cols = 1:ncol(values$MChromatograms), thread = round(values$ncore * 0.4))
             values$Analyte_corrected <- TRUE
           }
         })
