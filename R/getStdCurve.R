@@ -95,6 +95,7 @@ GetStdCurve_MChromatograms <- function(MChromatograms, sampleInfo, weights = "1/
   names(cols_batchs) <- batchNameVector
   cols_std <- .getCol4typeName(MChromatograms, typeName = "std")
   rows_IS <- .getRow4analyteType(MChromatograms = MChromatograms, analyteType = "IS")
+  chrs_all <- MChromatograms[,1:ncol , drop = TRUE]
   combinations <- expand.grid(rows_Quant, sapply(cols_batchs, function(x) purrr::pluck(x, 1)))
   colnames(combinations) <- c("i", "j")
   pb <- utils::txtProgressBar(max = nrow(combinations), style = 3)

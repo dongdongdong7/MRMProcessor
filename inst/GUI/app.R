@@ -1130,7 +1130,7 @@ library(gridlayout)
             }else{
               delete <- as.integer(input$AnalyteCheck_delete)
             }
-            stdCurveRes_new <- MRMProcessor::GetStdCurve(values$MChromatograms, row = row, batchName = batchName, weights = input$AnalyteCheck_weights, delete = delete, zero = as.logical(input$AnalyteCheck_zero))
+            stdCurveRes_new <- MRMProcessor::GetStdCurve(values$MChromatograms, row = row, batchName = batchName, weights = input$AnalyteCheck_weights, delete = delete, zero = as.logical(input$AnalyteCheck_zero), rows_IS = values$rows_IS)
             attributes(values$MChromatograms[row, values$cols_batchs[[batchName]][1]])$stdCurveRes <- stdCurveRes_new
           }
         })
