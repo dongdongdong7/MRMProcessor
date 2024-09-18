@@ -175,6 +175,7 @@ generate_area <- function(MChromatograms){
 #' @examples
 #' plotStdCurve(stdCurveRes)
 plotStdCurve <- function(stdCurveRes){
+  if(is.null(stdCurveRes)) return(plotly::ggplotly(ggplot2::ggplot(data = NULL)))
   df <- stdCurveRes$df;analyteName <- stdCurveRes$analyteName;ISName <- stdCurveRes$ISName;
   slope <- stdCurveRes$slope;intercept <- stdCurveRes$intercept;r_squared <- stdCurveRes$r_squared;
   delete <- stdCurveRes$delete;weights = stdCurveRes$weights
