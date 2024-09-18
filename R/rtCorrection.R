@@ -108,6 +108,7 @@ rtCorrection_analyte <- function(MChromatograms, rows = NA, cols, thread = 4, de
     i <- combinations[l, ]$i;j <- combinations[l, ]$j
     (j - 1) * nrow + i
   })
+  rows_IS <- .getRow4analyteType(MChromatograms = MChromatograms, analyteType = "IS")
   if(nrow(combinations) < 100) thread <- 1 # if loop number is small, do not set too much thread number.
   pb <- utils::txtProgressBar(max = nrow(combinations), style = 3)
   loop <- function(l){
@@ -115,7 +116,7 @@ rtCorrection_analyte <- function(MChromatograms, rows = NA, cols, thread = 4, de
     Chromatogram <- MChromatograms[i, j]
     if(!is.null(attributes(Chromatogram)$deltaRt)) return(Chromatogram)
     relatedIS <- attributes(Chromatogram)$relatedIS
-    row_IS <- .getRow4analyteName(MChromatograms, analyteNameVec = relatedIS)
+    row_IS <- rows_IS[names(rows_IS) == relatedIS]
     if(length(row_IS) > 1) stop("analytyName cannot have duplicates!")
     Chromatogram_IS <- MChromatograms[row_IS, j]
     if(is.null(attributes(Chromatogram_IS)$deltaRt) & is.na(deltaRt)) return(Chromatogram)
