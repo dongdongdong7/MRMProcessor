@@ -87,28 +87,31 @@ GetStdCurve <- function(MChromatograms, row, batchName, weights = "1/x^2", delet
 }
 
 GetStdCurve_MChromatograms <- function(MChromatograms, sampleInfo, weights = "1/x^2", zero = FALSE){
+  nrow <- nrow(MChromatograms)
+  ncol <- ncol(MChromatograms)
   rows_Quant <- .getRow4analyteType(MChromatograms, analyteType = c("Quant"))
   batchNameVector <- unique(sampleInfo$batchName)
   cols_batchs <- lapply(batchNameVector, function(x) .getCol4batchName(MChromatograms = MChromatograms, batchName = x))
   names(cols_batchs) <- batchNameVector
   cols_std <- .getCol4typeName(MChromatograms, typeName = "std")
   rows_IS <- .getRow4analyteType(MChromatograms = MChromatograms, analyteType = "IS")
-  stdCurveResList <- lapply(rows_Quant, function(i) {
-    print(i)
-    lapply(batchNameVector, function(x) {
-      GetStdCurve(MChromatograms, row = i, batchName = x, rows_IS = rows_IS, cols_std = cols_std, cols_batchs = cols_batchs)
-    })
+  combinations <- expand.grid(rows_Quant, sapply(cols_batchs, function(x) purrr::pluck(x, 1)))
+  pb <- utils::txtProgressBar(max = nrow(combinations), style = 3)
+  chrs_idx <- sapply(1:nrow(combinations), function(l) {
+    i <- combinations[l, ]$i;j <- combinations[l, ]$j
+    (j - 1) * nrow + i
   })
-  stdCurveResList <- purrr::list_flatten(stdCurveResList)
-  k <- 1
-  for(i in rows_Quant){
-    print(i)
-    for(j in sapply(cols_batchs, function(x) purrr::pluck(x, 1))){
-      attributes(MChromatograms[i, j])$stdCurveRes <- stdCurveResList[[k]]
-      k <- k + 1
-    }
-  }
-  return(MChromatograms)
+  chrs <- lapply(1:nrow(combinations), function(l) {
+    utils::setTxtProgressBar(pb, l)
+    i <- combinations[l, ]$i;j <- combinations[l, ]$j
+    Chromatogram <- MChromatograms[i, j]
+    stdCurveRes <- GetStdCurve(MChromatograms, row = i, batchName = attributes(MChromatograms[i,j])$batchName, rows_IS = rows_IS, cols_std = cols_std, cols_batchs = cols_batchs)
+    attributes(Chromatogram)$stdCurveRes <- stdCurveRes
+    return(Chromatogram)
+  })
+  chrs_all[chrs_idx] <- chrs
+  MSnbase::MChromatograms(chrs_all,
+                          ncol = ncol)
 }
 
 cal_concentration <- function(MChromatograms, sampleInfo){
