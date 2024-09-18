@@ -8,6 +8,7 @@
 #' @param weights weights.None, 1/x, 1/x^2.
 #' @param delete Serial numbers of the samples to be deleted, sorted in the order of injection.
 #' @param zero Whether the marking curve passes the zero point.
+#' @param rows_IS rows_IS.
 #'
 #' @return A stdCurve list.
 #' @export
@@ -16,7 +17,7 @@
 #' rows_Quant <- .getRow4analyteType(MChromatograms, analyteType = c("Quant"))
 #' rows_IS <- .getRow4analyteType(MChromatograms, analyteType = c("IS"))
 #' stdCurveRes <- GetStdCurve(MChromatograms, row = rows_Quant[1], batchName = "batch1", delete = c(10, 12))
-GetStdCurve <- function(MChromatograms, row, batchName, weights = "1/x^2", delete = c(), zero = FALSE){
+GetStdCurve <- function(MChromatograms, row, batchName, weights = "1/x^2", delete = c(), zero = FALSE, rows_IS = NULL){
 
   if(attributes(MChromatograms[row, 1])$analyteType != "Quant") stop("Must be Quant!")
 
@@ -42,7 +43,8 @@ GetStdCurve <- function(MChromatograms, row, batchName, weights = "1/x^2", delet
     dplyr::arrange(injectOrder)
   # IS
   ISName <- attributes(MChromatograms[row, cols_std[1]])$relatedIS
-  row_IS <- .getRow4analyteName(MChromatograms, analyteNameVec = c(ISName))
+  if(is.null(rows_IS)) row_IS <- .getRow4analyteName(MChromatograms, analyteNameVec = c(ISName))
+  else row_IS <- rows_IS[names(rows_IS) == relatedIS]
   areaVec <- as.numeric(sapply(cols_std, function(j) {
     if(is.null(attributes(MChromatograms[row_IS, j])$targetPeak)) return(NA)
     else return(attributes(MChromatograms[row_IS, j])$targetPeak[[1]]["area"])
@@ -63,7 +65,8 @@ GetStdCurve <- function(MChromatograms, row, batchName, weights = "1/x^2", delet
   df$type <- rep("save", nrow(df))
   df$type[df$injectOrder %in% delete] <- "delete"
   df_fit <- df %>%
-    dplyr::filter(type == "save")
+    dplyr::filter(type == "save" & !is.na(areaRatio))
+  if(nrow(df_fit) <= 3) return(NULL)
   if(zero){
     df_fit <- rbind(data.frame(concentrationRatio = 0.000001, areaRatio = 0.000001, injectOrder = 0, type = "save"), df_fit)
   }
@@ -85,9 +88,10 @@ GetStdCurve_MChromatograms <- function(MChromatograms, sampleInfo, weights = "1/
   batchNameVector <- unique(sampleInfo$batchName)
   cols_batchs <- lapply(batchNameVector, function(x) .getCol4batchName(MChromatograms = MChromatograms, batchName = x))
   names(cols_batchs) <- batchNameVector
+  rows_IS <- .getRow4analyteType(MChromatograms = MChromatograms, analyteType = "IS")
   stdCurveResList <- lapply(rows_Quant, function(i) {
     lapply(batchNameVector, function(x) {
-      GetStdCurve(MChromatograms, row = i, batchName = x)
+      GetStdCurve(MChromatograms, row = i, batchName = x, rows_IS = rows_IS)
     })
   })
   stdCurveResList <- purrr::list_flatten(stdCurveResList)
@@ -111,11 +115,12 @@ cal_concentration <- function(MChromatograms, sampleInfo){
   sampleNameVector <- sapply(cols_real, function(j) {
     strsplit(basename(attributes(MChromatograms[1, j])$sample_name), split = ".", fixed = TRUE)[[1]][1]
   })
+  rows_IS <- .getRow4analyteType(MChromatograms = MChromatograms, analyteType = "IS")
   dfList <- lapply(rows_Quant, function(i) {
     conVec <- sapply(cols_real, function(j) {
       if(is.null(attributes(MChromatograms[i, j])$targetPeak)) area_analyte <- 0
       else area_analyte <- as.numeric(attributes(MChromatograms[i, j])$targetPeak[[1]]["area"])
-      row_IS <- .getRow4analyteName(MChromatograms, analyteNameVec = attributes(MChromatograms[i, j])$relatedIS)
+      row_IS <- rows_IS[names(rows_IS) == relatedIS]
       if(is.null(attributes(MChromatograms[row_IS, j])$targetPeak)) area_IS <- 0
       else area_IS <- as.numeric(attributes(MChromatograms[row_IS, j])$targetPeak[[1]]["area"])
       if(area_analyte == 0 | area_IS == 0) return(NA)
