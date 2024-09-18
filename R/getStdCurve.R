@@ -96,12 +96,12 @@ GetStdCurve_MChromatograms <- function(MChromatograms, sampleInfo, weights = "1/
   cols_std <- .getCol4typeName(MChromatograms, typeName = "std")
   rows_IS <- .getRow4analyteType(MChromatograms = MChromatograms, analyteType = "IS")
   combinations <- expand.grid(rows_Quant, sapply(cols_batchs, function(x) purrr::pluck(x, 1)))
+  colnames(combinations) <- c("i", "j")
   pb <- utils::txtProgressBar(max = nrow(combinations), style = 3)
   chrs_idx <- sapply(1:nrow(combinations), function(l) {
     i <- combinations[l, ]$i;j <- combinations[l, ]$j
     (j - 1) * nrow + i
   })
-  browser()
   chrs <- lapply(1:nrow(combinations), function(l) {
     utils::setTxtProgressBar(pb, l)
     i <- combinations[l, ]$i;j <- combinations[l, ]$j
