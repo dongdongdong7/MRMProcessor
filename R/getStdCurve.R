@@ -9,6 +9,8 @@
 #' @param delete Serial numbers of the samples to be deleted, sorted in the order of injection.
 #' @param zero Whether the marking curve passes the zero point.
 #' @param rows_IS rows_IS.
+#' @param cols_std cols_std.
+#' @param cols_batchs cols_batchs.
 #'
 #' @return A stdCurve list.
 #' @export
@@ -17,11 +19,12 @@
 #' rows_Quant <- .getRow4analyteType(MChromatograms, analyteType = c("Quant"))
 #' rows_IS <- .getRow4analyteType(MChromatograms, analyteType = c("IS"))
 #' stdCurveRes <- GetStdCurve(MChromatograms, row = rows_Quant[1], batchName = "batch1", delete = c(10, 12))
-GetStdCurve <- function(MChromatograms, row, batchName, weights = "1/x^2", delete = c(), zero = FALSE, rows_IS = NULL){
+GetStdCurve <- function(MChromatograms, row, batchName, weights = "1/x^2", delete = c(), zero = FALSE, rows_IS = NULL, cols_std = NULL, cols_batchs = NULL){
 
   if(attributes(MChromatograms[row, 1])$analyteType != "Quant") stop("Must be Quant!")
 
-  cols_std <- intersect(.getCol4typeName(MChromatograms, typeName = "std"), .getCol4batchName(MChromatograms, batchName = batchName))
+  if(is.null(cols_std) | is.null(cols_batchs)) cols_std <- intersect(.getCol4typeName(MChromatograms, typeName = "std"), .getCol4batchName(MChromatograms, batchName = batchName))
+  else cols_std <- intersect(cols_std, cols_batchs[[batchName]])
   # analyte
   analyteName <- attributes(MChromatograms[row, 1])$analyteName
   dilutionRatioVec <- sapply(cols_std, function(j) {
@@ -88,10 +91,12 @@ GetStdCurve_MChromatograms <- function(MChromatograms, sampleInfo, weights = "1/
   batchNameVector <- unique(sampleInfo$batchName)
   cols_batchs <- lapply(batchNameVector, function(x) .getCol4batchName(MChromatograms = MChromatograms, batchName = x))
   names(cols_batchs) <- batchNameVector
+  cols_std <- .getCol4typeName(MChromatograms, typeName = "std")
   rows_IS <- .getRow4analyteType(MChromatograms = MChromatograms, analyteType = "IS")
   stdCurveResList <- lapply(rows_Quant, function(i) {
+    print(i)
     lapply(batchNameVector, function(x) {
-      GetStdCurve(MChromatograms, row = i, batchName = x, rows_IS = rows_IS)
+      GetStdCurve(MChromatograms, row = i, batchName = x, rows_IS = rows_IS, cols_std = cols_std, cols_batchs = cols_batchs)
     })
   })
   stdCurveResList <- purrr::list_flatten(stdCurveResList)
