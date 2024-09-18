@@ -151,7 +151,6 @@ rtCorrection_analyte <- function(MChromatograms, rows = NA, cols, thread = 4, de
     }
     return(Chromatogram)
   }
-  browser()
   if(thread == 1){
     chrs <- lapply(1:nrow(combinations), function(l) {
       utils::setTxtProgressBar(pb, l)
