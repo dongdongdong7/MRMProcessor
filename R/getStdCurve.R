@@ -102,6 +102,7 @@ GetStdCurve_MChromatograms <- function(MChromatograms, sampleInfo, weights = "1/
   stdCurveResList <- purrr::list_flatten(stdCurveResList)
   k <- 1
   for(i in rows_Quant){
+    print(i)
     for(j in sapply(cols_batchs, function(x) purrr::pluck(x, 1))){
       attributes(MChromatograms[i, j])$stdCurveRes <- stdCurveResList[[k]]
       k <- k + 1
