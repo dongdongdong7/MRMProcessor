@@ -464,8 +464,8 @@ library(gridlayout)
               folderPath <- NULL;message <- "There are no *.mzML files in this folder!"
             }else{
               message <- folderPath;values$dataDir <- folderPath;values$dataPath <- file_path
-              id <- notify("Loading Raw Data...")
-              on.exit(removeNotification(id), add = TRUE)
+              # id <- notify("Loading Raw Data...")
+              # on.exit(removeNotification(id), add = TRUE)
               values$MChromatograms <- MRMProcessor::readMRMData(file_path, thread = round(values$ncore * 0.4))
             }
           }
