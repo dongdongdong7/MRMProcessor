@@ -20,7 +20,6 @@ peakPicking_Chromatogram <- function(Chromatogram, noise = NA, noiseMag = 3,
                                      smoothPara = get_smoothPara(), baselinePara = get_baselinePara(),
                                      peakPara = get_peakPara()){
   int <- Chromatogram@intensity
-  if(all(int == 0)) return(Chromatogram)
   rt <- Chromatogram@rtime
   attributes(Chromatogram)$smoothPara <- smoothPara
   attributes(Chromatogram)$baselinePara <- baselinePara
@@ -32,6 +31,7 @@ peakPicking_Chromatogram <- function(Chromatogram, noise = NA, noiseMag = 3,
     int <- smoothFun(attributes(Chromatogram)$intensity_orign, smoothPara = smoothPara)
   }
   Chromatogram@intensity <- int
+  if(all(int == 0)) return(Chromatogram)
   baseline <- baselineEs(int = int, rt = rt, baselinePara = baselinePara)
   attributes(Chromatogram)$baseline <- baseline
   if(is.na(noise)){
