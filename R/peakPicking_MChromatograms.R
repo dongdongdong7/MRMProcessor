@@ -33,6 +33,11 @@ peakPicking_MChromatograms <- function(MChromatograms, noise = NA, noiseMag = 3,
     #if(l == 20) browser()
     i <- combinations[l, ]$i;j <- combinations[l, ]$j
     Chromatogram <- MChromatograms[i, j]
+    # Debug: rtime and intensity are from blank
+    if(length(attributes(Chromatogram)$rtime) == 0 | length(attributes(Chromatogram)$intensity) == 0){
+      attributes(Chromatogram)$rtime <- c(0.1, 0.2, 0.3)
+      attributes(Chromatogram)$intensity <- c(0, 0, 0)
+    }
     if(unit == "min") attributes(Chromatogram)$rtime <- attributes(Chromatogram)$rtime * 60
     Chromatogram <- peakPicking_Chromatogram(Chromatogram = Chromatogram, noise = noise, noiseMag = noiseMag,
                                              smoothPara = smoothPara, baselinePara = baselinePara,

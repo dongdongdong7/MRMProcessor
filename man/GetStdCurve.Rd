@@ -10,7 +10,10 @@ GetStdCurve(
   batchName,
   weights = "1/x^2",
   delete = c(),
-  zero = FALSE
+  zero = FALSE,
+  rows_IS = NULL,
+  cols_std = NULL,
+  cols_batchs = NULL
 )
 }
 \arguments{
@@ -25,6 +28,12 @@ GetStdCurve(
 \item{delete}{Serial numbers of the samples to be deleted, sorted in the order of injection.}
 
 \item{zero}{Whether the marking curve passes the zero point.}
+
+\item{rows_IS}{rows_IS.}
+
+\item{cols_std}{cols_std.}
+
+\item{cols_batchs}{cols_batchs.}
 }
 \value{
 A stdCurve list.
