@@ -974,29 +974,31 @@ library(gridlayout)
             #   MRMProcessor::plotHeatMap_MChromatogramsRow(MChromatograms = values$MChromatograms, row = row, cols = values$cols_batchs[[input$AnalyteCheck_batchName]])
             # })
           }
-          if(values$stdCurved){
+          if(values$stdCurved & !is.null(values$analyteNameVector)){
             #row <- MRMProcessor:::.getRow4analyteName(MChromatograms = values$MChromatograms, analyteNameVec = input$AnalyteCheck_analyteName)
             row <- which(values$analyteNameVector == input$AnalyteCheck_analyteName)
             batchName <- input$AnalyteCheck_batchName
-            if(row %in% values$rows_Quant){
-              stdCurveRes <- attributes(values$MChromatograms[row, values$cols_batchs[[batchName]][1]])$stdCurveRes
-              delete_injectOrder <- stdCurveRes$df$injectOrder
-              names(delete_injectOrder) <- as.character(stdCurveRes$df$injectOrder)
-              delete_injectOrder <- c("none" = "none", delete_injectOrder)
-              if(is.null(stdCurveRes$delete)) select <- "none"
-              else{
-                select <- as.character(stdCurveRes$delete)
+            if(length(row) != 0){
+              if(row %in% values$rows_Quant){
+                stdCurveRes <- attributes(values$MChromatograms[row, values$cols_batchs[[batchName]][1]])$stdCurveRes
+                delete_injectOrder <- stdCurveRes$df$injectOrder
+                names(delete_injectOrder) <- as.character(stdCurveRes$df$injectOrder)
+                delete_injectOrder <- c("none" = "none", delete_injectOrder)
+                if(is.null(stdCurveRes$delete)) select <- "none"
+                else{
+                  select <- as.character(stdCurveRes$delete)
+                }
+                updateCheckboxGroupInput(session, inputId = "AnalyteCheck_delete", choices = delete_injectOrder, selected = select)
+                updateRadioButtons(session, inputId = "AnalyteCheck_weights", selected = stdCurveRes$weights)
+                updateRadioButtons(session, inputId = "AnalyteCheck_zero", selected = as.character(stdCurveRes$zero))
+                output$AnalyteCheck_Plot3 <- plotly::renderPlotly({
+                  MRMProcessor::plotStdCurve(attributes(values$MChromatograms[row, values$cols_batchs[[batchName]][1]])$stdCurveRes)
+                })
+              }else{
+                output$AnalyteCheck_Plot3 <- plotly::renderPlotly({
+                  plotly::ggplotly(ggplot2::ggplot(data = NULL))
+                })
               }
-              updateCheckboxGroupInput(session, inputId = "AnalyteCheck_delete", choices = delete_injectOrder, selected = select)
-              updateRadioButtons(session, inputId = "AnalyteCheck_weights", selected = stdCurveRes$weights)
-              updateRadioButtons(session, inputId = "AnalyteCheck_zero", selected = as.character(stdCurveRes$zero))
-              output$AnalyteCheck_Plot3 <- plotly::renderPlotly({
-                MRMProcessor::plotStdCurve(attributes(values$MChromatograms[row, values$cols_batchs[[batchName]][1]])$stdCurveRes)
-              })
-            }else{
-              output$AnalyteCheck_Plot3 <- plotly::renderPlotly({
-                plotly::ggplotly(ggplot2::ggplot(data = NULL))
-              })
             }
           }
         })
