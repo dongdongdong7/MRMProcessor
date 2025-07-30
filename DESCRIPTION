@@ -19,7 +19,6 @@ Imports:
     ggplot2,
     grid,
     magrittr,
-    MSnbase,
     mzR,
     openxlsx,
     plotly,
@@ -28,6 +27,5 @@ Imports:
     shiny,
     shinyFiles,
     signal,
-    snow,
-    utils,
-    xcms
+    snow
+
