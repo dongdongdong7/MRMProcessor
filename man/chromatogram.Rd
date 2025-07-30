@@ -40,6 +40,8 @@ chr <- chromatogram$new(rtime = rtime, intensity = intensity, Q1 = 200.321, Q3 =
 
 \item{\code{relatedIS}}{`chrarcter(1)`, IS name, if analyteType is IS, it is NA}
 
+\item{\code{sampleName}}{`character(1)`, sample name}
+
 \item{\code{peakwidth}}{`numeric(2)` with the lower and upper boun of the expected peak width.}
 
 \item{\code{snthresh}}{`numeric(1)` defining the signal to noise ratio cutoff.}
@@ -88,7 +90,8 @@ Creates a new instance of chromatogram
   windowName,
   expectRt,
   analyteType,
-  relatedIS
+  relatedIS,
+  sampleName
 )}\if{html}{\out{</div>}}
 }
 
@@ -112,6 +115,8 @@ Creates a new instance of chromatogram
 \item{\code{analyteType}}{`character(1)` with IS or Analyte}
 
 \item{\code{relatedIS}}{`chrarcter(1)`, IS name, if analyteType is IS, it is NA}
+
+\item{\code{sampleName}}{`character(1)`, sample name}
 }
 \if{html}{\out{</div>}}
 }

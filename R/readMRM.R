@@ -177,7 +177,8 @@ readMRMData <- function(files, unit = c("min", "sec"), windowInfo, sampleInfo, t
                                   return(chromatogram$new(rtime = chr_data[[j]]$rtime * mag, intensity = chr_data[[j]]$intensity,
                                                           Q1 = Q1, Q3 = Q3,
                                                           analyteName = analyteName, windowName = windowName,
-                                                          expectRt = expectRt, analyteType = analyteType, relatedIS = relatedIS))
+                                                          expectRt = expectRt, analyteType = analyteType, relatedIS = relatedIS,
+                                                          sampleName = stringr::str_extract(basename(sample_path), ".*(?=\\.mzML)")))
                                 })
                                 chrs_list
                               })

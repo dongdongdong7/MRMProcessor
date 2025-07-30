@@ -125,6 +125,7 @@ ChrGrid <- R6::R6Class(
         current_windowName_vec <- sapply(1:self$dim[1], function(k) {
           self$get(k, j)$windowName
         })
+        sampleName <- self$sampleInfo[j, "sampleName"]
         lapply(1:m, function(i) {
           analyteName <- self$windowInfo[i, "analyteName"]
           windowName <- self$windowInfo[i, "windowName"]
@@ -143,7 +144,8 @@ ChrGrid <- R6::R6Class(
             return(chromatogram$new(rtime = numeric(), intensity = numeric(),
                                     Q1 = self$windowInfo[i, "Q1"], Q3 = self$windowInfo[i, "Q3"],
                                     analyteName = analyteName, windowName = windowName,
-                                    expectRt = expectRt, analyteType = analyteType, relatedIS = relatedIS))
+                                    expectRt = expectRt, analyteType = analyteType, relatedIS = relatedIS,
+                                    sampleName = sampleName))
           }else{
             stop("Multi match: ", windowName)
           }
@@ -170,68 +172,125 @@ ChrGrid <- R6::R6Class(
 
     #' @description
     #' Calculate retention time shift based on target peak of IS window
-    cal_rtshift = function(){
+    #' @param i `integer()`, analyte index
+    #' @param j `integer()`, sample index
+    cal_rtshift = function(i, j){
       IS_i <- which(self$windowInfo$analyteType == "IS")
       IS_j <- 1:self$dim[2]
-      IS_name <- self$windowInfo[IS_i, ]$analyteName
-      pb <- progress::progress_bar$new(
-        format = "[:bar] :percent | ELA: :elapsedfull | ETA: :eta",
-        total = length(IS_i) * length(IS_j),
-        width = 60
-      )
-      message("Calculate rtshift of IS...")
-      for(i in IS_i){
-        for(j in IS_j){
-          pb$tick()
-          chr_tmp <- self$get(i, j) # not copy
-          tp <- chr_tmp$targetPeak
-          if(is.null(tp)){
-            message(paste0(i, "-", j, " do not have target peak"))
-            next
-          }
-          if(nrow(tp) != 0){
-            chr_tmp$rtshift <-  as.numeric(tp[1, "rt"] - chr_tmp$expectRt)
-          }else{
-            message(paste0(i, "-", j, " do not have target peak"))
-            next
+      IS_name <- self$windowInfo$analyteName[IS_i]
+
+      analyte_i <- which(self$windowInfo$analyteType != "IS")
+      analyte_j <- 1:self$dim[2]
+
+      if(missing(i) & missing(j)){
+        IS_i_ <- IS_i
+        IS_j_ <- IS_j
+
+        analyte_i_ <- analyte_i
+        analyte_j_ <- analyte_j
+        relatedIS_name <- self$windowInfo$relatedIS[analyte_i_]
+        relatedIS_i <- match(relatedIS_name, IS_name)
+      }else if(!missing(i) & missing(j)){
+        IS_i_ <- IS_i[IS_i %in% i]
+        IS_j_ <- IS_j
+
+        analyte_i_ <- analyte_i[analyte_i %in% i]
+        analyte_j_ <- analyte_j
+        relatedIS_name <- self$windowInfo$relatedIS[analyte_i_]
+        relatedIS_i <- match(relatedIS_name, IS_name)
+      }else if(missing(i) & !missing(j)){
+        IS_i_ <- IS_i
+        IS_j_ <- IS_j[IS_j %in% j]
+
+        analyte_i_ <- analyte_i
+        analyte_j_ <- analyte_j[analyte_j %in% j]
+        relatedIS_name <- self$windowInfo$relatedIS[analyte_i_]
+        relatedIS_i <- match(relatedIS_name, IS_name)
+      }else{
+        IS_i_ <- IS_i[IS_i %in% i]
+        IS_j_ <- IS_j[IS_j %in% j]
+
+        analyte_i_ <- analyte_i[analyte_i %in% i]
+        analyte_j_ <- analyte_j[analyte_j %in% j]
+        relatedIS_name <- self$windowInfo$relatedIS[analyte_i_]
+        relatedIS_i <- match(relatedIS_name, IS_name)
+      }
+      if(length(IS_i_) >0 & length(IS_j_) > 0){
+        pb <- progress::progress_bar$new(
+          format = "[:bar] :percent | ELA: :elapsedfull | ETA: :eta",
+          total = length(IS_i_) * length(IS_j_),
+          width = 60
+        )
+        message("Calculate rtshift of IS...")
+        for(i_ in IS_i_){
+          for(j_ in IS_j_){
+            pb$tick()
+            chr_tmp <- self$get(i_, j_) # not copy
+            tp <- chr_tmp$targetPeak
+            if(is.null(tp)){
+              message(paste0(i_, "-", j_, " do not have target peak"))
+              chr_tmp$rtshift <- NULL
+              next
+            }
+            if(nrow(tp) == 1){
+              chr_tmp$rtshift <-  as.numeric(tp[1, "rt"] - chr_tmp$expectRt)
+            }else{
+              message(paste0(i, "-", j, " do not have target peak"))
+              chr_tmp$rtshift <- NULL
+            }
           }
         }
       }
-      analyte_i <- which(self$windowInfo$analyteType != "IS")
-      analyte_j <- 1:self$dim[2]
-      relatedIS_name <- self$windowInfo[analyte_i, ]$relatedIS
-      relatedIS_i <- match(relatedIS_name, IS_name)
-      pb <- progress::progress_bar$new(
-        format = "[:bar] :percent | ELA: :elapsedfull | ETA: :eta",
-        total = length(analyte_i) * length(analyte_j),
-        width = 60
-      )
-      message("Assign rtshift for analyte...")
-      for(l in 1:length(analyte_i)){
-        for(j in analyte_j){
-          pb$tick()
-          i <- analyte_i[l]
-          chr_IS <- self$get(relatedIS_i[l], j)
-          chr_analyte <- self$get(i, j)
-          chr_analyte$rtshift <- chr_IS$rtshift
+      if(length(analyte_i_) > 0 & length(analyte_j_) > 0){
+        pb <- progress::progress_bar$new(
+          format = "[:bar] :percent | ELA: :elapsedfull | ETA: :eta",
+          total = length(analyte_i_) * length(analyte_j_),
+          width = 60
+        )
+        message("Assign rtshift for analyte...")
+        for(l in 1:length(analyte_i_)){
+          for(j_ in analyte_j_){
+            pb$tick()
+            i_ <- analyte_i_[l]
+            chr_IS <- self$get(relatedIS_i[l], j_)
+            chr_analyte <- self$get(i_, j_)
+            chr_analyte$rtshift <- chr_IS$rtshift
+          }
         }
       }
     },
 
     #' @description
     #' Correct retention time shift
-    correct_rtshift = function(){
-      i_seq <- 1:self$dim[1]
-      j_seq <- 1:self$dim[2]
+    #' @param i `integer()`, analyte index
+    #' @param j `integer()`, sample index
+    correct_rtshift = function(i, j){
+      if(missing(i) & missing(j)){
+        i_seq <- 1:self$dim[1]
+        j_seq <- 1:self$dim[2]
+      }else if(!missing(i) & missing(j)){
+        i_seq <- i
+        j_seq <- 1:self$dim[2]
+      }else if(missing(i) & !missing(j)){
+        i_seq <- 1:self$dim[1]
+        j_seq <- j
+      }else{
+        i_seq <- i
+        j_seq <- j
+      }
       pb <- progress::progress_bar$new(
         format = "[:bar] :percent | ELA: :elapsedfull | ETA: :eta",
         total = length(i_seq) * length(j_seq),
         width = 60
       )
-      for(i in i_seq){
-        for(j in j_seq){
+      for(i_ in i_seq){
+        for(j_ in j_seq){
           pb$tick()
-          chr_tmp <- self$get(i,j)
+          chr_tmp <- self$get(i_,j_)
+          if(!is.null(chr_tmp$rtcorrect)){
+            message(paste0(i_, "-", j_, " has been correct"))
+            next
+          }
           if(is.null(chr_tmp$rtshift)) next
           chr_tmp$rtime <- chr_tmp$rtime - chr_tmp$rtshift
           chr_tmp$peaks[, "rt"] <- chr_tmp$peaks[, "rt"] - chr_tmp$rtshift
@@ -241,25 +300,37 @@ ChrGrid <- R6::R6Class(
           chr_tmp$targetPeak[, "rtmin"] <- chr_tmp$targetPeak[, "rtmin"] - chr_tmp$rtshift
           chr_tmp$targetPeak[, "rtmax"] <- chr_tmp$targetPeak[, "rtmax"] - chr_tmp$rtshift
           chr_tmp$rtcorrect <- chr_tmp$rtshift
-          chr_tmp$rtshift <- NULL
         }
       }
     },
 
     #' @description
     #' Restore retention time from correction
-    drop_rtshift = function(){
-      i_seq <- 1:self$dim[1]
-      j_seq <- 1:self$dim[2]
+    #' @param i `integer()`, analyte index
+    #' @param j `integer()`, sample index
+    drop_rtshift = function(i, j){
+      if(missing(i) & missing(j)){
+        i_seq <- 1:self$dim[1]
+        j_seq <- 1:self$dim[2]
+      }else if(!missing(i) & missing(j)){
+        i_seq <- i
+        j_seq <- 1:self$dim[2]
+      }else if(missing(i) & !missing(j)){
+        i_seq <- 1:self$dim[1]
+        j_seq <- j
+      }else{
+        i_seq <- i
+        j_seq <- j
+      }
       pb <- progress::progress_bar$new(
         format = "[:bar] :percent | ELA: :elapsedfull | ETA: :eta",
         total = length(i_seq) * length(j_seq),
         width = 60
       )
-      for(i in i_seq){
-        for(j in j_seq){
+      for(i_ in i_seq){
+        for(j_ in j_seq){
           pb$tick()
-          chr_tmp <- self$get(i,j)
+          chr_tmp <- self$get(i_,j_)
           if(is.null(chr_tmp$rtcorrect)) next
           chr_tmp$rtime <- chr_tmp$rtime + chr_tmp$rtcorrect
           chr_tmp$peaks[, "rt"] <- chr_tmp$peaks[, "rt"] + chr_tmp$rtcorrect
@@ -269,7 +340,6 @@ ChrGrid <- R6::R6Class(
           chr_tmp$targetPeak[, "rtmin"] <- chr_tmp$targetPeak[, "rtmin"] + chr_tmp$rtcorrect
           chr_tmp$targetPeak[, "rtmax"] <- chr_tmp$targetPeak[, "rtmax"] + chr_tmp$rtcorrect
           chr_tmp$rtcorrect <- NULL
-          chr_tmp$rtshift <- chr_tmp$rtcorrect
         }
       }
     }

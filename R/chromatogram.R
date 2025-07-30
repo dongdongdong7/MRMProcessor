@@ -41,6 +41,8 @@ chromatogram <- R6::R6Class(
     analyteType = NULL,
     #' @field relatedIS `chrarcter(1)`, IS name, if analyteType is IS, it is NA
     relatedIS = NULL,
+    #' @field sampleName `character(1)`, sample name
+    sampleName = NULL,
     #' @field peakwidth `numeric(2)` with the lower and upper boun of the expected peak width.
     peakwidth = NULL,
     #' @field snthresh `numeric(1)` defining the signal to noise ratio cutoff.
@@ -73,7 +75,8 @@ chromatogram <- R6::R6Class(
     #' @param expectRt `numeric(1)`, expect rt of target peak in MRM window
     #' @param analyteType `character(1)` with IS or Analyte
     #' @param relatedIS `chrarcter(1)`, IS name, if analyteType is IS, it is NA
-    initialize = function(rtime, intensity, Q1, Q3, analyteName, windowName, expectRt, analyteType, relatedIS){
+    #' @param sampleName `character(1)`, sample name
+    initialize = function(rtime, intensity, Q1, Q3, analyteName, windowName, expectRt, analyteType, relatedIS, sampleName){
       if(length(rtime) != length(intensity)){
         warnings("The length of rtime does not match the length of intensity")
         self$rtime <- numeric()
@@ -89,6 +92,7 @@ chromatogram <- R6::R6Class(
       self$expectRt <- expectRt
       self$analyteType <- analyteType
       self$relatedIS <- relatedIS
+      self$sampleName <- sampleName
     },
 
     #' @description
@@ -162,7 +166,10 @@ chromatogram <- R6::R6Class(
         ggplot2::theme_bw() +
         ggplot2::labs(x = "Retention Time", y = "Intensity") +
         ggplot2::annotation_custom(
-          grob = grid::textGrob(paste0(self$Q1, " - ", self$Q3),
+          grob = grid::textGrob(paste0(self$Q1, " - ", self$Q3, "\n",
+                                       self$analyteName, "\n",
+                                       self$windowName, "\n",
+                                       self$sampleName),
                                 x = grid::unit(0.05, "npc"),  # 使用相对单位
                                 y = grid::unit(0.95, "npc"),  # 使用相对单位
                                 just = c("left", "top"),

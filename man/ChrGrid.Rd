@@ -202,9 +202,18 @@ Extract targte peak in chrmatograms of ChrGrid
 \subsection{Method \code{cal_rtshift()}}{
 Calculate retention time shift based on target peak of IS window
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ChrGrid$cal_rtshift()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ChrGrid$cal_rtshift(i, j)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{i}}{`integer()`, analyte index}
+
+\item{\code{j}}{`integer()`, sample index}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ChrGrid-correct_rtshift"></a>}}
@@ -212,9 +221,18 @@ Calculate retention time shift based on target peak of IS window
 \subsection{Method \code{correct_rtshift()}}{
 Correct retention time shift
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ChrGrid$correct_rtshift()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ChrGrid$correct_rtshift(i, j)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{i}}{`integer()`, analyte index}
+
+\item{\code{j}}{`integer()`, sample index}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ChrGrid-drop_rtshift"></a>}}
@@ -222,8 +240,17 @@ Correct retention time shift
 \subsection{Method \code{drop_rtshift()}}{
 Restore retention time from correction
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ChrGrid$drop_rtshift()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ChrGrid$drop_rtshift(i, j)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{i}}{`integer()`, analyte index}
+
+\item{\code{j}}{`integer()`, sample index}
+}
+\if{html}{\out{</div>}}
+}
 }
 }
