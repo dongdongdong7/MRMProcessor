@@ -4,7 +4,14 @@
 \alias{readMRMData}
 \title{Read MRM data}
 \usage{
-readMRMData(files, unit = c("min", "sec"), windowInfo, sampleInfo, thread = 1)
+readMRMData(
+  files,
+  unit = c("min", "sec"),
+  windowInfo,
+  sampleInfo,
+  thread = 1,
+  shinyProgress = NULL
+)
 }
 \arguments{
 \item{files}{files path.}
@@ -12,6 +19,8 @@ readMRMData(files, unit = c("min", "sec"), windowInfo, sampleInfo, thread = 1)
 \item{unit}{`character(1)`, retention time unit, min or sec}
 
 \item{thread}{thread.}
+
+\item{shinyProgress}{this parameter is used to receive shiny Progress instance}
 }
 \value{
 ChrGrid object.

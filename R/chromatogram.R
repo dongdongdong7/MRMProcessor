@@ -27,6 +27,8 @@ chromatogram <- R6::R6Class(
     targetPeak = NULL,
     #' @field rt_diff_tol `numeric()`, tolerance for retention time differences between two peaks that are same analytes
     rt_diff_tol = NULL,
+    #' @field rtdifference `numeric()`, difference between rt of targetPeak and expectRt
+    rtdifference = NULL,
     #' @field Q1 `numeric(1)`, Q1 for MRM window
     Q1 = NULL,
     #' @field Q3 `numeric(1)`, Q3 for MRM window
@@ -35,7 +37,7 @@ chromatogram <- R6::R6Class(
     analyteName = NULL,
     #' @field windowName `character(1)`, window's name
     windowName = NULL,
-    #' @field expectRt `numeric(1)`, expect rt of target peak in MRM window
+    #' @field expectRt `numeric(1)`, expect rt of target peak in MRM window, it is based on the reference experiment
     expectRt = NULL,
     #' @field analyteType `character(1)` with IS or Analyte
     analyteType = NULL,
@@ -143,13 +145,18 @@ chromatogram <- R6::R6Class(
 
     #' @description
     #' Extract targte peak in a chrmatogram
+    #' @param rt `numeric(1)`, rt of target peak, if it is missing, rt will be expectRt
     #' @param rt_diff_tol `numeric(1)`, tolerance for retention time differences between two peaks that are same analytes
-    extract_targetPeak_chr = function(rt_diff_tol = 10){
-      if(!is.null(self$peaks) & !is.null(self$expectRt)){
+    extract_targetPeak_chr = function(rt, rt_diff_tol = 10){
+      self$targetPeak <- NULL
+      self$rtdifference <- NULL
+      if(missing(rt)) rt <- self$expectRt
+      if(!is.null(self$peaks) & !is.null(rt)){
         if(nrow(self$peaks) != 0){
-          ps <- self$peaks[abs(self$peaks[, "rt"] - self$expectRt) < rt_diff_tol, , drop = FALSE]
+          ps <- self$peaks[abs(self$peaks[, "rt"] - rt) < rt_diff_tol, , drop = FALSE]
           if(nrow(ps) > 0){
-            self$targetPeak <- ps[which.min(abs(ps[, "rt"] - self$expectRt)), , drop = FALSE]
+            self$targetPeak <- ps[which.min(abs(ps[, "rt"] - rt)), , drop = FALSE]
+            self$rtdifference <- as.numeric(self$targetPeak[1, "rt"] - rt)
           }
         }
       }

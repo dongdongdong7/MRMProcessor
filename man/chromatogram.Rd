@@ -26,6 +26,8 @@ chr <- chromatogram$new(rtime = rtime, intensity = intensity, Q1 = 200.321, Q3 =
 
 \item{\code{rt_diff_tol}}{`numeric()`, tolerance for retention time differences between two peaks that are same analytes}
 
+\item{\code{rtdifference}}{`numeric()`, difference between rt of targetPeak and expectRt}
+
 \item{\code{Q1}}{`numeric(1)`, Q1 for MRM window}
 
 \item{\code{Q3}}{`numeric(1)`, Q3 for MRM window}
@@ -34,7 +36,7 @@ chr <- chromatogram$new(rtime = rtime, intensity = intensity, Q1 = 200.321, Q3 =
 
 \item{\code{windowName}}{`character(1)`, window's name}
 
-\item{\code{expectRt}}{`numeric(1)`, expect rt of target peak in MRM window}
+\item{\code{expectRt}}{`numeric(1)`, expect rt of target peak in MRM window, it is based on the reference experiment}
 
 \item{\code{analyteType}}{`character(1)` with IS or Analyte}
 
@@ -177,12 +179,14 @@ Find chromatographic peaks using CentWave
 \subsection{Method \code{extract_targetPeak_chr()}}{
 Extract targte peak in a chrmatogram
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{chromatogram$extract_targetPeak_chr(rt_diff_tol = 10)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{chromatogram$extract_targetPeak_chr(rt, rt_diff_tol = 10)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
+\item{\code{rt}}{`numeric(1)`, rt of target peak, if it is missing, rt will be expectRt}
+
 \item{\code{rt_diff_tol}}{`numeric(1)`, tolerance for retention time differences between two peaks that are same analytes}
 }
 \if{html}{\out{</div>}}

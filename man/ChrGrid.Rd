@@ -185,12 +185,18 @@ The extension needs to be executed because the number of analytes may be greater
 \subsection{Method \code{extract_targetPeak_ChrGrid()}}{
 Extract targte peak in chrmatograms of ChrGrid
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ChrGrid$extract_targetPeak_ChrGrid(rt_diff_tol = 10)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ChrGrid$extract_targetPeak_ChrGrid(i, j, rt, rt_diff_tol = 10)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
+\item{\code{i}}{`integer()`, analyte index}
+
+\item{\code{j}}{`integer()`, sample index}
+
+\item{\code{rt}}{`numeric(1)`, rt of target peak, if it is missing, rt will be expectRt}
+
 \item{\code{rt_diff_tol}}{`numeric(1)`, tolerance for retention time differences between two peaks that are same analytes}
 }
 \if{html}{\out{</div>}}

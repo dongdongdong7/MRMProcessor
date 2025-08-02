@@ -157,16 +157,36 @@ ChrGrid <- R6::R6Class(
 
     #' @description
     #' Extract targte peak in chrmatograms of ChrGrid
+    #' @param i `integer()`, analyte index
+    #' @param j `integer()`, sample index
+    #' @param rt `numeric(1)`, rt of target peak, if it is missing, rt will be expectRt
     #' @param rt_diff_tol `numeric(1)`, tolerance for retention time differences between two peaks that are same analytes
-    extract_targetPeak_ChrGrid = function(rt_diff_tol = 10){
+    extract_targetPeak_ChrGrid = function(i, j, rt, rt_diff_tol = 10){
+      if(missing(i) & missing(j)){
+        i_seq <- 1:self$dim[1]
+        j_seq <- 1:self$dim[2]
+      }else if(!missing(i) & missing(j)){
+        i_seq <- i
+        j_seq <- 1:self$dim[2]
+      }else if(missing(i) & !missing(j)){
+        i_seq <- 1:self$dim[1]
+        j_seq <- j
+      }else{
+        i_seq <- i
+        j_seq <- j
+      }
       pb <- progress::progress_bar$new(
         format = "[:bar] :percent | ELA: :elapsedfull | ETA: :eta",
-        total = length(self$chrs_list),
+        total = length(i_seq) * length(j_seq),
         width = 60
       )
-      for(i in 1:length(self$chrs_list)){
-        pb$tick()
-        self$chrs_list[[i]]$extract_targetPeak_chr(rt_diff_tol = rt_diff_tol)
+      for(i_ in i_seq){
+        for(j_ in j_seq){
+          pb$tick()
+          chr_tmp <- self$get(i_, j_)
+          if(missing(rt)) chr_tmp$extract_targetPeak_chr(rt_diff_tol = rt_diff_tol)
+          else chr_tmp$extract_targetPeak_chr(rt = rt, rt_diff_tol = rt_diff_tol)
+        }
       }
     },
 

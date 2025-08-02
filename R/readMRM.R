@@ -49,6 +49,7 @@
 #' @param files files path.
 #' @param unit `character(1)`, retention time unit, min or sec
 #' @param thread thread.
+#' @param shinyProgress this parameter is used to receive shiny Progress instance
 #'
 #' @return ChrGrid object.
 #' @export
@@ -64,7 +65,7 @@
 #' windowInfo <- openxlsx::read.xlsx(windowInfo_path, sheet = 1)
 #' sampleInfo <- openxlsx::read.xlsx(sampleInfo_path, sheet = 1)
 #' chr_grid <- readMRMData(files = files_path, windowInfo = windowInfo, sampleInfo = sampleInfo[1:10, ])
-readMRMData <- function(files, unit = c("min", "sec"), windowInfo, sampleInfo, thread = 1){
+readMRMData <- function(files, unit = c("min", "sec"), windowInfo, sampleInfo, thread = 1, shinyProgress = NULL){
   files <- normalizePath(files)
   unit <- match.arg(unit)
   if(unit == "min") mag <- 60
@@ -80,7 +81,10 @@ readMRMData <- function(files, unit = c("min", "sec"), windowInfo, sampleInfo, t
   files_name <- stringr::str_extract(basename(files), ".*(?=\\.mzML)")
   # Match to sampleInfo
   sampleInfo$samplePath <- files[match(sampleInfo$sampleName, files_name)]
-  if(any(is.na(sampleInfo$samplePath))) stop("samplePath of sampleInfo can not be NA!")
+  if(any(is.na(sampleInfo$samplePath))){
+    stop(paste0("samplePath of sampleInfo can not be NA!", "\n",
+                sampleInfo$sampleName[is.na(sampleInfo$samplePath)]))
+  }
   # window information from each sample
   hdr_list <- lapply(sampleInfo$samplePath, function(x) {
     msf <- .openMSfile(x)
@@ -133,13 +137,20 @@ readMRMData <- function(files, unit = c("min", "sec"), windowInfo, sampleInfo, t
   #                  " collisionEnergy=", fd$precursorCollisionEnergy,
   #                  " chromatogramIndex=", fd$chromatogramIndex)
   # pdata <- data.frame(file = files, stringsAsFactors = FALSE)
-  pb <- progress::progress_bar$new(
-    format = "[:bar] :percent | ELA: :elapsedfull | ETA: :eta",
-    total = nrow(sampleInfo),
-    width = 60
-  )
-  progress_update <- function(nn){
-    pb$tick()
+  if(is.null(shinyProgress)){
+    pb <- progress::progress_bar$new(
+      format = "[:bar] :percent | ELA: :elapsedfull | ETA: :eta",
+      total = nrow(sampleInfo),
+      width = 60
+    )
+    progress_update <- function(nn){
+      pb$tick()
+    }
+  }else{
+    maxValue <- shinyProgress$getMax()
+    progress_update <- function(nn){
+      shinyProgress$set(value = nn, message = "Reading MRM data: ", detail = paste0(nn, " / ", maxValue))
+    }
   }
   opts <- list(progress = progress_update)
   cl <- snow::makeCluster(thread)
