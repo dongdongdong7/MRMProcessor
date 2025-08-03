@@ -21,8 +21,14 @@ ChrGrid <- R6::R6Class(
     dim = NULL,
     #' @field unit `character(1)`, retention time unit, min or sec
     unit = NULL,
+    #' @field dataDir `character()`, raw data folder (shiny)
+    dataDir = NULL,
+    #' @field windowInfoPath `character()`, window information path (shiny)
+    windowInfoPath = NULL,
     #' @field windowInfo `data.frame()`, user's window information
     windowInfo = NULL,
+    #' @field sampleInfoPath `character()`, sample information path (shiny)
+    sampleInfoPath = NULL,
     #' @field sampleInfo `data.frame()`, user's sample information
     sampleInfo = NULL,
 
@@ -87,15 +93,24 @@ ChrGrid <- R6::R6Class(
     #' @param r2thresh `numeric(1)` threshold of peak shape.
     #' @param csthresh `numeric(1)` threshold of cs.
     #' @param thread `integer(1)`, thread number in parallel
+    #' @param shinyProgress this parameter is used to receive shiny Progress instance
     findPeaks_ChrGrid = function(peakwidth = c(5, 20), snthresh = 10, minPs = 3, noise = 100, estimateNoise = TRUE, extendLengthMSW = TRUE, r2thresh = 0.6, csthresh = 0.2,
-                                 thread = 1){
-      pb <- progress::progress_bar$new(
-        format = "[:bar] :percent | ELA: :elapsedfull | ETA: :eta",
-        total = length(self$chrs_list),
-        width = 60
-      )
-      progress_update <- function(nn){
-        pb$tick()
+                                 thread = 1, shinyProgress = NULL){
+      if(is.null(shinyProgress)){
+        pb <- progress::progress_bar$new(
+          format = "[:bar] :percent | ELA: :elapsedfull | ETA: :eta",
+          total = length(self$chrs_list),
+          width = 60
+        )
+        progress_update <- function(nn){
+          pb$tick()
+        }
+      }else{
+        maxValue <- shinyProgress$getMax()
+        if(maxValue != length(self$chrs_list)) stop("maxValue != length(chr_grid$chrs_list)")
+        progress_update <- function(nn){
+          shinyProgress$set(value = nn, message = "Find peaks...: ", detail = paste0(nn, " / ", maxValue))
+        }
       }
       opts <- list(progress = progress_update)
       cl <- snow::makeCluster(thread)

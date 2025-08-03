@@ -7,6 +7,7 @@ library(shinyFiles)
 library(bslib)
 library(shinyjs)
 source(system.file("GUI", "pages", "1_Load_Data.R", package = "MRMProcessor"))
+source(system.file("GUI", "pages", "2_Find_Peaks.R", package = "MRMProcessor"))
 
 ui <- page_navbar(
   useShinyjs(),
@@ -21,6 +22,7 @@ ui <- page_navbar(
     box-shadow: inset 0 3px 5px rgba(0,0,0,.125);
     }"))
   ),
+  includeScript(path = system.file("GUI", "draggable-card.js", package = "MRMProcessor")),
 
   title = "MRMProcessor",
   selected = "Load Data",
@@ -32,6 +34,7 @@ ui <- page_navbar(
   ),
   nav_panel(
     title = "Find Peaks",
+    find_peaks_ui(id = "find_peaks")
   ),
   nav_spacer(),
   nav_item(
@@ -72,6 +75,10 @@ server <- function(input, output, session){
     maxThreads <- BiocParallel::snowWorkers()
     updateNumericInput(session = session, inputId = "parallel_threads", value = maxThreads, max = maxThreads)
     message("Your machine has a maximum of ", maxThreads, " threads")
+  })
+  # Get global threads in options
+  observeEvent(input$parallel_threads, {
+    values$threads <- input$parallel_threads
   })
   # Page1: Load Data
   load_data_server(id = "load_data", values = values)

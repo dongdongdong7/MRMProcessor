@@ -20,7 +20,13 @@ chr_grid$findPeaks_ChrGrid()
 
 \item{\code{unit}}{`character(1)`, retention time unit, min or sec}
 
+\item{\code{dataDir}}{`character()`, raw data folder (shiny)}
+
+\item{\code{windowInfoPath}}{`character()`, window information path (shiny)}
+
 \item{\code{windowInfo}}{`data.frame()`, user's window information}
+
+\item{\code{sampleInfoPath}}{`character()`, sample information path (shiny)}
 
 \item{\code{sampleInfo}}{`data.frame()`, user's sample information}
 }
@@ -140,7 +146,8 @@ Find peaks in ChrGrid
   extendLengthMSW = TRUE,
   r2thresh = 0.6,
   csthresh = 0.2,
-  thread = 1
+  thread = 1,
+  shinyProgress = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -164,6 +171,8 @@ Find peaks in ChrGrid
 \item{\code{csthresh}}{`numeric(1)` threshold of cs.}
 
 \item{\code{thread}}{`integer(1)`, thread number in parallel}
+
+\item{\code{shinyProgress}}{this parameter is used to receive shiny Progress instance}
 }
 \if{html}{\out{</div>}}
 }

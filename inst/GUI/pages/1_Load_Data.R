@@ -7,7 +7,6 @@ library(shinyFiles)
 library(bslib)
 library(DT)
 library(shinyjs)
-library(waiter)
 
 load_data_ui <- function(id){
   ns <- NS(id)
@@ -16,7 +15,7 @@ load_data_ui <- function(id){
       position = "left",
       title = strong("Select data and tables"),
       open = TRUE,
-      selectInput(label = "Select rt unit", choices = c("min", "seconds"), selected = "min", inputId = ns("load_data_rtUnit")),
+      selectInput(label = "Select rt unit", choices = c("min", "sec"), selected = "min", inputId = ns("load_data_rtUnit")),
       shinyDirButton(id = ns("load_data_folder"), label = "Select Folder", title = "Please select a folder"),
       verbatimTextOutput(outputId = ns("load_data_folderText"), placeholder = TRUE),
       shinyFilesButton(id = ns("load_data_windowInfo"), label = "Window Information", title = "Please select a windowInfo", multiple = FALSE),
@@ -67,10 +66,9 @@ load_data_server <- function(id, values){
       }
 
       # load_data_rtUnit
-      observeEvent(input$load_data_rtUnit, {
-        if(input$load_data_rtUnit == "min") values$rtUnit <- "min"
-        else if(input$load_data_rtUnit == "seconds") values$rtUnit <- "seconds"
-        else stop("rtUnit is wrong!")
+      observe({
+        values$rtUnit <- input$load_data_rtUnit
+        if(values$rtUnit != "min" & values$rtUnit != "sec") stop("rtUnit is wrong!")
       })
 
       # load_data_folder
@@ -109,11 +107,6 @@ load_data_server <- function(id, values){
           message <- text
         }else message <- NULL
         output$load_data_windowInfoText <- renderText({message})
-        if(!is.null(values$windowInfo)){
-          output$load_data_windowInfoDT <- renderDT({
-            values$windowInfo
-          }, options = list(columnDefs = list(list(className = "dt-center", targets = "_all")), pageLength = 10))
-        }
       })
 
       # load_data_sampleInfo
@@ -127,15 +120,24 @@ load_data_server <- function(id, values){
           text <- paste0(root, nowsep, text, nowsep, file_name)
           values$sampleInfoPath <- text
           values$sampleInfo <- openxlsx::read.xlsx(values$sampleInfoPath)
-          values$batchNameVector <- unique(values$sampleInfo$batchName)
+          # values$batchNameVector <- unique(values$sampleInfo$batchName)
           message <- text
         }else message <- NULL
         output$load_data_sampleInfoText <- renderText({message})
+      })
+
+      # Update windowInfo and sampleInfo
+      observe({
+        if(!is.null(values$windowInfo)){
+          output$load_data_windowInfoDT <- renderDT({
+            values$windowInfo
+          }, options = list(columnDefs = list(list(className = "dt-center", targets = "_all")), pageLength = 10))
+        }
         if(!is.null(values$sampleInfo)){
           output$load_data_sampleInfoDT <- renderDT({
             values$sampleInfo
-          },options = list(columnDefs = list(list(className = "dt-center", targets = "_all")), pageLength = 10)
-          )
+          }, options = list(columnDefs = list(list(className = "dt-center", targets = "_all")), pageLength = 10))
+          values$batchNameVector <- unique(values$sampleInfo$batchName)
         }
       })
 
@@ -148,16 +150,19 @@ load_data_server <- function(id, values){
           on.exit(progress$close())
           values$chr_grid <- readMRMData(files = values$dataPath, unit = values$rtUnit,
                                          windowInfo = values$windowInfo, sampleInfo = values$sampleInfo,
-                                         thread = 2, shinyProgress = progress)
+                                         thread = values$threads, shinyProgress = progress)
           message <- paste0("ChrGrid with dimensions: "  ,values$chr_grid$dim[1], " x ",  values$chr_grid$dim[2])
+          values$windowInfo <- values$chr_grid$windowInfo
+          values$sampleInfo <- values$chr_grid$sampleInfo
         }else message <- NULL
         output$load_data_loadDataText <- renderText({message})
       })
 
       #  load_data_ChrGridUpload
-      observeEvent(input$load_data_ChrGridUpload, { # values中的很多东西应该在ChrGrid中, 这样每一次储存和加载更方便一点
+      observeEvent(input$load_data_ChrGridUpload, {
         if("files" %in% names(input$load_data_ChrGridUpload)){
           id <- showNotification("Load ChrGrid object...", duration = NULL, closeButton = FALSE)
+          addClass(id = "load_data_ChrGridUpload", class = "btn-clicked")
           n <- length(input$load_data_ChrGridUpload$files$`0`)
           file <- input$load_data_ChrGridUpload$files$`0`
           file_name <- input$load_data_ChrGridUpload$files$`0`[[n]]
@@ -165,6 +170,9 @@ load_data_server <- function(id, values){
           text <- paste0(file[2:(n-1)], collapse = nowsep)
           text <- paste0(root, nowsep, text, nowsep, file_name)
           values$chr_grid <- readRDS(text)
+          values$windowInfo <- values$chr_grid$windowInfo
+          values$sampleInfo <- values$chr_grid$sampleInfo
+          updateSelectInput(inputId = "load_data_rtUnit", selected = values$chr_grid$rtUnit)
           message <- text
           removeNotification(id)
           showNotification("Load ChrGrid successful", type = "message")
