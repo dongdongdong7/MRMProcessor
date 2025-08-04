@@ -82,6 +82,8 @@ server <- function(input, output, session){
   })
   # Page1: Load Data
   load_data_server(id = "load_data", values = values)
+  # Page2: Find Peaks
+  find_peaks_server(id = "find_peaks", values = values)
 }
 
 # Run the application

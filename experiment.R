@@ -7,13 +7,15 @@ windowInfo_path <- "../Carnitine_SBR/MRMprocesser/windowInfo_car_cll.xlsx"
 sampleInfo_path <- "../Carnitine_SBR/MRMprocesser/sampleInfo_car.xlsx"
 windowInfo <- openxlsx::read.xlsx(windowInfo_path, sheet = 1)
 sampleInfo <- openxlsx::read.xlsx(sampleInfo_path, sheet = 1)
-chr_grid <- readMRMData(files = files_path, windowInfo = windowInfo, sampleInfo = sampleInfo[1:5, ])
-chr_grid$findPeaks_ChrGrid(peakwidth = c(2, 20), snthresh = 3, thread = 2)
+chr_grid <- readMRMData(files = files_path, windowInfo = windowInfo, sampleInfo = sampleInfo[1:5, ], thread = 2)
+chr_grid$findPeaks_ChrGrid(peakwidth = c(2, 20), snthresh = 3, thread = 4)
 chr_grid$extend_ChrGrid()
-chr_grid$extract_targetPeak_ChrGrid()
-chr_grid$cal_rtshift()
-chr_grid$correct_rtshift()
-chr_grid$drop_rtshift()
+chr_grid$extract_targetPeak_ChrGrid(1,1,thread = 1) # 线程数为1时, 少量的循环会增加开销, 比不并行要慢
+chr_grid$get(1,1)$extract_targetPeak_chr()
+chr_grid$cal_rtshift(thread = 4)
+chr_grid$cal_rtshift(4,3,thread = 1)
+chr_grid$correct_rtshift(thread = 4)
+chr_grid$drop_rtshift(thread = 4)
 chr_grid$get(124,4)$expectRt
 chr_grid$get(125,4)$expectRt
 chr_grid$get(125,4)$rtdifference
