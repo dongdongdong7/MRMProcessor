@@ -179,13 +179,13 @@ Find chromatographic peaks using CentWave
 \subsection{Method \code{extract_targetPeak_chr()}}{
 Extract targte peak in a chrmatogram
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{chromatogram$extract_targetPeak_chr(rt, rt_diff_tol = 10)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{chromatogram$extract_targetPeak_chr(rt = NULL, rt_diff_tol = 10)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{rt}}{`numeric(1)`, rt of target peak, if it is missing, rt will be expectRt}
+\item{\code{rt}}{`numeric(1)`, rt of target peak, if it is NULL, rt will be expectRt}
 
 \item{\code{rt_diff_tol}}{`numeric(1)`, tolerance for retention time differences between two peaks that are same analytes}
 }

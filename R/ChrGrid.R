@@ -228,14 +228,17 @@ ChrGrid <- R6::R6Class(
                                   })
       snow::stopCluster(cl)
       gc()
-      self$chrs_list[index] <- unlist(resLt)
+      self$chrs_list[unlist(index)] <- unlist(resLt)
     },
 
     #' @description
     #' Calculate retention time shift based on target peak of IS window
     #' @param i `integer()`, analyte index
     #' @param j `integer()`, sample index
-    cal_rtshift = function(i, j){
+    #' @param thread `integer(1)`, thread number in parallel
+    #' @param shinyProgress_IS this parameter is used to receive shiny Progress instance
+    #' @param shinyProgress_Analyte this parameter is used to receive shiny Progress instance
+    cal_rtshift = function(i, j, thread = 1, shinyProgress_IS = NULL, shinyProgress_Analyte = NULL){
       IS_i <- which(self$windowInfo$analyteType == "IS")
       IS_j <- 1:self$dim[2]
       IS_name <- self$windowInfo$analyteName[IS_i]
@@ -277,47 +280,126 @@ ChrGrid <- R6::R6Class(
         relatedIS_i <- match(relatedIS_name, IS_name)
       }
       if(length(IS_i_) >0 & length(IS_j_) > 0){
-        pb <- progress::progress_bar$new(
-          format = "[:bar] :percent | ELA: :elapsedfull | ETA: :eta",
-          total = length(IS_i_) * length(IS_j_),
-          width = 60
-        )
-        message("Calculate rtshift of IS...")
-        for(i_ in IS_i_){
-          for(j_ in IS_j_){
+        index <- lapply(IS_j_, function(j_){
+          (j_ - 1) * self$dim[1] + IS_i_
+        })
+        chr_list_tmp <- lapply(index, function(x) {
+          self$chrs_list[x]
+        })
+        if(is.null(shinyProgress_IS)){
+          pb <- progress::progress_bar$new(
+            format = "[:bar] :percent | ELA: :elapsedfull | ETA: :eta",
+            total = length(IS_j_),
+            width = 60
+          )
+          progress_update <- function(nn){
             pb$tick()
-            chr_tmp <- self$get(i_, j_) # not copy
-            tp <- chr_tmp$targetPeak
-            if(is.null(tp)){
-              message(paste0(i_, "-", j_, " do not have target peak"))
-              chr_tmp$rtshift <- NULL
-              next
-            }
-            if(nrow(tp) == 1){
-              chr_tmp$rtshift <-  as.numeric(tp[1, "rt"] - chr_tmp$expectRt)
-            }else{
-              message(paste0(i, "-", j, " do not have target peak"))
-              chr_tmp$rtshift <- NULL
-            }
+          }
+        }else{
+          maxValue <- shinyProgress_IS$getMax()
+          if(maxValue != length(IS_j_)) stop("maxValue != length(IS_j_)")
+          progress_update <- function(nn){
+            shinyProgress_IS$set(value = nn, message = "Calculate rtshift for IS...: ", detail = paste0(nn, " / ", maxValue))
           }
         }
+        message("Calculate rtshift of IS...")
+        opts <- list(progress = progress_update)
+        cl <- snow::makeCluster(thread)
+        doSNOW::registerDoSNOW(cl)
+        resLt <- foreach::`%dopar%`(foreach::foreach(chr_list = chr_list_tmp, nn = 1:length(IS_j_),
+                                                     .options.snow = opts),
+                                    {
+                                      lapply(chr_list, function(chr_tmp){
+                                        tp <- chr_tmp$targetPeak
+                                        if(is.null(tp)){
+                                          chr_tmp$rtshift <- NULL
+                                          return(chr_tmp)
+                                        }
+                                        if(nrow(tp) == 1){
+                                          chr_tmp$rtshift <-  as.numeric(tp[1, "rt"] - chr_tmp$expectRt)
+                                        }else{
+                                          chr_tmp$rtshift <- NULL
+                                        }
+                                        return(chr_tmp)
+                                      })
+                                    })
+        snow::stopCluster(cl)
+        gc()
+        self$chrs_list[unlist(index)] <- unlist(resLt)
+        # for(i_ in IS_i_){
+        #   for(j_ in IS_j_){
+        #     pb$tick()
+        #     chr_tmp <- self$get(i_, j_) # not copy
+        #     tp <- chr_tmp$targetPeak
+        #     if(is.null(tp)){
+        #       message(paste0(i_, "-", j_, " do not have target peak"))
+        #       chr_tmp$rtshift <- NULL
+        #       next
+        #     }
+        #     if(nrow(tp) == 1){
+        #       chr_tmp$rtshift <-  as.numeric(tp[1, "rt"] - chr_tmp$expectRt)
+        #     }else{
+        #       message(paste0(i, "-", j, " do not have target peak"))
+        #       chr_tmp$rtshift <- NULL
+        #     }
+        #   }
+        # }
       }
       if(length(analyte_i_) > 0 & length(analyte_j_) > 0){
-        pb <- progress::progress_bar$new(
-          format = "[:bar] :percent | ELA: :elapsedfull | ETA: :eta",
-          total = length(analyte_i_) * length(analyte_j_),
-          width = 60
-        )
-        message("Assign rtshift for analyte...")
-        for(l in 1:length(analyte_i_)){
-          for(j_ in analyte_j_){
+        index <- lapply(analyte_j_, function(j_) {
+          (j_ - 1) * self$dim[1] + analyte_i_
+        })
+        chr_list_tmp <- lapply(index, function(x) {
+          self$chrs_list[x]
+        })
+        index_IS <- lapply(analyte_j_, function(j_) {
+          (j_ - 1) * self$dim[1] + relatedIS_i
+        })
+        chr_list_IS_tmp <- lapply(index_IS, function(x) {
+          self$chrs_list[x]
+        })
+        if(is.null(shinyProgress_Analyte)){
+          pb <- progress::progress_bar$new(
+            format = "[:bar] :percent | ELA: :elapsedfull | ETA: :eta",
+            total = length(analyte_j_),
+            width = 60
+          )
+          progress_update <- function(nn){
             pb$tick()
-            i_ <- analyte_i_[l]
-            chr_IS <- self$get(relatedIS_i[l], j_)
-            chr_analyte <- self$get(i_, j_)
-            chr_analyte$rtshift <- chr_IS$rtshift
+          }
+        }else{
+          maxValue <- shinyProgress_Analyte$getMax()
+          if(maxValue != length(analyte_j_)) stop("maxValue != length(analyte_j_)")
+          progress_update <- function(nn){
+            shinyProgress_Analyte$set(value = nn, message = "Calculate rtshift for Analyte...", detail = paste0(nn, " / ", maxValue))
           }
         }
+        message("Assign rtshift for analyte...")
+        opts <- list(progress = progress_update)
+        cl <- snow::makeCluster(thread)
+        doSNOW::registerDoSNOW(cl)
+        resLt <- foreach::`%dopar%`(foreach::foreach(chr_list = chr_list_tmp, chr_list_IS = chr_list_IS_tmp, nn = 1:length(analyte_j_),
+                                                     .options.snow = opts),
+                                    {
+                                      lapply(1:length(chr_list), function(l) {
+                                        chr_analyte <- chr_list[[l]]
+                                        chr_IS <- chr_list_IS[[l]]
+                                        chr_analyte$rtshift <- chr_IS$rtshift
+                                        chr_analyte
+                                      })
+                                    })
+        snow::stopCluster(cl)
+        gc()
+        # for(l in 1:length(analyte_i_)){
+        #   for(j_ in analyte_j_){
+        #     pb$tick()
+        #     i_ <- analyte_i_[l]
+        #     chr_IS <- self$get(relatedIS_i[l], j_)
+        #     chr_analyte <- self$get(i_, j_)
+        #     chr_analyte$rtshift <- chr_IS$rtshift
+        #   }
+        # }
+        self$chrs_list[unlist(index)] <- unlist(resLt)
       }
     },
 
@@ -325,7 +407,9 @@ ChrGrid <- R6::R6Class(
     #' Correct retention time shift
     #' @param i `integer()`, analyte index
     #' @param j `integer()`, sample index
-    correct_rtshift = function(i, j){
+    #' @param thread `integer(1)`, thread number in parallel
+    #' @param shinyProgress this parameter is used to receive shiny Progress instance
+    correct_rtshift = function(i, j, thread = 1, shinyProgress = NULL){
       if(missing(i) & missing(j)){
         i_seq <- 1:self$dim[1]
         j_seq <- 1:self$dim[2]
@@ -339,37 +423,83 @@ ChrGrid <- R6::R6Class(
         i_seq <- i
         j_seq <- j
       }
-      pb <- progress::progress_bar$new(
-        format = "[:bar] :percent | ELA: :elapsedfull | ETA: :eta",
-        total = length(i_seq) * length(j_seq),
-        width = 60
-      )
-      for(i_ in i_seq){
-        for(j_ in j_seq){
+      index <- lapply(j_seq, function(j_){
+        (j_ - 1) * self$dim[1] + i_seq
+      })
+      chr_list_tmp <- lapply(index, function(x) {
+        self$chrs_list[x]
+      })
+      if(is.null(shinyProgress)){
+        pb <- progress::progress_bar$new(
+          format = "[:bar] :percent | ELA: :elapsedfull | ETA: :eta",
+          total = length(j_seq),
+          width = 60
+        )
+        progress_update <- function(nn){
           pb$tick()
-          chr_tmp <- self$get(i_,j_)
-          if(!is.null(chr_tmp$rtcorrect)){
-            message(paste0(i_, "-", j_, " has been correct"))
-            next
-          }
-          if(is.null(chr_tmp$rtshift)) next
-          chr_tmp$rtime <- chr_tmp$rtime - chr_tmp$rtshift
-          chr_tmp$peaks[, "rt"] <- chr_tmp$peaks[, "rt"] - chr_tmp$rtshift
-          chr_tmp$peaks[, "rtmin"] <- chr_tmp$peaks[, "rtmin"] - chr_tmp$rtshift
-          chr_tmp$peaks[, "rtmax"] <- chr_tmp$peaks[, "rtmax"] - chr_tmp$rtshift
-          chr_tmp$targetPeak[, "rt"] <- chr_tmp$targetPeak[, "rt"] - chr_tmp$rtshift
-          chr_tmp$targetPeak[, "rtmin"] <- chr_tmp$targetPeak[, "rtmin"] - chr_tmp$rtshift
-          chr_tmp$targetPeak[, "rtmax"] <- chr_tmp$targetPeak[, "rtmax"] - chr_tmp$rtshift
-          chr_tmp$rtcorrect <- chr_tmp$rtshift
+        }
+      }else{
+        maxValue <- shinyProgress$getMax()
+        if(maxValue != length(j_seq)) stop("maxValue != length(j_seq)")
+        progress_update <- function(nn){
+          shinyProgress$set(value = nn, message = "Correct rtshift...", detail = paste0(nn, " / ", maxValue))
         }
       }
+      opts <- list(progress = progress_update)
+      cl <- snow::makeCluster(thread)
+      doSNOW::registerDoSNOW(cl)
+      resLt <- foreach::`%dopar%`(foreach::foreach(chr_list = chr_list_tmp, nn = 1:length(j_seq),
+                                                   .options.snow = opts),
+                                  {
+                                    lapply(chr_list, function(chr){
+                                      if(!is.null(chr$rtcorrect)){
+                                        return(chr)
+                                      }
+                                      if(is.null(chr$rtshift)){
+                                        return(chr)
+                                      }
+                                      chr$rtime <- chr$rtime - chr$rtshift
+                                      chr$peaks[, "rt"] <- chr$peaks[, "rt"] - chr$rtshift
+                                      chr$peaks[, "rtmin"] <- chr$peaks[, "rtmin"] - chr$rtshift
+                                      chr$peaks[, "rtmax"] <- chr$peaks[, "rtmax"] - chr$rtshift
+                                      chr$targetPeak[, "rt"] <- chr$targetPeak[, "rt"] - chr$rtshift
+                                      chr$targetPeak[, "rtmin"] <- chr$targetPeak[, "rtmin"] - chr$rtshift
+                                      chr$targetPeak[, "rtmax"] <- chr$targetPeak[, "rtmax"] - chr$rtshift
+                                      chr$rtcorrect <- chr$rtshift
+                                      return(chr)
+                                    })
+                                  })
+      snow::stopCluster(cl)
+      gc()
+      self$chrs_list[unlist(index)] <- unlist(resLt)
+      # for(i_ in i_seq){
+      #   for(j_ in j_seq){
+      #     pb$tick()
+      #     chr_tmp <- self$get(i_,j_)
+      #     if(!is.null(chr_tmp$rtcorrect)){
+      #       message(paste0(i_, "-", j_, " has been correct"))
+      #       next
+      #     }
+      #     if(is.null(chr_tmp$rtshift)) next
+      #     chr_tmp$rtime <- chr_tmp$rtime - chr_tmp$rtshift
+      #     chr_tmp$peaks[, "rt"] <- chr_tmp$peaks[, "rt"] - chr_tmp$rtshift
+      #     chr_tmp$peaks[, "rtmin"] <- chr_tmp$peaks[, "rtmin"] - chr_tmp$rtshift
+      #     chr_tmp$peaks[, "rtmax"] <- chr_tmp$peaks[, "rtmax"] - chr_tmp$rtshift
+      #     chr_tmp$targetPeak[, "rt"] <- chr_tmp$targetPeak[, "rt"] - chr_tmp$rtshift
+      #     chr_tmp$targetPeak[, "rtmin"] <- chr_tmp$targetPeak[, "rtmin"] - chr_tmp$rtshift
+      #     chr_tmp$targetPeak[, "rtmax"] <- chr_tmp$targetPeak[, "rtmax"] - chr_tmp$rtshift
+      #     chr_tmp$rtcorrect <- chr_tmp$rtshift
+      #   }
+      # }
     },
 
     #' @description
     #' Restore retention time from correction
     #' @param i `integer()`, analyte index
     #' @param j `integer()`, sample index
-    drop_rtshift = function(i, j){
+    #' @param thread `integer(1)`, thread number in parallel
+    #' @param shinyProgress this parameter is used to receive shiny Progress instance
+    drop_rtshift = function(i, j, thread = 1, shinyProgress = NULL){
       if(missing(i) & missing(j)){
         i_seq <- 1:self$dim[1]
         j_seq <- 1:self$dim[2]
@@ -383,26 +513,67 @@ ChrGrid <- R6::R6Class(
         i_seq <- i
         j_seq <- j
       }
-      pb <- progress::progress_bar$new(
-        format = "[:bar] :percent | ELA: :elapsedfull | ETA: :eta",
-        total = length(i_seq) * length(j_seq),
-        width = 60
-      )
-      for(i_ in i_seq){
-        for(j_ in j_seq){
+      index <- lapply(j_seq, function(j_){
+        (j_ - 1) * self$dim[1] + i_seq
+      })
+      chr_list_tmp <- lapply(index, function(x) {
+        self$chrs_list[x]
+      })
+      if(is.null(shinyProgress)){
+        pb <- progress::progress_bar$new(
+          format = "[:bar] :percent | ELA: :elapsedfull | ETA: :eta",
+          total = length(j_seq),
+          width = 60
+        )
+        progress_update <- function(nn){
           pb$tick()
-          chr_tmp <- self$get(i_,j_)
-          if(is.null(chr_tmp$rtcorrect)) next
-          chr_tmp$rtime <- chr_tmp$rtime + chr_tmp$rtcorrect
-          chr_tmp$peaks[, "rt"] <- chr_tmp$peaks[, "rt"] + chr_tmp$rtcorrect
-          chr_tmp$peaks[, "rtmin"] <- chr_tmp$peaks[, "rtmin"] + chr_tmp$rtcorrect
-          chr_tmp$peaks[, "rtmax"] <- chr_tmp$peaks[, "rtmax"] + chr_tmp$rtcorrect
-          chr_tmp$targetPeak[, "rt"] <- chr_tmp$targetPeak[, "rt"] + chr_tmp$rtcorrect
-          chr_tmp$targetPeak[, "rtmin"] <- chr_tmp$targetPeak[, "rtmin"] + chr_tmp$rtcorrect
-          chr_tmp$targetPeak[, "rtmax"] <- chr_tmp$targetPeak[, "rtmax"] + chr_tmp$rtcorrect
-          chr_tmp$rtcorrect <- NULL
+        }
+      }else{
+        maxValue <- shinyProgress$getMax()
+        if(maxValue != length(j_seq)) stop("maxValue != length(j_seq)")
+        progress_update <- function(nn){
+          shinyProgress$set(value = nn, message = "Correct rtshift...", detail = paste0(nn, " / ", maxValue))
         }
       }
+      opts <- list(progress = progress_update)
+      cl <- snow::makeCluster(thread)
+      doSNOW::registerDoSNOW(cl)
+      resLt <- foreach::`%dopar%`(foreach::foreach(chr_list = chr_list_tmp, nn = 1:length(j_seq),
+                                                   .options.snow = opts),
+                                  {
+                                    lapply(chr_list, function(chr){
+                                      if(is.null(chr$rtcorrect)){ # has been drop
+                                        return(chr)
+                                      }
+                                      chr$rtime <- chr$rtime + chr$rtcorrect
+                                      chr$peaks[, "rt"] <- chr$peaks[, "rt"] + chr$rtcorrect
+                                      chr$peaks[, "rtmin"] <- chr$peaks[, "rtmin"] + chr$rtcorrect
+                                      chr$peaks[, "rtmax"] <- chr$peaks[, "rtmax"] + chr$rtcorrect
+                                      chr$targetPeak[, "rt"] <- chr$targetPeak[, "rt"] + chr$rtcorrect
+                                      chr$targetPeak[, "rtmin"] <- chr$targetPeak[, "rtmin"] + chr$rtcorrect
+                                      chr$targetPeak[, "rtmax"] <- chr$targetPeak[, "rtmax"] + chr$rtcorrect
+                                      chr$rtcorrect <- NULL
+                                      return(chr)
+                                    })
+                                  })
+      snow::stopCluster(cl)
+      gc()
+      self$chrs_list[unlist(index)] <- unlist(resLt)
+      # for(i_ in i_seq){
+      #   for(j_ in j_seq){
+      #     pb$tick()
+      #     chr_tmp <- self$get(i_,j_)
+      #     if(is.null(chr_tmp$rtcorrect)) next
+      #     chr_tmp$rtime <- chr_tmp$rtime + chr_tmp$rtcorrect
+      #     chr_tmp$peaks[, "rt"] <- chr_tmp$peaks[, "rt"] + chr_tmp$rtcorrect
+      #     chr_tmp$peaks[, "rtmin"] <- chr_tmp$peaks[, "rtmin"] + chr_tmp$rtcorrect
+      #     chr_tmp$peaks[, "rtmax"] <- chr_tmp$peaks[, "rtmax"] + chr_tmp$rtcorrect
+      #     chr_tmp$targetPeak[, "rt"] <- chr_tmp$targetPeak[, "rt"] + chr_tmp$rtcorrect
+      #     chr_tmp$targetPeak[, "rtmin"] <- chr_tmp$targetPeak[, "rtmin"] + chr_tmp$rtcorrect
+      #     chr_tmp$targetPeak[, "rtmax"] <- chr_tmp$targetPeak[, "rtmax"] + chr_tmp$rtcorrect
+      #     chr_tmp$rtcorrect <- NULL
+      #   }
+      # }
     }
   )
 )

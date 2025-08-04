@@ -194,7 +194,14 @@ The extension needs to be executed because the number of analytes may be greater
 \subsection{Method \code{extract_targetPeak_ChrGrid()}}{
 Extract targte peak in chrmatograms of ChrGrid
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ChrGrid$extract_targetPeak_ChrGrid(i, j, rt, rt_diff_tol = 10)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ChrGrid$extract_targetPeak_ChrGrid(
+  i,
+  j,
+  rt = NULL,
+  rt_diff_tol = 10,
+  thread = 1,
+  shinyProgress = NULL
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -204,9 +211,13 @@ Extract targte peak in chrmatograms of ChrGrid
 
 \item{\code{j}}{`integer()`, sample index}
 
-\item{\code{rt}}{`numeric(1)`, rt of target peak, if it is missing, rt will be expectRt}
+\item{\code{rt}}{`numeric(1)`, rt of target peak, if it is NULL, rt will be expectRt}
 
 \item{\code{rt_diff_tol}}{`numeric(1)`, tolerance for retention time differences between two peaks that are same analytes}
+
+\item{\code{thread}}{`integer(1)`, thread number in parallel}
+
+\item{\code{shinyProgress}}{this parameter is used to receive shiny Progress instance}
 }
 \if{html}{\out{</div>}}
 }
@@ -217,7 +228,13 @@ Extract targte peak in chrmatograms of ChrGrid
 \subsection{Method \code{cal_rtshift()}}{
 Calculate retention time shift based on target peak of IS window
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ChrGrid$cal_rtshift(i, j)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ChrGrid$cal_rtshift(
+  i,
+  j,
+  thread = 1,
+  shinyProgress_IS = NULL,
+  shinyProgress_Analyte = NULL
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -226,6 +243,12 @@ Calculate retention time shift based on target peak of IS window
 \item{\code{i}}{`integer()`, analyte index}
 
 \item{\code{j}}{`integer()`, sample index}
+
+\item{\code{thread}}{`integer(1)`, thread number in parallel}
+
+\item{\code{shinyProgress_IS}}{this parameter is used to receive shiny Progress instance}
+
+\item{\code{shinyProgress_Analyte}}{this parameter is used to receive shiny Progress instance}
 }
 \if{html}{\out{</div>}}
 }
@@ -236,7 +259,7 @@ Calculate retention time shift based on target peak of IS window
 \subsection{Method \code{correct_rtshift()}}{
 Correct retention time shift
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ChrGrid$correct_rtshift(i, j)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ChrGrid$correct_rtshift(i, j, thread = 1, shinyProgress = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -245,6 +268,10 @@ Correct retention time shift
 \item{\code{i}}{`integer()`, analyte index}
 
 \item{\code{j}}{`integer()`, sample index}
+
+\item{\code{thread}}{`integer(1)`, thread number in parallel}
+
+\item{\code{shinyProgress}}{this parameter is used to receive shiny Progress instance}
 }
 \if{html}{\out{</div>}}
 }
@@ -255,7 +282,7 @@ Correct retention time shift
 \subsection{Method \code{drop_rtshift()}}{
 Restore retention time from correction
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ChrGrid$drop_rtshift(i, j)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ChrGrid$drop_rtshift(i, j, thread = 1, shinyProgress = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -264,6 +291,10 @@ Restore retention time from correction
 \item{\code{i}}{`integer()`, analyte index}
 
 \item{\code{j}}{`integer()`, sample index}
+
+\item{\code{thread}}{`integer(1)`, thread number in parallel}
+
+\item{\code{shinyProgress}}{this parameter is used to receive shiny Progress instance}
 }
 \if{html}{\out{</div>}}
 }
