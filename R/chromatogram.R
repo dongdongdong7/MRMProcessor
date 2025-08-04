@@ -145,12 +145,12 @@ chromatogram <- R6::R6Class(
 
     #' @description
     #' Extract targte peak in a chrmatogram
-    #' @param rt `numeric(1)`, rt of target peak, if it is missing, rt will be expectRt
+    #' @param rt `numeric(1)`, rt of target peak, if it is NULL, rt will be expectRt
     #' @param rt_diff_tol `numeric(1)`, tolerance for retention time differences between two peaks that are same analytes
-    extract_targetPeak_chr = function(rt, rt_diff_tol = 10){
+    extract_targetPeak_chr = function(rt = NULL, rt_diff_tol = 10){
       self$targetPeak <- NULL
       self$rtdifference <- NULL
-      if(missing(rt)) rt <- self$expectRt
+      if(is.null(rt)) rt <- self$expectRt
       if(!is.null(self$peaks) & !is.null(rt)){
         if(nrow(self$peaks) != 0){
           ps <- self$peaks[abs(self$peaks[, "rt"] - rt) < rt_diff_tol, , drop = FALSE]

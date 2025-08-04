@@ -174,9 +174,12 @@ ChrGrid <- R6::R6Class(
     #' Extract targte peak in chrmatograms of ChrGrid
     #' @param i `integer()`, analyte index
     #' @param j `integer()`, sample index
-    #' @param rt `numeric(1)`, rt of target peak, if it is missing, rt will be expectRt
+    #' @param rt `numeric(1)`, rt of target peak, if it is NULL, rt will be expectRt
     #' @param rt_diff_tol `numeric(1)`, tolerance for retention time differences between two peaks that are same analytes
-    extract_targetPeak_ChrGrid = function(i, j, rt, rt_diff_tol = 10){
+    #' @param thread `integer(1)`, thread number in parallel
+    #' @param shinyProgress this parameter is used to receive shiny Progress instance
+    extract_targetPeak_ChrGrid = function(i, j, rt = NULL, rt_diff_tol = 10,
+                                          thread = 1, shinyProgress = NULL){
       if(missing(i) & missing(j)){
         i_seq <- 1:self$dim[1]
         j_seq <- 1:self$dim[2]
@@ -190,19 +193,42 @@ ChrGrid <- R6::R6Class(
         i_seq <- i
         j_seq <- j
       }
-      pb <- progress::progress_bar$new(
-        format = "[:bar] :percent | ELA: :elapsedfull | ETA: :eta",
-        total = length(i_seq) * length(j_seq),
-        width = 60
-      )
-      for(i_ in i_seq){
-        for(j_ in j_seq){
+      index <- lapply(j_seq, function(j_){
+        (j_ - 1) * self$dim[1] + i_seq
+      })
+      chr_list_tmp <- lapply(index, function(x) {
+        self$chrs_list[x]
+      })
+      if(is.null(shinyProgress)){
+        pb <- progress::progress_bar$new(
+          format = "[:bar] :percent | ELA: :elapsedfull | ETA: :eta",
+          total = length(j_seq),
+          width = 60
+        )
+        progress_update <- function(nn){
           pb$tick()
-          chr_tmp <- self$get(i_, j_)
-          if(missing(rt)) chr_tmp$extract_targetPeak_chr(rt_diff_tol = rt_diff_tol)
-          else chr_tmp$extract_targetPeak_chr(rt = rt, rt_diff_tol = rt_diff_tol)
+        }
+      }else{
+        maxValue <- shinyProgress$getMax()
+        if(maxValue != length(j_seq)) stop("maxValue != length(j_seq)")
+        progress_update <- function(nn){
+          shinyProgress$set(value = nn, message = "Extract target peak...", detail = paste0(nn, " / ", maxValue))
         }
       }
+      opts <- list(progress = progress_update)
+      cl <- snow::makeCluster(thread)
+      doSNOW::registerDoSNOW(cl)
+      resLt <- foreach::`%dopar%`(foreach::foreach(chr_list = chr_list_tmp, nn = 1:length(j_seq),
+                                                   .options.snow = opts),
+                                  {
+                                    lapply(chr_list, function(chr){
+                                      chr$extract_targetPeak_chr(rt = rt, rt_diff_tol = rt_diff_tol)
+                                      chr
+                                    })
+                                  })
+      snow::stopCluster(cl)
+      gc()
+      self$chrs_list[index] <- unlist(resLt)
     },
 
     #' @description
