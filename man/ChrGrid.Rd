@@ -138,6 +138,8 @@ Print ChrGrid instance
 Find peaks in ChrGrid
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ChrGrid$findPeaks_ChrGrid(
+  i,
+  j,
   peakwidth = c(5, 20),
   snthresh = 10,
   minPs = 3,
@@ -154,6 +156,10 @@ Find peaks in ChrGrid
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
+\item{\code{i}}{`integer()`, analyte index}
+
+\item{\code{j}}{`integer()`, sample index}
+
 \item{\code{peakwidth}}{`numeric(2)` with the lower and upper boun of the expected peak width.}
 
 \item{\code{snthresh}}{`numeric(1)` defining the signal to noise ratio cutoff.}
@@ -184,9 +190,18 @@ Find peaks in ChrGrid
 Extend ChrGrid based on windowInfo.
 The extension needs to be executed because the number of analytes may be greater than the number of windows
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ChrGrid$extend_ChrGrid()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ChrGrid$extend_ChrGrid(thread = 1, shinyProgress = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{thread}}{`integer(1)`, thread number in parallel}
+
+\item{\code{shinyProgress}}{this parameter is used to receive shiny Progress instance}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ChrGrid-extract_targetPeak_ChrGrid"></a>}}

@@ -84,6 +84,8 @@ ChrGrid <- R6::R6Class(
 
     #' @description
     #' Find peaks in ChrGrid
+    #' @param i `integer()`, analyte index
+    #' @param j `integer()`, sample index
     #' @param peakwidth `numeric(2)` with the lower and upper boun of the expected peak width.
     #' @param snthresh `numeric(1)` defining the signal to noise ratio cutoff.
     #' @param minPs `integer(1)`, the ROI region requires a minimum of minPs of signals greater than the noise.
@@ -94,12 +96,31 @@ ChrGrid <- R6::R6Class(
     #' @param csthresh `numeric(1)` threshold of cs.
     #' @param thread `integer(1)`, thread number in parallel
     #' @param shinyProgress this parameter is used to receive shiny Progress instance
-    findPeaks_ChrGrid = function(peakwidth = c(5, 20), snthresh = 10, minPs = 3, noise = 100, estimateNoise = TRUE, extendLengthMSW = TRUE, r2thresh = 0.6, csthresh = 0.2,
+    findPeaks_ChrGrid = function(i, j,
+                                 peakwidth = c(5, 20), snthresh = 10, minPs = 3, noise = 100, estimateNoise = TRUE, extendLengthMSW = TRUE, r2thresh = 0.6, csthresh = 0.2,
                                  thread = 1, shinyProgress = NULL){
+      if(missing(i) & missing(j)){
+        i_seq <- 1:self$dim[1]
+        j_seq <- 1:self$dim[2]
+      }else if(!missing(i) & missing(j)){
+        i_seq <- i
+        j_seq <- 1:self$dim[2]
+      }else if(missing(i) & !missing(j)){
+        i_seq <- 1:self$dim[1]
+        j_seq <- j
+      }else{
+        i_seq <- i
+        j_seq <- j
+      }
+      index <- lapply(j_seq, function(j_){
+        (j_ - 1) * self$dim[1] + i_seq
+      })
+      index <- unlist(index)
+      chr_list_tmp <- self$chrs_list[index]
       if(is.null(shinyProgress)){
         pb <- progress::progress_bar$new(
           format = "[:bar] :percent | ELA: :elapsedfull | ETA: :eta",
-          total = length(self$chrs_list),
+          total = length(chr_list_tmp),
           width = 60
         )
         progress_update <- function(nn){
@@ -107,7 +128,7 @@ ChrGrid <- R6::R6Class(
         }
       }else{
         maxValue <- shinyProgress$getMax()
-        if(maxValue != length(self$chrs_list)) stop("maxValue != length(chr_grid$chrs_list)")
+        if(maxValue != length(chr_list_tmp)) stop("maxValue != length(chr_list_tmp)")
         progress_update <- function(nn){
           shinyProgress$set(value = nn, message = "Find peaks...: ", detail = paste0(nn, " / ", maxValue))
         }
@@ -115,7 +136,7 @@ ChrGrid <- R6::R6Class(
       opts <- list(progress = progress_update)
       cl <- snow::makeCluster(thread)
       doSNOW::registerDoSNOW(cl)
-      resLt <- foreach::`%dopar%`(foreach::foreach(chr = self$chrs_list, nn = 1:length(self$chrs_list),
+      resLt <- foreach::`%dopar%`(foreach::foreach(chr = chr_list_tmp, nn = 1:length(chr_list_tmp),
                                                    .options.snow = opts),
                                   {
                                     chr$findPeaks_chr(peakwidth = peakwidth, snthresh = snthresh, minPs = minPs, noise = noise,
@@ -125,47 +146,111 @@ ChrGrid <- R6::R6Class(
                                   })
       snow::stopCluster(cl)
       gc()
-      self$chrs_list <- resLt
+      self$chrs_list[index] <- resLt
     },
 
     #' @description
     #' Extend ChrGrid based on windowInfo.
     #' The extension needs to be executed because the number of analytes may be greater than the number of windows
-    extend_ChrGrid = function(){
+    #' @param thread `integer(1)`, thread number in parallel
+    #' @param shinyProgress this parameter is used to receive shiny Progress instance
+    extend_ChrGrid = function(thread = 1, shinyProgress = NULL){
       if(self$unit == "min") mag <- 60
       else mag <- 1
       n <- nrow(self$sampleInfo)
       m <- nrow(self$windowInfo)
-      resLt <- lapply(1:n, function(j) {
-        current_windowName_vec <- sapply(1:self$dim[1], function(k) {
-          self$get(k, j)$windowName
-        })
-        sampleName <- self$sampleInfo[j, "sampleName"]
-        lapply(1:m, function(i) {
-          analyteName <- self$windowInfo[i, "analyteName"]
-          windowName <- self$windowInfo[i, "windowName"]
-          expectRt <- self$windowInfo[i, "expectRt"] * mag
-          analyteType <- self$windowInfo[i, "analyteType"]
-          relatedIS <- self$windowInfo[i, "relatedIS"]
-          l <- match(windowName, current_windowName_vec)
-          if(length(l) == 1){
-            chr_tmp <- self$get(l, j)$clone()
-            chr_tmp$analyteName <- analyteName
-            chr_tmp$expectRt <- expectRt
-            chr_tmp$analyteType <- analyteType
-            chr_tmp$relatedIS <- relatedIS
-            return(chr_tmp)
-          }else if(length(l) == 0){
-            return(chromatogram$new(rtime = numeric(), intensity = numeric(),
-                                    Q1 = self$windowInfo[i, "Q1"], Q3 = self$windowInfo[i, "Q3"],
-                                    analyteName = analyteName, windowName = windowName,
-                                    expectRt = expectRt, analyteType = analyteType, relatedIS = relatedIS,
-                                    sampleName = sampleName))
-          }else{
-            stop("Multi match: ", windowName)
-          }
+      m_ <- self$dim[1]
+      n_ <- self$dim[2]
+      chr_list_tmp <- lapply(1:n_, function(j) {
+        lapply(1:m_, function(i){
+          self$get(i, j)
         })
       })
+      windowInfo <- self$windowInfo
+      sampleInfo <- self$sampleInfo
+      if(is.null(shinyProgress)){
+        pb <- progress::progress_bar$new(
+          format = "[:bar] :percent | ELA: :elapsedfull | ETA: :eta",
+          total = n,
+          width = 60
+        )
+        progress_update <- function(nn){
+          pb$tick()
+        }
+      }else{
+        maxValue <- shinyProgress$getMax()
+        if(maxValue != n) stop("maxValue != nrow(sampleInfo)")
+        progress_update <- function(nn){
+          shinyProgress$set(value = nn, message = "Extend ChrGrid...", detail = paste0(nn, " / ", maxValue))
+        }
+      }
+      opts <- list(progress = progress_update)
+      cl <- snow::makeCluster(thread)
+      doSNOW::registerDoSNOW(cl)
+      resLt <- foreach::`%dopar%`(foreach::foreach(chr_list = chr_list_tmp, nn = 1:n_,
+                                                   .options.snow = opts),
+                                  {
+                                    current_windowName_vec <- sapply(1:m_, function(k) {
+                                      chr_list[[k]]$windowName
+                                    })
+                                    sampleName <- sampleInfo$sampleName[nn]
+                                    lapply(1:m, function(i) {
+                                      analyteName <- windowInfo$analyteName[i]
+                                      windowName <- windowInfo$windowName[i]
+                                      expectRt <- windowInfo$expectRt[i] * mag
+                                      analyteType <- windowInfo$analyteType[i]
+                                      relatedIS <- windowInfo$relatedIS[i]
+                                      l <- match(windowName, current_windowName_vec)
+                                      if(length(l) == 1){
+                                        chr_tmp <- chr_list[[l]]$clone()
+                                        chr_tmp$analyteName <- analyteName
+                                        chr_tmp$expectRt <- expectRt
+                                        chr_tmp$analyteType <- analyteType
+                                        chr_tmp$relatedIS <- relatedIS
+                                        return(chr_tmp)
+                                      }else if(length(l) == 0){
+                                        return(chromatogram$new(rtime = numeric(), intensity = numeric(),
+                                                                Q1 = self$windowInfo[i, "Q1"], Q3 = self$windowInfo[i, "Q3"],
+                                                                analyteName = analyteName, windowName = windowName,
+                                                                expectRt = expectRt, analyteType = analyteType, relatedIS = relatedIS,
+                                                                sampleName = sampleName))
+                                      }else{
+                                        stop("Multi match: ", windowName)
+                                      }
+                                    })
+                                  })
+      snow::stopCluster(cl)
+      gc()
+      # resLt <- lapply(1:n, function(j) {
+      #   current_windowName_vec <- sapply(1:self$dim[1], function(k) {
+      #     self$get(k, j)$windowName
+      #   })
+      #   sampleName <- self$sampleInfo[j, "sampleName"]
+      #   lapply(1:m, function(i) {
+      #     analyteName <- self$windowInfo[i, "analyteName"]
+      #     windowName <- self$windowInfo[i, "windowName"]
+      #     expectRt <- self$windowInfo[i, "expectRt"] * mag
+      #     analyteType <- self$windowInfo[i, "analyteType"]
+      #     relatedIS <- self$windowInfo[i, "relatedIS"]
+      #     l <- match(windowName, current_windowName_vec)
+      #     if(length(l) == 1){
+      #       chr_tmp <- self$get(l, j)$clone()
+      #       chr_tmp$analyteName <- analyteName
+      #       chr_tmp$expectRt <- expectRt
+      #       chr_tmp$analyteType <- analyteType
+      #       chr_tmp$relatedIS <- relatedIS
+      #       return(chr_tmp)
+      #     }else if(length(l) == 0){
+      #       return(chromatogram$new(rtime = numeric(), intensity = numeric(),
+      #                               Q1 = self$windowInfo[i, "Q1"], Q3 = self$windowInfo[i, "Q3"],
+      #                               analyteName = analyteName, windowName = windowName,
+      #                               expectRt = expectRt, analyteType = analyteType, relatedIS = relatedIS,
+      #                               sampleName = sampleName))
+      #     }else{
+      #       stop("Multi match: ", windowName)
+      #     }
+      #   })
+      # })
       self$dim <- c(m, n)
       self$chrs_list <- unlist(resLt)
     },
