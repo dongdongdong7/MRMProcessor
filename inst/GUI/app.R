@@ -67,7 +67,6 @@ server <- function(input, output, session){
     values$windowInfo <- NULL
     values$sampleInfoPath <- NULL
     values$sampleInfo <- NULL
-    values$batchNameVector <- NULL
     values$chr_grid <- NULL
   }
   # Initialize app

@@ -120,7 +120,6 @@ load_data_server <- function(id, values){
           text <- paste0(root, nowsep, text, nowsep, file_name)
           values$sampleInfoPath <- text
           values$sampleInfo <- openxlsx::read.xlsx(values$sampleInfoPath)
-          # values$batchNameVector <- unique(values$sampleInfo$batchName)
           message <- text
         }else message <- NULL
         output$load_data_sampleInfoText <- renderText({message})
@@ -137,7 +136,6 @@ load_data_server <- function(id, values){
           output$load_data_sampleInfoDT <- renderDT({
             values$sampleInfo
           }, options = list(columnDefs = list(list(className = "dt-center", targets = "_all")), pageLength = 10))
-          values$batchNameVector <- unique(values$sampleInfo$batchName)
         }
       })
 
