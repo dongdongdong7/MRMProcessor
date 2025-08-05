@@ -73,6 +73,9 @@ chr <- chromatogram$new(rtime = rtime, intensity = intensity, Q1 = 200.321, Q3 =
 \item \href{#method-chromatogram-print}{\code{chromatogram$print()}}
 \item \href{#method-chromatogram-findPeaks_chr}{\code{chromatogram$findPeaks_chr()}}
 \item \href{#method-chromatogram-extract_targetPeak_chr}{\code{chromatogram$extract_targetPeak_chr()}}
+\item \href{#method-chromatogram-cal_rtshift_chr}{\code{chromatogram$cal_rtshift_chr()}}
+\item \href{#method-chromatogram-correct_rtshift_chr}{\code{chromatogram$correct_rtshift_chr()}}
+\item \href{#method-chromatogram-drop_rtshift_chr}{\code{chromatogram$drop_rtshift_chr()}}
 \item \href{#method-chromatogram-plot_chr}{\code{chromatogram$plot_chr()}}
 \item \href{#method-chromatogram-clone}{\code{chromatogram$clone()}}
 }
@@ -191,6 +194,43 @@ Extract targte peak in a chrmatogram
 }
 \if{html}{\out{</div>}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-chromatogram-cal_rtshift_chr"></a>}}
+\if{latex}{\out{\hypertarget{method-chromatogram-cal_rtshift_chr}{}}}
+\subsection{Method \code{cal_rtshift_chr()}}{
+Calculate retention time shift based on target peak of IS winodw
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{chromatogram$cal_rtshift_chr(chr_grid = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{chr_grid}}{`ChrGrid()`, the ChrGrid to which this chromatogram belongs}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-chromatogram-correct_rtshift_chr"></a>}}
+\if{latex}{\out{\hypertarget{method-chromatogram-correct_rtshift_chr}{}}}
+\subsection{Method \code{correct_rtshift_chr()}}{
+Correct retention time shift
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{chromatogram$correct_rtshift_chr()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-chromatogram-drop_rtshift_chr"></a>}}
+\if{latex}{\out{\hypertarget{method-chromatogram-drop_rtshift_chr}{}}}
+\subsection{Method \code{drop_rtshift_chr()}}{
+Restore retention time from correction
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{chromatogram$drop_rtshift_chr()}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-chromatogram-plot_chr"></a>}}

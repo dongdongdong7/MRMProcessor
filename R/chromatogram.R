@@ -164,6 +164,64 @@ chromatogram <- R6::R6Class(
     },
 
     #' @description
+    #' Calculate retention time shift based on target peak of IS winodw
+    #' @param chr_grid `ChrGrid()`, the ChrGrid to which this chromatogram belongs
+    cal_rtshift_chr = function(chr_grid = NULL){
+      if(self$analyteType == "IS"){
+        tp <- self$targetPeak
+        if(!is.null(tp)){
+          if(nrow(tp) == 1){
+            self$rtshift <- as.numeric(tp[1, "rt"] - self$expectRt)
+          }else{
+            self$rtshift <- NULL
+          }
+        }else{
+          self$rtshift <- NULL
+        }
+      }
+      else{
+        if(!is.null(chr_grid)){
+          i_IS <- which(chr_grid$windowInfo$analyteName == self$relatedIS)
+          j_IS <- which(chr_grid$sampleInfo$sampleName == self$sampleName)
+          chr_IS <- chr_grid$get(i_IS, j_IS)
+          self$rtshift <- chr_IS$rtshift
+        }else{
+          warning("if you want to calculate an analyte, you need provide ChrGrid")
+        }
+      }
+    },
+
+    #' @description
+    #' Correct retention time shift
+    correct_rtshift_chr = function(){
+      if(!is.null(self$rtshift) & is.null(self$rtcorrect)){
+        self$rtime <- self$rtime - self$rtshift
+        self$peaks[, "rt"] <- self$peaks[, "rt"] - self$rtshift
+        self$peaks[, "rtmin"] <- self$peaks[, "rtmin"] - self$rtshift
+        self$peaks[, "rtmax"] <- self$peaks[, "rtmax"] - self$rtshift
+        self$targetPeak[, "rt"] <- self$targetPeak[, "rt"] - self$rtshift
+        self$targetPeak[, "rtmin"] <- self$targetPeak[, "rtmin"] - self$rtshift
+        self$targetPeak[, "rtmax"] <- self$targetPeak[, "rtmax"] - self$rtshift
+        self$rtcorrect <- self$rtshift
+      }
+    },
+
+    #' @description
+    #' Restore retention time from correction
+    drop_rtshift_chr = function(){
+      if(!is.null(self$rtcorrect)){ # has been drop or nerver be corrected
+        self$rtime <- self$rtime + self$rtcorrect
+        self$peaks[, "rt"] <- self$peaks[, "rt"] + self$rtcorrect
+        self$peaks[, "rtmin"] <- self$peaks[, "rtmin"] + self$rtcorrect
+        self$peaks[, "rtmax"] <- self$peaks[, "rtmax"] + self$rtcorrect
+        self$targetPeak[, "rt"] <- self$targetPeak[, "rt"] + self$rtcorrect
+        self$targetPeak[, "rtmin"] <- self$targetPeak[, "rtmin"] + self$rtcorrect
+        self$targetPeak[, "rtmax"] <- self$targetPeak[, "rtmax"] + self$rtcorrect
+        self$rtcorrect <- NULL
+      }
+    },
+
+    #' @description
     #' Plot chromatogram
     #' @param target `logical(1)`, whether to plot only the target peak
     plot_chr = function(target = FALSE){
