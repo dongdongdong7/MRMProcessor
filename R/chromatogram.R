@@ -230,16 +230,18 @@ chromatogram <- R6::R6Class(
         ggplot2::geom_line(ggplot2::aes(y = int), col = "black", linewidth = 1) +
         ggplot2::theme_bw() +
         ggplot2::labs(x = "Retention Time", y = "Intensity") +
-        ggplot2::annotation_custom(
-          grob = grid::textGrob(paste0(self$Q1, " - ", self$Q3, "\n",
-                                       self$analyteName, "\n",
-                                       self$windowName, "\n",
-                                       self$sampleName),
-                                x = grid::unit(0.05, "npc"),  # 使用相对单位
-                                y = grid::unit(0.95, "npc"),  # 使用相对单位
-                                just = c("left", "top"),
-                                gp = grid::gpar(col = "red", fontsize = 9))
-        )
+        ggplot2::annotate("text", x = Inf, y = Inf, label = paste0(self$Q1, " - ", self$Q3), color = "red", size = 3,
+                          hjust = 1.1, vjust = 1.1)
+        # ggplot2::annotation_custom(
+        #   grob = grid::textGrob(paste0(self$Q1, " - ", self$Q3, "\n",
+        #                                self$analyteName, "\n",
+        #                                self$windowName, "\n",
+        #                                self$sampleName),
+        #                         x = grid::unit(0.05, "npc"),  # 使用相对单位
+        #                         y = grid::unit(0.95, "npc"),  # 使用相对单位
+        #                         just = c("left", "top"),
+        #                         gp = grid::gpar(col = "red", fontsize = 9))
+        # )
       if(target){
         peaksInfo <- self$targetPeak
       }else{
