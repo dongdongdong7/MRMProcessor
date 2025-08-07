@@ -58,7 +58,7 @@ ui <- page_navbar(
 server <- function(input, output, session){
   # Global Variable
   {
-    values <- reactiveValues() # TODO: 还是将所有values的监视变量放在一起
+    values <- reactiveValues()
     values$threads <- NULL
     values$rtUnit <- NULL
     values$dataDir <- NULL
@@ -68,6 +68,10 @@ server <- function(input, output, session){
     values$sampleInfoPath <- NULL
     values$sampleInfo <- NULL
     values$chr_grid <- NULL
+    values$current_i <- 1
+    values$current_j <- 1
+    values$current_analyteName <- NULL
+    values$current_sampleName <- NULL
   }
   # Initialize app
   observe({
