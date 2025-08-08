@@ -72,6 +72,7 @@ server <- function(input, output, session){
     values$current_j <- 1
     values$current_analyteName <- NULL
     values$current_sampleName <- NULL
+    values$chr_grid_change <- 1 # 用于反应chr_grid的变化
   }
   # Initialize app
   observe({

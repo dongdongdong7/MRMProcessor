@@ -41,7 +41,7 @@ find_peaks_ui <- function(id){
       #find_peaks-btn_right { top: 50px; left: 100px; }
       #find_peaks-btn_down { top: 100px; left: 50px; }
       .find_peaks_ij {
-      width: 60px;
+      width: 80px;
       height: 180px;
       }
     "))
@@ -61,7 +61,8 @@ find_peaks_ui <- function(id){
       open = TRUE,
       selectInput(label = "Sample Name", choices = "none", selected = "none", inputId = ns("find_peaks_sampleName"), width = "100%"),
       selectInput(label = "Analyte Name", choices = "none", selected = "none", inputId = ns("find_peaks_analyteName"), width = "100%"),
-      numericInput(label = "Target RT", inputId = ns("find_peaks_targetRt"), min = 0, max = 1000, value = 100, step = 0.5),
+      numericInput(label = "Target RT", inputId = ns("find_peaks_targetRt"), min = 0, max = 1000, value = 100, step = 1),
+      numericInput(label = "RT Difference Tolerance", inputId = ns("find_peaks_rt_diff_tol"), min = 0, max = 60, value = 10, step = 1),
       actionButton(label = "Find Peaks", inputId = ns("find_peaks_findPeaks")),
       actionButton(label = "Extract Target", inputId = ns("find_peaks_extractTarget")),
       actionButton(label = "Correct RT", inputId = ns("find_peaks_correctRt")),
@@ -69,10 +70,23 @@ find_peaks_ui <- function(id){
       actionButton(label = "browser", inputId = ns("browser"))
     ),
     layout_columns(
-      col_widths = c(8, 4, 12),
+      col_widths = c(7, 5, 12),
       row_heights = c(1,1,1),
       card(
-        plotly::plotlyOutput(outputId = ns("find_peaks_currentAnalyte"))
+        div(style = "display: flex; width: 100%; height: 100%; gap: 10px;",
+          div(style = "width: 50px; height: 25px;",
+              shinyWidgets::dropdownButton(
+                shinyWidgets::switchInput(inputId = ns("find_peaks_showTarget"), label = "Show Target", value = FALSE, onLabel = "ON", offLabel = "OFF"),
+                circle = FALSE,
+                size = "sm",
+                status = "primary",
+                icon = icon("gear"), width = "100px"
+              ),
+          ),
+          div(style = "width: 100%; height: 100%;",
+              plotly::plotlyOutput(outputId = ns("find_peaks_currentAnalyte"), width = "100%", height = "100%")
+          )
+        )
       ),
       card(
         div(
@@ -226,57 +240,110 @@ find_peaks_server <- function(id, values){
       })
 
       # find_peaks_findPeaks
-      observeEvent(input$find_peaks_findPeaks, { # TODO: 给extend加上进度条, 少量find peaks 时, 进度条好像不对
+      observeEvent(input$find_peaks_findPeaks, {
         if(!is.null(values$chr_grid)){
           addClass(id = "find_peaks_findPeaks", class = "btn-clicked")
-          progress <- Progress$new(min = 0, max = length(values$chr_grid$chrs_list))
-          progress$set(message = "Begain to finding peaks...", value = 0)
-          on.exit(progress$close())
           i_seq <- input$find_peaks_i_start:input$find_peaks_i_end
           j_seq <- input$find_peaks_j_start:input$find_peaks_j_end
-          # if(length(i_seq) * length(j_seq) <= 10){
-          #   for(i in i_seq){
-          #     for(j in j_seq){
-          #       values$chr_grid$get(i, j)$findPeaks_ChrGrid()
-          #     }
-          #   }
-          # }
-          values$chr_grid$findPeaks_ChrGrid(i = i_seq,
-                                            j = j_seq,
-                                            peakwidth = c(input$find_peaks_peakwidth[1], input$find_peaks_peakwidth[2]),
-                                            snthresh = input$find_peaks_snthresh,
-                                            noise = input$find_peaks_noise, estimateNoise = input$find_peaks_estimateNoise,
-                                            r2thresh = input$find_peaks_r2thresh,
-                                            thread = values$threads, shinyProgress = progress)
-          values$chr_grid$extend_ChrGrid()
+          progress <- Progress$new(min = 0, max = length(i_seq) * length(j_seq))
+          progress$set(message = "Begain to finding peaks...", value = 0)
+          on.exit(progress$close(), add = TRUE)
+          if(length(i_seq) * length(j_seq) <= 10){
+            nn <- 1
+            maxValue <- progress$getMax()
+            for(i in i_seq){
+              for(j in j_seq){
+                progress$set(value = nn, message = "Find peaks...", detail = paste0(nn, " / ", maxValue))
+                nn <- nn + 1
+                values$chr_grid$get(i, j)$findPeaks_chr(peakwidth = c(input$find_peaks_peakwidth[1], input$find_peaks_peakwidth[2]),
+                                                        snthresh = input$find_peaks_snthresh,
+                                                        noise = input$find_peaks_noise, estimateNoise = input$find_peaks_estimateNoise,
+                                                        r2thresh = input$find_peaks_r2thresh)
+              }
+            }
+          }else{
+            values$chr_grid$findPeaks_ChrGrid(i = i_seq,
+                                              j = j_seq,
+                                              peakwidth = c(input$find_peaks_peakwidth[1], input$find_peaks_peakwidth[2]),
+                                              snthresh = input$find_peaks_snthresh,
+                                              noise = input$find_peaks_noise, estimateNoise = input$find_peaks_estimateNoise,
+                                              r2thresh = input$find_peaks_r2thresh,
+                                              thread = values$threads, shinyProgress = progress)
+          }
+          if(length(i_seq) == values$chr_grid$dim[1] & length(j_seq) == values$chr_grid$dim[2] & !values$chr_grid$extended){
+            # 没有被extend, 且正在对全部窗口寻峰
+            progress2 <- Progress$new(min = 0, max = nrow(values$chr_grid$sampleInfo))
+            progress2$set(message = "Begain to extend ChrGrid...", value = 0)
+            on.exit(progress2$close(), add = TRUE)
+            values$chr_grid$extend_ChrGrid(thread = values$threads, shinyProgress = progress2)
+          }
+          values$chr_grid_change <- values$chr_grid_change + 1
         }
       })
       # find_peaks_extractTarget
       observeEvent(input$find_peaks_extractTarget, {
-        browser()
-        values$chr_grid$extractTarget
+        if(!is.null(values$chr_grid)){
+          addClass(id = "find_peaks_extractTarget", class = "btn-clicked")
+          i_seq <- input$find_peaks_i_start:input$find_peaks_i_end
+          j_seq <- input$find_peaks_j_start:input$find_peaks_j_end
+          if(length(i_seq) * length(j_seq) <= 20){
+            progress <- Progress$new(min = 0, max = length(i_seq) * length(j_seq))
+            progress$set(message = "Begain to extract target...", value = 0)
+            on.exit(progress$close(), add = TRUE)
+            nn <- 1
+            maxValue <- progress$getMax()
+            for(i in i_seq){
+              for(j in j_seq){
+                progress$set(value = nn, message = "Extract target...", detail = paste0(nn, " / ", maxValue))
+                nn <- nn + 1
+                values$chr_grid$get(i, j)$extract_targetPeak_chr(rt = input$find_peaks_targetRt, rt_diff_tol = input$find_peaks_rt_diff_tol)
+              }
+            }
+          }else{
+            progress <- Progress$new(min = 0, max = length(j_seq))
+            progress$set(message = "Begain to extract target...", value = 0)
+            on.exit(progress$close(), add = TRUE)
+            values$chr_grid$extract_targetPeak_ChrGrid(i = i_seq, j = j_seq,
+                                                       rt = input$find_peaks_targetRt, rt_diff_tol = input$find_peaks_rt_diff_tol,
+                                                       thread = values$threads, shinyProgress = progress)
+          }
+        }
+        values$chr_grid_change <- values$chr_grid_change + 1
       })
 
       # find_peaks_currentAnalyte
       observe({
         if(!is.null(values$chr_grid)){
           if(!is.na(values$current_i) & !is.na(values$current_j)){
+            values$chr_grid_change # 观察chr_grid是否改变
             chr <- values$chr_grid$get(values$current_i,values$current_j)
-            peakwidth <- chr$peakwidth
-            snthresh <- chr$snthresh
-            noise <- chr$noise
-            estimateNoise <- chr$estimateNoise
-            r2thresh <- chr$r2thresh
-            if(all(sapply(list(peakwidth, snthresh, noise ,estimateNoise, r2thresh), function(x) {!is.null(x)}))){
-              updateSliderInput(session = session, inputId = "find_peaks_peakwidth", value = c(chr$peakwidth[1], chr$peakwidth[2]))
-              updateSliderInput(session = session, inputId = "find_peaks_snthresh", value = snthresh)
-              updateNumericInput(session = session, inputId = "find_peaks_noise", value = noise)
-              shinyWidgets::updateSwitchInput(session = session, inputId = "find_peaks_estimateNoise", value = estimateNoise)
-              updateSliderInput(session = session, inputId = "find_peaks_r2thresh", value = r2thresh)
+            if(!is.null(chr)){
+              # 动态更新寻峰参数
+              peakwidth <- chr$peakwidth
+              snthresh <- chr$snthresh
+              noise <- chr$noise
+              estimateNoise <- chr$estimateNoise
+              r2thresh <- chr$r2thresh
+              if(all(sapply(list(peakwidth, snthresh, noise ,estimateNoise, r2thresh), function(x) {!is.null(x)}))){
+                updateSliderInput(session = session, inputId = "find_peaks_peakwidth", value = c(chr$peakwidth[1], chr$peakwidth[2]))
+                updateSliderInput(session = session, inputId = "find_peaks_snthresh", value = snthresh)
+                updateNumericInput(session = session, inputId = "find_peaks_noise", value = noise)
+                shinyWidgets::updateSwitchInput(session = session, inputId = "find_peaks_estimateNoise", value = estimateNoise)
+                updateSliderInput(session = session, inputId = "find_peaks_r2thresh", value = r2thresh)
+              }
+              # 动态更新目标保留时间和保留时间差值容忍度
+              targetRt <- chr$targetRt
+              rt_diff_tol <- chr$rt_diff_tol
+              if(is.null(targetRt)) targetRt <- chr$expectRt
+              if(is.null(rt_diff_tol)) rt_diff_tol <- 10
+              if(!is.null(targetRt) & !is.null(rt_diff_tol)){
+                updateNumericInput(session = session, inputId = "find_peaks_targetRt", value = targetRt)
+                updateNumericInput(session = session, inputId = "find_peaks_rt_diff_tol", value = rt_diff_tol)
+              }
+              output$find_peaks_currentAnalyte <- plotly::renderPlotly({
+                chr$plot_chr(target = input$find_peaks_showTarget)
+              })
             }
-            output$find_peaks_currentAnalyte <- plotly::renderPlotly({
-              chr$plot_chr()
-            })
           }
         }
       })
