@@ -22,11 +22,13 @@ chr <- chromatogram$new(rtime = rtime, intensity = intensity, Q1 = 200.321, Q3 =
 
 \item{\code{peaks}}{`matrix()`, peaks information of chromatogram}
 
+\item{\code{targetRt}}{`numeric(1)`, retention time of target peak for the current sample}
+
 \item{\code{targetPeak}}{`matrix()`, target peak of this window}
 
-\item{\code{rt_diff_tol}}{`numeric()`, tolerance for retention time differences between two peaks that are same analytes}
+\item{\code{rt_diff_tol}}{`numeric(1)`, tolerance for retention time differences between two peaks that are same analytes}
 
-\item{\code{rtdifference}}{`numeric()`, difference between rt of targetPeak and expectRt}
+\item{\code{rtdifference}}{`numeric(1)`, difference between rt of targetPeak and expectRt}
 
 \item{\code{Q1}}{`numeric(1)`, Q1 for MRM window}
 
