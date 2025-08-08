@@ -62,6 +62,10 @@ ChrGrid <- R6::R6Class(
       if(missing(i) | missing(j)){
         stop("You need to specify the chrs you want to obtain.")
       }
+      if(i > self$dim[1] | i < 1 | j > self$dim[2] | j < 1){
+        message("Invalid i or j")
+        return(NULL)
+      }
       self$chrs_list[[(j - 1) * self$dim[1] + i]]
     },
 
