@@ -29,6 +29,8 @@ chr_grid$findPeaks_ChrGrid()
 \item{\code{sampleInfoPath}}{`character()`, sample information path (shiny)}
 
 \item{\code{sampleInfo}}{`data.frame()`, user's sample information}
+
+\item{\code{extended}}{`logical(1)`, whether extended}
 }
 \if{html}{\out{</div>}}
 }

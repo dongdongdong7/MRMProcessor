@@ -31,6 +31,8 @@ ChrGrid <- R6::R6Class(
     sampleInfoPath = NULL,
     #' @field sampleInfo `data.frame()`, user's sample information
     sampleInfo = NULL,
+    #' @field extended `logical(1)`, whether extended
+    extended = FALSE,
 
     #' @description
     #' Create a new instance of ChrGrid
@@ -155,6 +157,7 @@ ChrGrid <- R6::R6Class(
     #' @param thread `integer(1)`, thread number in parallel
     #' @param shinyProgress this parameter is used to receive shiny Progress instance
     extend_ChrGrid = function(thread = 1, shinyProgress = NULL){
+      if(self$extended) return() # if self$extended == TRUE do nothing
       if(self$unit == "min") mag <- 60
       else mag <- 1
       n <- nrow(self$sampleInfo)
@@ -253,6 +256,7 @@ ChrGrid <- R6::R6Class(
       # })
       self$dim <- c(m, n)
       self$chrs_list <- unlist(resLt)
+      self$extended <- TRUE
     },
 
     #' @description
