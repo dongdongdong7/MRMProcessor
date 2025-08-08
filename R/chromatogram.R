@@ -23,11 +23,13 @@ chromatogram <- R6::R6Class(
     intensity = NULL,
     #' @field peaks `matrix()`, peaks information of chromatogram
     peaks = NULL,
+    #' @field targetRt `numeric(1)`, retention time of target peak for the current sample
+    targetRt = NULL,
     #' @field targetPeak `matrix()`, target peak of this window
     targetPeak = NULL,
-    #' @field rt_diff_tol `numeric()`, tolerance for retention time differences between two peaks that are same analytes
+    #' @field rt_diff_tol `numeric(1)`, tolerance for retention time differences between two peaks that are same analytes
     rt_diff_tol = NULL,
-    #' @field rtdifference `numeric()`, difference between rt of targetPeak and expectRt
+    #' @field rtdifference `numeric(1)`, difference between rt of targetPeak and expectRt
     rtdifference = NULL,
     #' @field Q1 `numeric(1)`, Q1 for MRM window
     Q1 = NULL,
@@ -148,8 +150,10 @@ chromatogram <- R6::R6Class(
     #' @param rt `numeric(1)`, rt of target peak, if it is NULL, rt will be expectRt
     #' @param rt_diff_tol `numeric(1)`, tolerance for retention time differences between two peaks that are same analytes
     extract_targetPeak_chr = function(rt = NULL, rt_diff_tol = 10){
+      self$targetRt <- NULL
       self$targetPeak <- NULL
       self$rtdifference <- NULL
+      self$rt_diff_tol <- NULL
       if(is.null(rt)) rt <- self$expectRt
       if(!is.null(self$peaks) & !is.null(rt)){
         if(nrow(self$peaks) != 0){
@@ -160,6 +164,7 @@ chromatogram <- R6::R6Class(
           }
         }
       }
+      self$targetRt <- rt
       self$rt_diff_tol <- rt_diff_tol
     },
 

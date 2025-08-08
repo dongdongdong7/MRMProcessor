@@ -136,7 +136,7 @@ ChrGrid <- R6::R6Class(
         maxValue <- shinyProgress$getMax()
         if(maxValue != length(chr_list_tmp)) stop("maxValue != length(chr_list_tmp)")
         progress_update <- function(nn){
-          shinyProgress$set(value = nn, message = "Find peaks...: ", detail = paste0(nn, " / ", maxValue))
+          shinyProgress$set(value = nn, message = "Find peaks... ", detail = paste0(nn, " / ", maxValue))
         }
       }
       opts <- list(progress = progress_update)
