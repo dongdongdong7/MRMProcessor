@@ -20,6 +20,8 @@ chr <- chromatogram$new(rtime = rtime, intensity = intensity, Q1 = 200.321, Q3 =
 
 \item{\code{intensity}}{`numeric()`, intensity of chromatogram}
 
+\item{\code{intensity_backup}}{`numeric()`, if the chromatographic peak is smoothed, intensity_backup will store the previous unsmoothed values}
+
 \item{\code{peaks}}{`matrix()`, peaks information of chromatogram}
 
 \item{\code{targetRt}}{`numeric(1)`, retention time of target peak for the current sample}
@@ -73,6 +75,8 @@ chr <- chromatogram$new(rtime = rtime, intensity = intensity, Q1 = 200.321, Q3 =
 \itemize{
 \item \href{#method-chromatogram-new}{\code{chromatogram$new()}}
 \item \href{#method-chromatogram-print}{\code{chromatogram$print()}}
+\item \href{#method-chromatogram-smooth_chr}{\code{chromatogram$smooth_chr()}}
+\item \href{#method-chromatogram-desmooth_chr}{\code{chromatogram$desmooth_chr()}}
 \item \href{#method-chromatogram-findPeaks_chr}{\code{chromatogram$findPeaks_chr()}}
 \item \href{#method-chromatogram-extract_targetPeak_chr}{\code{chromatogram$extract_targetPeak_chr()}}
 \item \href{#method-chromatogram-cal_rtshift_chr}{\code{chromatogram$cal_rtshift_chr()}}
@@ -135,6 +139,39 @@ Creates a new instance of chromatogram
 Print chromatogram instance
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{chromatogram$print()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-chromatogram-smooth_chr"></a>}}
+\if{latex}{\out{\hypertarget{method-chromatogram-smooth_chr}{}}}
+\subsection{Method \code{smooth_chr()}}{
+Smooth intensity using Savitzky-Golay
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{chromatogram$smooth_chr(p = 3, n = p + 3 - p\%\%2, m = 0, ts = 1)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{p}}{`integer(1)`, filter order}
+
+\item{\code{n}}{`integer(1)`, filter length (must be odd)}
+
+\item{\code{m}}{`integer(1)`, return the m-th derivative of the filter coefficients}
+
+\item{\code{ts}}{`integer(1)`, time scaling factor}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-chromatogram-desmooth_chr"></a>}}
+\if{latex}{\out{\hypertarget{method-chromatogram-desmooth_chr}{}}}
+\subsection{Method \code{desmooth_chr()}}{
+Desmooth intensity
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{chromatogram$desmooth_chr()}\if{html}{\out{</div>}}
 }
 
 }

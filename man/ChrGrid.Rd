@@ -41,6 +41,8 @@ chr_grid$findPeaks_ChrGrid()
 \item \href{#method-ChrGrid-get}{\code{ChrGrid$get()}}
 \item \href{#method-ChrGrid-set}{\code{ChrGrid$set()}}
 \item \href{#method-ChrGrid-print}{\code{ChrGrid$print()}}
+\item \href{#method-ChrGrid-smooth_ChrGrid}{\code{ChrGrid$smooth_ChrGrid()}}
+\item \href{#method-ChrGrid-desmooth_ChrGrid}{\code{ChrGrid$desmooth_ChrGrid()}}
 \item \href{#method-ChrGrid-findPeaks_ChrGrid}{\code{ChrGrid$findPeaks_ChrGrid()}}
 \item \href{#method-ChrGrid-extend_ChrGrid}{\code{ChrGrid$extend_ChrGrid()}}
 \item \href{#method-ChrGrid-extract_targetPeak_ChrGrid}{\code{ChrGrid$extract_targetPeak_ChrGrid()}}
@@ -132,6 +134,69 @@ Print ChrGrid instance
 \if{html}{\out{<div class="r">}}\preformatted{ChrGrid$print()}\if{html}{\out{</div>}}
 }
 
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-ChrGrid-smooth_ChrGrid"></a>}}
+\if{latex}{\out{\hypertarget{method-ChrGrid-smooth_ChrGrid}{}}}
+\subsection{Method \code{smooth_ChrGrid()}}{
+Smooth intensity using Savitzky-Golay
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ChrGrid$smooth_ChrGrid(
+  i,
+  j,
+  p = 3,
+  n = p + 3 - p\%\%2,
+  m = 0,
+  ts = 1,
+  thread = 1,
+  shinyProgress = NULL
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{i}}{`integer()`, analyte index}
+
+\item{\code{j}}{`integer()`, sample index}
+
+\item{\code{p}}{`integer(1)`, filter order}
+
+\item{\code{n}}{`integer(1)`, filter length (must be odd)}
+
+\item{\code{m}}{`integer(1)`, return the m-th derivative of the filter coefficients}
+
+\item{\code{ts}}{`integer(1)`, time scaling factor}
+
+\item{\code{thread}}{`integer(1)`, thread number in parallel}
+
+\item{\code{shinyProgress}}{this parameter is used to receive shiny Progress instance}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-ChrGrid-desmooth_ChrGrid"></a>}}
+\if{latex}{\out{\hypertarget{method-ChrGrid-desmooth_ChrGrid}{}}}
+\subsection{Method \code{desmooth_ChrGrid()}}{
+Desmooth intensity
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ChrGrid$desmooth_ChrGrid(i, j, thread = 1, shinyProgress = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{i}}{`integer()`, analyte index}
+
+\item{\code{j}}{`integer()`, sample index}
+
+\item{\code{thread}}{`integer(1)`, thread number in parallel}
+
+\item{\code{shinyProgress}}{this parameter is used to receive shiny Progress instance}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ChrGrid-findPeaks_ChrGrid"></a>}}

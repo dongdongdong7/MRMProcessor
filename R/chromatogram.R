@@ -21,6 +21,8 @@ chromatogram <- R6::R6Class(
     rtime = NULL,
     #' @field intensity `numeric()`, intensity of chromatogram
     intensity = NULL,
+    #' @field intensity_backup `numeric()`, if the chromatographic peak is smoothed, intensity_backup will store the previous unsmoothed values
+    intensity_backup = NULL,
     #' @field peaks `matrix()`, peaks information of chromatogram
     peaks = NULL,
     #' @field targetRt `numeric(1)`, retention time of target peak for the current sample
@@ -108,6 +110,28 @@ chromatogram <- R6::R6Class(
                  "window name: ", self$windowName, "\n",
                  "analyte type: ", self$analyteType, "\n",
                  "peaks: ", pn, "\n"))
+    },
+
+    #' @description
+    #' Smooth intensity using Savitzky-Golay
+    #' @param p `integer(1)`, filter order
+    #' @param n `integer(1)`, filter length (must be odd)
+    #' @param m `integer(1)`, return the m-th derivative of the filter coefficients
+    #' @param ts `integer(1)`, time scaling factor
+    smooth_chr = function(p = 3, n = p + 3 - p%%2, m = 0, ts = 1){
+      if(is.null(self$intensity_backup) & length(self$intensity) != 0){
+        self$intensity_backup <- self$intensity
+        self$intensity <- signal::sgolayfilt(x = self$intensity, p = p, n = n, m = m, ts = ts)
+      }
+    },
+
+    #' @description
+    #' Desmooth intensity
+    desmooth_chr = function(){
+      if(!is.null(self$intensity_backup)){
+        self$intensity <- self$intensity_backup
+        self$intensity_backup <- NULL
+      }
     },
 
     #' @description

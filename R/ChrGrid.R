@@ -89,6 +89,129 @@ ChrGrid <- R6::R6Class(
     },
 
     #' @description
+    #' Smooth intensity using Savitzky-Golay
+    #' @param i `integer()`, analyte index
+    #' @param j `integer()`, sample index
+    #' @param p `integer(1)`, filter order
+    #' @param n `integer(1)`, filter length (must be odd)
+    #' @param m `integer(1)`, return the m-th derivative of the filter coefficients
+    #' @param ts `integer(1)`, time scaling factor
+    #' @param thread `integer(1)`, thread number in parallel
+    #' @param shinyProgress this parameter is used to receive shiny Progress instance
+    smooth_ChrGrid = function(i, j,
+                              p = 3, n = p + 3 - p%%2, m = 0, ts = 1,
+                              thread = 1, shinyProgress = NULL){
+      if(missing(i) & missing(j)){
+        i_seq <- 1:self$dim[1]
+        j_seq <- 1:self$dim[2]
+      }else if(!missing(i) & missing(j)){
+        i_seq <- i
+        j_seq <- 1:self$dim[2]
+      }else if(missing(i) & !missing(j)){
+        i_seq <- 1:self$dim[1]
+        j_seq <- j
+      }else{
+        i_seq <- i
+        j_seq <- j
+      }
+      index <- lapply(j_seq, function(j_){
+        (j_ - 1) * self$dim[1] + i_seq
+      })
+      chr_list_tmp <- lapply(index, function(x) {
+        self$chrs_list[x]
+      })
+      if(is.null(shinyProgress)){
+        pb <- progress::progress_bar$new(
+          format = "[:bar] :percent | ELA: :elapsedfull | ETA: :eta",
+          total = length(j_seq),
+          width = 60
+        )
+        progress_update <- function(nn){
+          pb$tick()
+        }
+      }else{
+        maxValue <- shinyProgress$getMax()
+        if(maxValue != length(chr_list_tmp)) stop("maxValue != length(j_seq)")
+        progress_update <- function(nn){
+          shinyProgress$set(value = nn, message = "Smooth... ", detail = paste0(nn, " / ", maxValue))
+        }
+      }
+      opts <- list(progress = progress_update)
+      cl <- snow::makeCluster(thread)
+      doSNOW::registerDoSNOW(cl)
+      resLt <- foreach::`%dopar%`(foreach::foreach(chr_list = chr_list_tmp, nn = 1:length(j_seq),
+                                                   .options.snow = opts),
+                                  {
+                                    lapply(chr_list, function(chr) {
+                                      chr$smooth_chr(p = p, n = n, m = m, ts = ts)
+                                      chr
+                                    })
+                                  })
+      snow::stopCluster(cl)
+      gc()
+      self$chrs_list[unlist(index)] <- unlist(resLt)
+    },
+
+    #' @description
+    #' Desmooth intensity
+    #' @param i `integer()`, analyte index
+    #' @param j `integer()`, sample index
+    #' @param thread `integer(1)`, thread number in parallel
+    #' @param shinyProgress this parameter is used to receive shiny Progress instance
+    desmooth_ChrGrid = function(i, j,
+                                thread = 1, shinyProgress = NULL){
+      if(missing(i) & missing(j)){
+        i_seq <- 1:self$dim[1]
+        j_seq <- 1:self$dim[2]
+      }else if(!missing(i) & missing(j)){
+        i_seq <- i
+        j_seq <- 1:self$dim[2]
+      }else if(missing(i) & !missing(j)){
+        i_seq <- 1:self$dim[1]
+        j_seq <- j
+      }else{
+        i_seq <- i
+        j_seq <- j
+      }
+      index <- lapply(j_seq, function(j_){
+        (j_ - 1) * self$dim[1] + i_seq
+      })
+      chr_list_tmp <- lapply(index, function(x) {
+        self$chrs_list[x]
+      })
+      if(is.null(shinyProgress)){
+        pb <- progress::progress_bar$new(
+          format = "[:bar] :percent | ELA: :elapsedfull | ETA: :eta",
+          total = length(j_seq),
+          width = 60
+        )
+        progress_update <- function(nn){
+          pb$tick()
+        }
+      }else{
+        maxValue <- shinyProgress$getMax()
+        if(maxValue != length(chr_list_tmp)) stop("maxValue != length(j_seq)")
+        progress_update <- function(nn){
+          shinyProgress$set(value = nn, message = "Desmooth... ", detail = paste0(nn, " / ", maxValue))
+        }
+      }
+      opts <- list(progress = progress_update)
+      cl <- snow::makeCluster(thread)
+      doSNOW::registerDoSNOW(cl)
+      resLt <- foreach::`%dopar%`(foreach::foreach(chr_list = chr_list_tmp, nn = 1:length(j_seq),
+                                                   .options.snow = opts),
+                                  {
+                                    lapply(chr_list, function(chr) {
+                                      chr$desmooth_chr()
+                                      chr
+                                    })
+                                  })
+      snow::stopCluster(cl)
+      gc()
+      self$chrs_list[unlist(index)] <- unlist(resLt)
+    },
+
+    #' @description
     #' Find peaks in ChrGrid
     #' @param i `integer()`, analyte index
     #' @param j `integer()`, sample index
