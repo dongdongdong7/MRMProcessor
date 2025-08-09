@@ -11,11 +11,13 @@ library(shinyjs)
 load_data_ui <- function(id){
   ns <- NS(id)
   layout_sidebar(
+    fillable = TRUE,
+    class = "p-0",
     sidebar = sidebar(
       position = "left",
       title = strong("Select data and tables"),
       open = TRUE,
-      selectInput(label = "Select rt unit", choices = c("min", "sec"), selected = "min", inputId = ns("load_data_rtUnit")),
+      # selectInput(label = "Select rt unit", choices = c("min", "sec"), selected = "min", inputId = ns("load_data_rtUnit")),
       shinyDirButton(id = ns("load_data_folder"), label = "Select Folder", title = "Please select a folder"),
       verbatimTextOutput(outputId = ns("load_data_folderText"), placeholder = TRUE),
       shinyFilesButton(id = ns("load_data_windowInfo"), label = "Window Information", title = "Please select a windowInfo", multiple = FALSE),
@@ -23,23 +25,30 @@ load_data_ui <- function(id){
       shinyFilesButton(id = ns("load_data_sampleInfo"), label = "Sample Information", title = "Please select a sampleInfo", multiple = FALSE),
       verbatimTextOutput(outputId = ns("load_data_sampleInfoText"), placeholder = TRUE),
       actionButton(label = "Load Data", inputId = ns("load_data_loadDataBt")),
-      verbatimTextOutput(outputId = ns("load_data_loadDataText"), placeholder = TRUE),
-      shinyFilesButton(id = ns("load_data_ChrGridUpload"), label = "Upload ChrGrid", title = "Please upload a ChrGrid object rds", multiple = FALSE),
-      verbatimTextOutput(outputId = ns("load_data_ChrGridText"), placeholder = TRUE),
-      downloadButton(outputId = ns("load_data_ChrGridDownload"), label = "Download ChrGrid")
+      verbatimTextOutput(outputId = ns("load_data_loadDataText"), placeholder = TRUE)
     ),
-    card(
-      tabsetPanel(
-        nav_panel(
-          title = "window information",
-          DTOutput(
-            outputId = ns("load_data_windowInfoDT")
-          )
-        ),
-        nav_panel(
-          title = "sample information",
-          DTOutput(
-            outputId = ns("load_data_sampleInfoDT")
+    layout_sidebar(
+      border = FALSE,
+      # fill = TRUE,
+      sidebar = sidebar(
+        position = "right", open = FALSE, title = strong("Upload or Download ChrGrid"),
+        shinyFilesButton(id = ns("load_data_ChrGridUpload"), label = "Upload ChrGrid", title = "Please upload a ChrGrid object rds", multiple = FALSE),
+        verbatimTextOutput(outputId = ns("load_data_ChrGridText"), placeholder = TRUE),
+        downloadButton(outputId = ns("load_data_ChrGridDownload"), label = "Download ChrGrid")
+      ),
+      card(
+        tabsetPanel(
+          nav_panel(
+            title = "window information",
+            DTOutput(
+              outputId = ns("load_data_windowInfoDT")
+            )
+          ),
+          nav_panel(
+            title = "sample information",
+            DTOutput(
+              outputId = ns("load_data_sampleInfoDT")
+            )
           )
         )
       )
@@ -64,12 +73,6 @@ load_data_server <- function(id, values){
         shinyFiles::shinyFileChoose(input, 'load_data_sampleInfo', roots=basedir )
         shinyFiles::shinyFileChoose(input, "load_data_ChrGridUpload", roots=basedir)
       }
-
-      # load_data_rtUnit
-      observe({
-        values$rtUnit <- input$load_data_rtUnit
-        if(values$rtUnit != "min" & values$rtUnit != "sec") stop("rtUnit is wrong!")
-      })
 
       # load_data_folder
       observeEvent(input$load_data_folder, {

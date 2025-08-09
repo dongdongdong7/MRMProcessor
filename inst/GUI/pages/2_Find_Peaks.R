@@ -44,6 +44,11 @@ find_peaks_ui <- function(id){
       width: 80px;
       height: 180px;
       }
+      .custom-btn-smooth {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      }
     "))
     ),
     tags$script(HTML("
@@ -63,6 +68,13 @@ find_peaks_ui <- function(id){
       selectInput(label = "Analyte Name", choices = "none", selected = "none", inputId = ns("find_peaks_analyteName"), width = "100%"),
       numericInput(label = "Target RT", inputId = ns("find_peaks_targetRt"), min = 0, max = 1000, value = 100, step = 1),
       numericInput(label = "RT Difference Tolerance", inputId = ns("find_peaks_rt_diff_tol"), min = 0, max = 60, value = 10, step = 1),
+      layout_columns(
+        fillable = TRUE,
+        fill = TRUE,
+        gap = "2px",
+        actionButton(inputId = ns("find_peaks_smooth"), label = "smooth", class = "custom-btn-smooth"),
+        actionButton(inputId = ns("find_peaks_desmooth"), label = "desmooth", class = "custom-btn-smooth")
+      ),
       actionButton(label = "Find Peaks", inputId = ns("find_peaks_findPeaks")),
       actionButton(label = "Extract Target", inputId = ns("find_peaks_extractTarget")),
       actionButton(label = "Correct RT", inputId = ns("find_peaks_correctRt")),
@@ -152,10 +164,15 @@ find_peaks_server <- function(id, values){
       observe({
         message("Initialize Find Peaks Page")
         if(!is.null(values$chr_grid)){
+          values$windowNameVector <- unique(values$chr_grid$windowInfo$windowName)
           # Initialize sampleName
           updateSelectInput(session = session, inputId = "find_peaks_sampleName", choices = values$chr_grid$sampleInfo$sampleName, selected = values$chr_grid$sampleInfo$sampleName[1])
           # Initialize analyteName
-          updateSelectInput(session = session, inputId = "find_peaks_analyteName", choices = values$chr_grid$windowInfo$analyteName, selected = values$chr_grid$windowInfo$analyteName[1])
+          if(values$chr_grid$extended){
+            updateSelectInput(session = session, inputId = "find_peaks_analyteName", choices = values$chr_grid$windowInfo$analyteName, selected = values$chr_grid$windowInfo$analyteName[1])
+          }else{
+            updateSelectInput(session = session, inputId = "find_peaks_analyteName", choices = values$windowNameVector, selected = values$windowNameVector[1])
+          }
           # Initialize i_start i_end
           max_i <- values$chr_grid$dim[1]
           max_j <- values$chr_grid$dim[2]
@@ -168,39 +185,59 @@ find_peaks_server <- function(id, values){
 
       # direction keys
       observeEvent(input$btn_up, {
-        values$current_i <- values$current_i - 1
-        values$current_analyteName <- values$chr_grid$windowInfo$analyteName[values$current_i]
-        updateSelectInput(session = session, inputId = "find_peaks_analyteName", selected = values$current_analyteName)
-        updateNumericInput(session = session, inputId = "find_peaks_i_start", value = values$current_i)
-        updateNumericInput(session = session, inputId = "find_peaks_i_end", value = values$current_i)
+        if(!is.null(values$chr_grid)){
+          values$current_i <- values$current_i - 1
+          if(values$chr_grid$extended){
+            values$current_analyteName <- values$chr_grid$windowInfo$analyteName[values$current_i]
+          }else{
+            values$current_analyteName <- values$windowNameVector[values$current_i]
+          }
+          updateSelectInput(session = session, inputId = "find_peaks_analyteName", selected = values$current_analyteName)
+          updateNumericInput(session = session, inputId = "find_peaks_i_start", value = values$current_i)
+          updateNumericInput(session = session, inputId = "find_peaks_i_end", value = values$current_i)
+        }
       })
       observeEvent(input$btn_down, {
-        values$current_i <- values$current_i + 1
-        values$current_analyteName <- values$chr_grid$windowInfo$analyteName[values$current_i]
-        updateSelectInput(session = session, inputId = "find_peaks_analyteName", selected = values$current_analyteName)
-        updateNumericInput(session = session, inputId = "find_peaks_i_start", value = values$current_i)
-        updateNumericInput(session = session, inputId = "find_peaks_i_end", value = values$current_i)
+        if(!is.null(values$chr_grid)){
+          values$current_i <- values$current_i + 1
+          if(values$chr_grid$extended){
+            values$current_analyteName <- values$chr_grid$windowInfo$analyteName[values$current_i]
+          }else{
+            values$current_analyteName <- values$windowNameVector[values$current_i]
+          }
+          updateSelectInput(session = session, inputId = "find_peaks_analyteName", selected = values$current_analyteName)
+          updateNumericInput(session = session, inputId = "find_peaks_i_start", value = values$current_i)
+          updateNumericInput(session = session, inputId = "find_peaks_i_end", value = values$current_i)
+        }
       })
       observeEvent(input$btn_left, {
-        values$current_j <- values$current_j - 1
-        values$current_sampleName <- values$chr_grid$sampleInfo$sampleName[values$current_j]
-        updateSelectInput(session = session, inputId = "find_peaks_sampleName", selected = values$current_sampleName)
-        updateNumericInput(session = session, inputId = "find_peaks_j_start", value = values$current_j)
-        updateNumericInput(session = session, inputId = "find_peaks_j_end", value = values$current_j)
+        if(!is.null(values$chr_grid)){
+          values$current_j <- values$current_j - 1
+          values$current_sampleName <- values$chr_grid$sampleInfo$sampleName[values$current_j]
+          updateSelectInput(session = session, inputId = "find_peaks_sampleName", selected = values$current_sampleName)
+          updateNumericInput(session = session, inputId = "find_peaks_j_start", value = values$current_j)
+          updateNumericInput(session = session, inputId = "find_peaks_j_end", value = values$current_j)
+        }
       })
       observeEvent(input$btn_right, {
-        values$current_j <- values$current_j + 1
-        values$current_sampleName <- values$chr_grid$sampleInfo$sampleName[values$current_j]
-        updateSelectInput(session = session, inputId = "find_peaks_sampleName", selected = values$current_sampleName)
-        updateNumericInput(session = session, inputId = "find_peaks_j_start", value = values$current_j)
-        updateNumericInput(session = session, inputId = "find_peaks_j_end", value = values$current_j)
+        if(!is.null(values$chr_grid)){
+          values$current_j <- values$current_j + 1
+          values$current_sampleName <- values$chr_grid$sampleInfo$sampleName[values$current_j]
+          updateSelectInput(session = session, inputId = "find_peaks_sampleName", selected = values$current_sampleName)
+          updateNumericInput(session = session, inputId = "find_peaks_j_start", value = values$current_j)
+          updateNumericInput(session = session, inputId = "find_peaks_j_end", value = values$current_j)
+        }
       })
 
       # find_peaks_analyteName
       observeEvent(input$find_peaks_analyteName, {
         if(input$find_peaks_analyteName != "none" & !is.na(input$find_peaks_i_start)){
           values$current_analyteName <- input$find_peaks_analyteName
-          values$current_i <- which(values$chr_grid$windowInfo$analyteName == values$current_analyteName)
+          if(values$chr_grid$extended){
+            values$current_i <- which(values$chr_grid$windowInfo$analyteName == values$current_analyteName)
+          }else{
+            values$current_i <- which(values$windowNameVector == values$current_analyteName)
+          }
           if(which(values$chr_grid$windowInfo$analyteName == input$find_peaks_analyteName) != input$find_peaks_i_start){
             updateNumericInput(session = session, inputId = "find_peaks_i_start", value = values$current_i)
             updateNumericInput(session = session, inputId = "find_peaks_i_end", value = values$current_i)
@@ -222,7 +259,11 @@ find_peaks_server <- function(id, values){
       observeEvent(input$find_peaks_i_start, {
         if(input$find_peaks_analyteName != "none" & !is.na(input$find_peaks_i_start)){
           values$current_i <- input$find_peaks_i_start
-          values$current_analyteName <- values$chr_grid$windowInfo$analyteName[values$current_i]
+          if(values$chr_grid$extended){
+            values$current_analyteName <- values$chr_grid$windowInfo$analyteName[values$current_i]
+          }else{
+            values$current_analyteName <- values$windowNameVector[values$current_i]
+          }
           if(which(values$chr_grid$windowInfo$analyteName == input$find_peaks_analyteName) != input$find_peaks_i_start){
             updateSelectInput(session = session, inputId = "find_peaks_analyteName", selected = values$current_analyteName)
           }
@@ -239,6 +280,67 @@ find_peaks_server <- function(id, values){
         }
       })
 
+      # find_peaks_smooth
+      observeEvent(input$find_peaks_smooth, {
+        if(!is.null(values$chr_grid)){
+          addClass(id = "find_peaks_smooth", class = "btn-clicked")
+          i_seq <- input$find_peaks_i_start:input$find_peaks_i_end
+          j_seq <- input$find_peaks_j_start:input$find_peaks_j_end
+          if(length(i_seq) * length(j_seq) <= 20){
+            progress <- Progress$new(min = 0, max = length(i_seq) * length(j_seq))
+            progress$set(message = "smooth...", value = 0)
+            on.exit(progress$close(), add = TRUE)
+            nn <- 1
+            maxValue <- progress$getMax()
+            for(i in i_seq){
+              for(j in j_seq){
+                progress$set(value = nn, message = "Smooth...", detail = paste0(nn, " / ", maxValue))
+                nn <- nn + 1
+                values$chr_grid$get(i, j)$desmooth_chr()
+                values$chr_grid$get(i, j)$smooth_chr()
+              }
+            }
+          }else{
+            progress_desmooth <- Progress$new(min = 0, max = length(j_seq))
+            progress_desmooth$set(message = "Begain to desmooth...", value = 0)
+            on.exit(progress_desmooth$close(), add = TRUE)
+            values$chr_grid$desmooth_ChrGrid(i = i_seq, j = j_seq)
+            progress_smooth <- Progress$new(min = 0, max = length(j_seq))
+            progress_smooth$set(message = "Begain to smooth...", value = 0)
+            on.exit(progress_smooth_ChrGrid$close(), add = TRUE)
+            values$chr_grid$smooth(i = i_seq, j = j_seq)
+          }
+          values$chr_grid_change <- values$chr_grid_change + 1
+        }
+      })
+      # find_peaks_desmooth
+      observeEvent(input$find_peaks_desmooth, {
+        if(!is.null(values$chr_grid)){
+          addClass(id = "find_peaks_desmooth", class = "btn-clicked")
+          i_seq <- input$find_peaks_i_start:input$find_peaks_i_end
+          j_seq <- input$find_peaks_j_start:input$find_peaks_j_end
+          if(length(i_seq) * length(j_seq) <= 20){
+            progress <- Progress$new(min = 0, max = length(i_seq) * length(j_seq))
+            progress$set(message = "Desmooth...", value = 0)
+            on.exit(progress$close(), add = TRUE)
+            nn <- 1
+            maxValue <- progress$getMax()
+            for(i in i_seq){
+              for(j in j_seq){
+                progress$set(value = nn, message = "Demooth...", detail = paste0(nn, " / ", maxValue))
+                nn <- nn + 1
+                values$chr_grid$get(i, j)$desmooth_chr()
+              }
+            }
+          }else{
+            progress <- Progress$new(min = 0, max = length(j_seq))
+            progress$set(message = "Begain to desmooth...", value = 0)
+            on.exit(progress$close(), add = TRUE)
+            values$chr_grid$desmooth_ChrGrid(i = i_seq, j = j_seq)
+          }
+          values$chr_grid_change <- values$chr_grid_change + 1
+        }
+      })
       # find_peaks_findPeaks
       observeEvent(input$find_peaks_findPeaks, {
         if(!is.null(values$chr_grid)){

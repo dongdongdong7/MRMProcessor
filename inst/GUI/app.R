@@ -5,11 +5,13 @@
 library(shiny)
 library(shinyFiles)
 library(bslib)
+library(bsicons)
 library(shinyjs)
 source(system.file("GUI", "pages", "1_Load_Data.R", package = "MRMProcessor"))
 source(system.file("GUI", "pages", "2_Find_Peaks.R", package = "MRMProcessor"))
 
 ui <- page_navbar(
+  theme = bs_theme(version = 5, preset = "shiny"),
   useShinyjs(),
 
   # add head
@@ -27,7 +29,6 @@ ui <- page_navbar(
   title = "MRMProcessor",
   selected = "Load Data",
   navbar_options = navbar_options(collapsible = TRUE),
-  theme = bs_theme(),
   nav_panel(
     title = "Load Data",
     load_data_ui(id = "load_data")
@@ -37,22 +38,18 @@ ui <- page_navbar(
     find_peaks_ui(id = "find_peaks")
   ),
   nav_spacer(),
+  # nav_menu(
+  #   title = "Options",
+  #   numericInput(label = "thread", inputId = "parallel_threads", value = 1, min = 1, max = 1)
+  # ),
   nav_item(
-    class = "dropdown",
-    tags$a(href = "#", class = "nav-link dropdown-toggle",`data-bs-toggle` = "dropdown", role = "button",icon("gear"), "Options"),
-    tags$div(
-      class = "dropdown-menu dropdown-menu-end",
-      tags$div(
-        style = "text-align: center; margin-bottom: 6px;",
-        tags$strong("Global Options", style = "font-size: 18px;")
-      ),
-      tags$div(
-        style = "text-align: left; margin: 1px;",
-        tags$p("threads:", style = "display: inline-block; font-size: 16px; width: 40%;"),
-        tags$input(id = "parallel_threads", type = "number", value = 1, min = 1, max = 1, style = "display: inline-block; height: 16px; width: 50%;")
-      ),
-    )
-  ),
+    popover(
+      bs_icon("gear"),
+      title = "Options",
+      selectInput(label = "rt unit", choices = c("min", "sec"), selected = "min", inputId = "rtUnit"),
+      numericInput(label = "thread", inputId = "parallel_threads", value = 1, min = 1, max = 1)
+    ),
+  )
 )
 
 server <- function(input, output, session){
@@ -65,6 +62,7 @@ server <- function(input, output, session){
     values$dataPath <- NULL
     values$windowInfoPath <- NULL
     values$windowInfo <- NULL
+    values$windowNameVector <- NULL
     values$sampleInfoPath <- NULL
     values$sampleInfo <- NULL
     values$chr_grid <- NULL
@@ -79,6 +77,11 @@ server <- function(input, output, session){
     maxThreads <- BiocParallel::snowWorkers()
     updateNumericInput(session = session, inputId = "parallel_threads", value = maxThreads, max = maxThreads)
     message("Your machine has a maximum of ", maxThreads, " threads")
+  })
+  # Get rt unit in options
+  observe({
+    values$rtUnit <- input$rtUnit
+    if(values$rtUnit != "min" & values$rtUnit != "sec") stop("rtUnit is wrong!")
   })
   # Get global threads in options
   observeEvent(input$parallel_threads, {
