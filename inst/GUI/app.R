@@ -66,6 +66,7 @@ server <- function(input, output, session){
     values$sampleInfoPath <- NULL
     values$sampleInfo <- NULL
     values$chr_grid <- NULL
+    values$extended <- NULL
     values$current_i <- 1
     values$current_j <- 1
     values$current_analyteName <- NULL

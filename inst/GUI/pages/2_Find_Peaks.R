@@ -7,6 +7,7 @@ library(shinyFiles)
 library(bslib)
 library(DT)
 library(shinyjs)
+library(plotly)
 
 find_peaks_ui <- function(id){
   ns <- NS(id)
@@ -44,7 +45,7 @@ find_peaks_ui <- function(id){
       width: 80px;
       height: 180px;
       }
-      .custom-btn-smooth {
+      .custom-btn {
       display: flex;
       justify-content: center;
       align-items: center;
@@ -72,12 +73,26 @@ find_peaks_ui <- function(id){
         fillable = TRUE,
         fill = TRUE,
         gap = "2px",
-        actionButton(inputId = ns("find_peaks_smooth"), label = "smooth", class = "custom-btn-smooth"),
-        actionButton(inputId = ns("find_peaks_desmooth"), label = "desmooth", class = "custom-btn-smooth")
+        actionButton(inputId = ns("find_peaks_smooth"), label = "Smooth", class = "custom-btn"),
+        actionButton(inputId = ns("find_peaks_desmooth"), label = "Desmooth", class = "custom-btn")
       ),
       actionButton(label = "Find Peaks", inputId = ns("find_peaks_findPeaks")),
-      actionButton(label = "Extract Target", inputId = ns("find_peaks_extractTarget")),
-      actionButton(label = "Correct RT", inputId = ns("find_peaks_correctRt")),
+      layout_columns(
+        fillable = TRUE,
+        fill = TRUE,
+        gap = "2px",
+        # actionButton(label = div(style = "text-align: center;", "Extract", br(), "(expect)"), inputId = ns("find_peaks_extract_expect"), class = "custom-btn"),
+        # actionButton(label = div(style = "text-align: center;", "Extract", br(), "(manual)"), inputId = ns("find_peaks_extract_manual"), class = "custom-btn")
+        actionButton(label = "Extract\n(expect)", inputId = ns("find_peaks_extract_expect"), class = "custom-btn"),
+        actionButton(label = "Extract\n(manual)", inputId = ns("find_peaks_extract_manual"), class = "custom-btn")
+      ),
+      layout_columns(
+        fillable = TRUE,
+        fill = TRUE,
+        gap = "2px",
+        actionButton(label = "Correct", inputId = ns("find_peaks_correctRt"), class = "custom-btn"),
+        actionButton(label = "Uncorrect", inputId = ns("find_peaks_uncorrectRt"), class = "custom-btn")
+      ),
       actionButton(label = "Make Blank", inputId = ns("find_peaks_makeBlank")),
       actionButton(label = "browser", inputId = ns("browser"))
     ),
@@ -96,7 +111,7 @@ find_peaks_ui <- function(id){
               ),
           ),
           div(style = "width: 100%; height: 100%;",
-              plotly::plotlyOutput(outputId = ns("find_peaks_currentAnalyte"), width = "100%", height = "100%")
+              plotlyOutput(outputId = ns("find_peaks_currentAnalyte"), width = "100%", height = "100%")
           )
         )
       ),
@@ -110,6 +125,10 @@ find_peaks_ui <- function(id){
               shinyWidgets::actionBttn(ns("btn_right"), "→", class = "dpad-btn"),
               shinyWidgets::actionBttn(ns("btn_down"), "↓", class = "dpad-btn")
           ),
+          # div(class = "find_peaks_ij_btn",
+          #     actionButton(inputId = ns("find_peaks_i_bottom"), label = p("b", style = "font-size: 10px"), width = "20px"),
+          #     actionButton(inputId = ns("find_peaks_j_bottom"), label = p("b", style = "font-size: 10px"), width = "20px"),
+          # ),
           div(class = "find_peaks_ij",
               shinyWidgets::numericInputIcon(inputId = ns("find_peaks_i_start"), label = "i start", value = 1, min = 1, max = 1 ,step = 1, width = "100%"),
               shinyWidgets::numericInputIcon(inputId = ns("find_peaks_j_start"), label = "j start", value = 1, min = 1, max = 1, step = 1, width = "100%")
@@ -117,7 +136,11 @@ find_peaks_ui <- function(id){
           div(class = "find_peaks_ij",
               shinyWidgets::numericInputIcon(inputId = ns("find_peaks_i_end"), label = "i end", value = 1, min = 1, max = 1 ,step = 1, width = "100%"),
               shinyWidgets::numericInputIcon(inputId = ns("find_peaks_j_end"), label = "j end", value = 1, min = 1, max = 1, step = 1, width = "100%")
-          )
+          ),
+          # div(class = "find_peaks_ij_btn",
+          #     actionButton(inputId = ns("find_peaks_i_top"), label = "top"),
+          #     actionButton(inputId = ns("find_peaks_j_top"), label = "top"),
+          # ),
         ),
         sliderInput(inputId = ns("find_peaks_peakwidth"), label = "peak witdh", min = 1, max = 30, value = c(5, 20), step = 1),
         sliderInput(inputId = ns("find_peaks_snthresh"), label = "sn thresh", min = 0, max = 10, step = 1, value = 3),
@@ -126,7 +149,7 @@ find_peaks_ui <- function(id){
         sliderInput(inputId = ns("find_peaks_r2thresh"), label = "r2 thresh", min = 0, max = 1, value = 0.6, step = 0.1),
       ),
       card(
-        plotly::plotlyOutput(outputId = ns("find_peaks_rtdifference"))
+        plotlyOutput(outputId = ns("find_peaks_rtdifference"), width = "100%", height = "100%")
       )
     ),
     # 卡片1
@@ -165,6 +188,8 @@ find_peaks_server <- function(id, values){
         message("Initialize Find Peaks Page")
         if(!is.null(values$chr_grid)){
           values$windowNameVector <- unique(values$chr_grid$windowInfo$windowName)
+          values$extended <- values$chr_grid$extended
+          message(paste0("extended: ", values$extended))
           # Initialize sampleName
           updateSelectInput(session = session, inputId = "find_peaks_sampleName", choices = values$chr_grid$sampleInfo$sampleName, selected = values$chr_grid$sampleInfo$sampleName[1])
           # Initialize analyteName
@@ -304,11 +329,11 @@ find_peaks_server <- function(id, values){
             progress_desmooth <- Progress$new(min = 0, max = length(j_seq))
             progress_desmooth$set(message = "Begain to desmooth...", value = 0)
             on.exit(progress_desmooth$close(), add = TRUE)
-            values$chr_grid$desmooth_ChrGrid(i = i_seq, j = j_seq)
+            values$chr_grid$desmooth_ChrGrid(i = i_seq, j = j_seq, shinyProgress = progress_desmooth)
             progress_smooth <- Progress$new(min = 0, max = length(j_seq))
             progress_smooth$set(message = "Begain to smooth...", value = 0)
-            on.exit(progress_smooth_ChrGrid$close(), add = TRUE)
-            values$chr_grid$smooth(i = i_seq, j = j_seq)
+            on.exit(progress_smooth$close(), add = TRUE)
+            values$chr_grid$smooth_ChrGrid(i = i_seq, j = j_seq, shinyProgress = progress_smooth)
           }
           values$chr_grid_change <- values$chr_grid_change + 1
         }
@@ -336,7 +361,7 @@ find_peaks_server <- function(id, values){
             progress <- Progress$new(min = 0, max = length(j_seq))
             progress$set(message = "Begain to desmooth...", value = 0)
             on.exit(progress$close(), add = TRUE)
-            values$chr_grid$desmooth_ChrGrid(i = i_seq, j = j_seq)
+            values$chr_grid$desmooth_ChrGrid(i = i_seq, j = j_seq, threads = values$threads, shinyProgress = progress)
           }
           values$chr_grid_change <- values$chr_grid_change + 1
         }
@@ -378,14 +403,45 @@ find_peaks_server <- function(id, values){
             progress2$set(message = "Begain to extend ChrGrid...", value = 0)
             on.exit(progress2$close(), add = TRUE)
             values$chr_grid$extend_ChrGrid(thread = values$threads, shinyProgress = progress2)
+            values$extended <- values$chr_grid$extended
           }
           values$chr_grid_change <- values$chr_grid_change + 1
         }
       })
-      # find_peaks_extractTarget
-      observeEvent(input$find_peaks_extractTarget, {
+      # find_peaks_extract_expect
+      observeEvent(input$find_peaks_extract_expect, {
         if(!is.null(values$chr_grid)){
-          addClass(id = "find_peaks_extractTarget", class = "btn-clicked")
+          addClass(id = "find_peaks_extract_expect", class = "btn-clicked")
+          i_seq <- input$find_peaks_i_start:input$find_peaks_i_end
+          j_seq <- input$find_peaks_j_start:input$find_peaks_j_end
+          if(length(i_seq) * length(j_seq) <= 20){
+            progress <- Progress$new(min = 0, max = length(i_seq) * length(j_seq))
+            progress$set(message = "Begain to extract target...", value = 0)
+            on.exit(progress$close(), add = TRUE)
+            nn <- 1
+            maxValue <- progress$getMax()
+            for(i in i_seq){
+              for(j in j_seq){
+                progress$set(value = nn, message = "Extract target...", detail = paste0(nn, " / ", maxValue))
+                nn <- nn + 1
+                values$chr_grid$get(i, j)$extract_targetPeak_chr(rt = NULL, rt_diff_tol = input$find_peaks_rt_diff_tol)
+              }
+            }
+          }else{
+            progress <- Progress$new(min = 0, max = length(j_seq))
+            progress$set(message = "Begain to extract target...", value = 0)
+            on.exit(progress$close(), add = TRUE)
+            values$chr_grid$extract_targetPeak_ChrGrid(i = i_seq, j = j_seq,
+                                                       rt = NULL, rt_diff_tol = input$find_peaks_rt_diff_tol,
+                                                       thread = values$threads, shinyProgress = progress)
+          }
+        }
+        values$chr_grid_change <- values$chr_grid_change + 1
+      })
+      # find_peaks_extract_manual
+      observeEvent(input$find_peaks_extract_manual, {
+        if(!is.null(values$chr_grid)){
+          addClass(id = "find_peaks_extract_manual", class = "btn-clicked")
           i_seq <- input$find_peaks_i_start:input$find_peaks_i_end
           j_seq <- input$find_peaks_j_start:input$find_peaks_j_end
           if(length(i_seq) * length(j_seq) <= 20){
@@ -411,6 +467,89 @@ find_peaks_server <- function(id, values){
           }
         }
         values$chr_grid_change <- values$chr_grid_change + 1
+      })
+      # find_peaks_correctRt
+      observeEvent(input$find_peaks_correctRt, {
+        if(!is.null(values$chr_grid)){
+          addClass(id = "find_peaks_correctRt", class = "btn-clicked")
+          i_seq <- input$find_peaks_i_start:input$find_peaks_i_end
+          j_seq <- input$find_peaks_j_start:input$find_peaks_j_end
+          if(length(i_seq) * length(j_seq) <= 20){
+            progress <- Progress$new(min = 0, max = length(i_seq) * length(j_seq))
+            progress$set(message = "Begain to correct RT...", value = 0)
+            on.exit(progress$close(), add = TRUE)
+            nn <- 1
+            maxValue <- progress$getMax()
+            for(i in i_seq){
+              for(j in j_seq){
+                progress$set(value = nn, message = "Correct RT...", detail = paste0(nn, " / ", maxValue))
+                nn <- nn + 1
+                values$chr_grid$get(i, j)$cal_rtshift_chr(chr_grid = values$chr_grid)
+                values$chr_grid$get(i, j)$drop_rtshift_chr()
+                values$chr_grid$get(i, j)$correct_rtshift_chr()
+              }
+            }
+          }else{
+            progress_calrtshift_IS <- Progress$new(min = 0, max = length(j_seq))
+            progress_calrtshift_IS$set(message = "Begain to calculate rtshift for IS...", value = 0)
+            on.exit(progress_calrtshift_IS$close(), add = TRUE)
+            progress_calrtshift_Analyte <- Progress$new(min = 0, max = length(j_seq))
+            progress_calrtshift_Analyte$set(message = "Begain to calculate rtshift for Analyte...", value = 0)
+            on.exit(progress_calrtshift_Analyte$close(), add = TRUE)
+            values$chr_grid$cal_rtshift_ChrGrid(i = i_seq, j = j_seq, thread = values$threads,
+                                                shinyProgress_IS = progress_calrtshift_IS, shinyProgress_Analyte = progress_calrtshift_Analyte)
+            progress_droprtshift <- Progress$new(min = 0, max = length(j_seq))
+            progress_droprtshift$set(message = "Begain to uncorrect...", value = 0)
+            on.exit(progress_droprtshift$close(), add = TRUE)
+            values$chr_grid$drop_rtshift_ChrGrid(i = i_seq, j = j_seq, thread = values$threads, shinyProgress = progress_droprtshift)
+            progress_correctrtshift <- Progress$new(min = 0, max = length(j_seq))
+            progress_correctrtshift$set(message = "Begain to correct...", value = 0)
+            on.exit(progress_correctrtshift$close(), add = TRUE)
+            values$chr_grid$correct_rtshift_ChrGrid(i = i_seq, j = j_seq, thread = values$threads, shinyProgress = progress_correctrtshift)
+          }
+          values$chr_grid_change <- values$chr_grid_change + 1
+        }
+      })
+      # find_peaks_uncorrectRt
+      observeEvent(input$find_peaks_uncorrectRt, {
+        if(!is.null(values$chr_grid)){
+          addClass(id = "find_peaks_uncorrectRt", class = "btn-clicked")
+          i_seq <- input$find_peaks_i_start:input$find_peaks_i_end
+          j_seq <- input$find_peaks_j_start:input$find_peaks_j_end
+          if(length(i_seq) * length(j_seq) <= 20){
+            progress <- Progress$new(min = 0, max = length(i_seq) * length(j_seq))
+            progress$set(message = "Begain to uncorrect RT...", value = 0)
+            on.exit(progress$close(), add = TRUE)
+            nn <- 1
+            maxValue <- progress$getMax()
+            for(i in i_seq){
+              for(j in j_seq){
+                progress$set(value = nn, message = "Uncorrect RT...", detail = paste0(nn, " / ", maxValue))
+                nn <- nn + 1
+                values$chr_grid$get(i, j)$drop_rtshift_chr()
+              }
+            }
+          }else{
+            progress <- Porgress$new(min = 0, max = length(j_seq))
+            progress$set(message = "Begain to uncorrect RT...", value = 0)
+            on.exit(progress$close(), add = TRUE)
+            values$chr_grid$drop_rtshift_ChrGrid(i = i_seq, j = j_seq, threads = values$threads, shinyProgress = progress)
+          }
+          values$chr_grid_change <- values$chr_grid_change + 1
+        }
+      })
+      # find_peaks_makeBlank
+      observeEvent(input$find_peaks_makeBlank, {
+        if(!is.null(values$chr_grid)){
+          addClass(id = "find_peaks_makeBlank", class = "btn-clicked")
+          i_seq <- input$find_peaks_i_start:input$find_peaks_i_end
+          j_seq <- input$find_peaks_j_start:input$find_peaks_j_end
+          progress <- Progress$new(min = 0, max = length(i_seq) * length(j_seq))
+          progress$set(message = "Begain to blank...", value = 0)
+          on.exit(progress$close(), add =TRUE)
+          values$chr_grid$blank_ChrGrid(i = i_seq, j = j_seq, shinyProgress = progress)
+          values$chr_grid_change <- values$chr_grid_change + 1
+        }
       })
 
       # find_peaks_currentAnalyte
@@ -447,6 +586,31 @@ find_peaks_server <- function(id, values){
               })
             }
           }
+        }
+      })
+      # find_peaks_rtdifference
+      observe({
+        if(!is.null(values$chr_grid)){
+          if(!is.na(values$current_i) & !is.na(values$current_j)){
+            values$chr_grid_change
+            output$find_peaks_rtdifference <- renderPlotly({
+              p <- values$chr_grid$plot_rtdifference(i = values$current_i)
+              ggplotly(p = p, source = "find_peaks_rtdifference_pic") %>%
+                event_register(event = "plotly_click")
+            })
+          }
+        }
+      })
+      # 处理点击操作
+      observeEvent(event_data(event = "plotly_click", source = "find_peaks_rtdifference_pic"), {
+        event_data <- event_data(event = "plotly_click", source = "find_peaks_rtdifference_pic")
+        if(!is.null(event_data)){
+          message("click")
+          values$current_j <- event_data$x[1]
+          values$current_sampleName <- values$chr_grid$sampleInfo$sampleName[values$current_j]
+          updateNumericInput(session = session, inputId = "find_peaks_j_start", value = values$current_j)
+          updateNumericInput(session = session, inputId = "find_peaks_j_end", value = values$current_j)
+          updateSelectInput(session = session, inputId = "find_peaks_sampleName", selected = values$current_sampleName)
         }
       })
     }
