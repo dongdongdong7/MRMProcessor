@@ -251,6 +251,13 @@ chromatogram <- R6::R6Class(
     },
 
     #' @description
+    #' Remove peaks and target peak information in chromatogram
+    blank_chr = function(){
+      self$peaks <- NULL
+      self$targetPeak <- NULL
+    },
+
+    #' @description
     #' Plot chromatogram
     #' @param target `logical(1)`, whether to plot only the target peak
     plot_chr = function(target = FALSE){

@@ -748,7 +748,7 @@ ChrGrid <- R6::R6Class(
         maxValue <- shinyProgress$getMax()
         if(maxValue != length(j_seq)) stop("maxValue != length(j_seq)")
         progress_update <- function(nn){
-          shinyProgress$set(value = nn, message = "Correct rtshift...", detail = paste0(nn, " / ", maxValue))
+          shinyProgress$set(value = nn, message = "Drop rtshift...", detail = paste0(nn, " / ", maxValue))
         }
       }
       opts <- list(progress = progress_update)
@@ -790,6 +790,51 @@ ChrGrid <- R6::R6Class(
       #     chr_tmp$rtcorrect <- NULL
       #   }
       # }
+    },
+
+    #' @description
+    #' Remove peaks and target peak information in ChrGrid
+    #' @param i `integer()`, analyte index
+    #' @param j `integer()`, sample index
+    #' @param shinyProgress this parameter is used to receive shiny Progress instance
+    blank_ChrGrid = function(i, j, shinyProgress = NULL){
+      if(missing(i) & missing(j)){
+        i_seq <- 1:self$dim[1]
+        j_seq <- 1:self$dim[2]
+      }else if(!missing(i) & missing(j)){
+        i_seq <- i
+        j_seq <- 1:self$dim[2]
+      }else if(missing(i) & !missing(j)){
+        i_seq <- 1:self$dim[1]
+        j_seq <- j
+      }else{
+        i_seq <- i
+        j_seq <- j
+      }
+      if(is.null(shinyProgress)){
+        pb <- progress::progress_bar$new(
+          format = "[:bar] :percent | ELA: :elapsedfull | ETA: :eta",
+          total = length(i_seq) * length(j_seq),
+          width = 60
+        )
+        progress_update <- function(nn){
+          pb$tick()
+        }
+      }else{
+        maxValue <- shinyProgress$getMax()
+        if(maxValue != length(i_seq) * length(j_seq)) stop("maxValue != length(i_seq) * length(j_seq)")
+        progress_update <- function(nn){
+          shinyProgress$set(value = nn, message = "Blank...", detail = paste0(nn, " / ", maxValue))
+        }
+      }
+      nn <- 1
+      for(i in i_seq){
+        for(j in j_seq){
+          progress_update(nn)
+          self$get(i, j)$blank_chr()
+          nn <- nn + 1
+        }
+      }
     }
   )
 )

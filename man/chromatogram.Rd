@@ -82,6 +82,7 @@ chr <- chromatogram$new(rtime = rtime, intensity = intensity, Q1 = 200.321, Q3 =
 \item \href{#method-chromatogram-cal_rtshift_chr}{\code{chromatogram$cal_rtshift_chr()}}
 \item \href{#method-chromatogram-correct_rtshift_chr}{\code{chromatogram$correct_rtshift_chr()}}
 \item \href{#method-chromatogram-drop_rtshift_chr}{\code{chromatogram$drop_rtshift_chr()}}
+\item \href{#method-chromatogram-blank_chr}{\code{chromatogram$blank_chr()}}
 \item \href{#method-chromatogram-plot_chr}{\code{chromatogram$plot_chr()}}
 \item \href{#method-chromatogram-clone}{\code{chromatogram$clone()}}
 }
@@ -268,6 +269,16 @@ Correct retention time shift
 Restore retention time from correction
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{chromatogram$drop_rtshift_chr()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-chromatogram-blank_chr"></a>}}
+\if{latex}{\out{\hypertarget{method-chromatogram-blank_chr}{}}}
+\subsection{Method \code{blank_chr()}}{
+Remove peaks and target peak information in chromatogram
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{chromatogram$blank_chr()}\if{html}{\out{</div>}}
 }
 
 }

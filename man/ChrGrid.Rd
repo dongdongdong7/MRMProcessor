@@ -49,6 +49,7 @@ chr_grid$findPeaks_ChrGrid()
 \item \href{#method-ChrGrid-cal_rtshift_ChrGrid}{\code{ChrGrid$cal_rtshift_ChrGrid()}}
 \item \href{#method-ChrGrid-correct_rtshift_ChrGrid}{\code{ChrGrid$correct_rtshift_ChrGrid()}}
 \item \href{#method-ChrGrid-drop_rtshift_ChrGrid}{\code{ChrGrid$drop_rtshift_ChrGrid()}}
+\item \href{#method-ChrGrid-blank_ChrGrid}{\code{ChrGrid$blank_ChrGrid()}}
 }
 }
 \if{html}{\out{<hr>}}
@@ -375,6 +376,27 @@ Restore retention time from correction
 \item{\code{j}}{`integer()`, sample index}
 
 \item{\code{thread}}{`integer(1)`, thread number in parallel}
+
+\item{\code{shinyProgress}}{this parameter is used to receive shiny Progress instance}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-ChrGrid-blank_ChrGrid"></a>}}
+\if{latex}{\out{\hypertarget{method-ChrGrid-blank_ChrGrid}{}}}
+\subsection{Method \code{blank_ChrGrid()}}{
+Remove peaks and target peak information in ChrGrid
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ChrGrid$blank_ChrGrid(i, j, shinyProgress = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{i}}{`integer()`, analyte index}
+
+\item{\code{j}}{`integer()`, sample index}
 
 \item{\code{shinyProgress}}{this parameter is used to receive shiny Progress instance}
 }
