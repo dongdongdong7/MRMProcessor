@@ -835,6 +835,32 @@ ChrGrid <- R6::R6Class(
           nn <- nn + 1
         }
       }
+    },
+
+    #' @description
+    #' Plot rtdifference picture
+    #' @param i `integer(1)`, index of one analyte
+    #' @param j `integer()`, sample index
+    plot_rtdifference = function(i, j){
+      if(missing(i)){
+        stop("i is missing!")
+      }
+      if(missing(j)){
+        j <- 1:self$dim[2]
+      }
+      rtdifference_vec <- sapply(j, function(j_) {
+        rtdiff <- self$get(i, j_)$rtdifference
+        if(is.null(rtdiff)) rtdiff <- NA
+        rtdiff
+      })
+      df <- data.frame(
+        j = j,
+        rtdifference = rtdifference_vec
+      )
+      p <- ggplot2::ggplot(df, ggplot2::aes(x = j, y = rtdifference)) +
+        ggplot2::geom_point(size = 3, ) +
+        ggplot2::geom_line() +
+        ggplot2::theme_bw()
     }
   )
 )

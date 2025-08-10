@@ -50,6 +50,7 @@ chr_grid$findPeaks_ChrGrid()
 \item \href{#method-ChrGrid-correct_rtshift_ChrGrid}{\code{ChrGrid$correct_rtshift_ChrGrid()}}
 \item \href{#method-ChrGrid-drop_rtshift_ChrGrid}{\code{ChrGrid$drop_rtshift_ChrGrid()}}
 \item \href{#method-ChrGrid-blank_ChrGrid}{\code{ChrGrid$blank_ChrGrid()}}
+\item \href{#method-ChrGrid-plot_rtdifference}{\code{ChrGrid$plot_rtdifference()}}
 }
 }
 \if{html}{\out{<hr>}}
@@ -399,6 +400,25 @@ Remove peaks and target peak information in ChrGrid
 \item{\code{j}}{`integer()`, sample index}
 
 \item{\code{shinyProgress}}{this parameter is used to receive shiny Progress instance}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-ChrGrid-plot_rtdifference"></a>}}
+\if{latex}{\out{\hypertarget{method-ChrGrid-plot_rtdifference}{}}}
+\subsection{Method \code{plot_rtdifference()}}{
+Plot rtdifference picture
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ChrGrid$plot_rtdifference(i, j)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{i}}{`integer(1)`, index of one analyte}
+
+\item{\code{j}}{`integer()`, sample index}
 }
 \if{html}{\out{</div>}}
 }
