@@ -454,7 +454,7 @@ ChrGrid <- R6::R6Class(
     #' @param thread `integer(1)`, thread number in parallel
     #' @param shinyProgress_IS this parameter is used to receive shiny Progress instance
     #' @param shinyProgress_Analyte this parameter is used to receive shiny Progress instance
-    cal_rtshift = function(i, j, thread = 1, shinyProgress_IS = NULL, shinyProgress_Analyte = NULL){
+    cal_rtshift_ChrGrid = function(i, j, thread = 1, shinyProgress_IS = NULL, shinyProgress_Analyte = NULL){
       IS_i <- which(self$windowInfo$analyteType == "IS")
       IS_j <- 1:self$dim[2]
       IS_name <- self$windowInfo$analyteName[IS_i]
@@ -625,7 +625,7 @@ ChrGrid <- R6::R6Class(
     #' @param j `integer()`, sample index
     #' @param thread `integer(1)`, thread number in parallel
     #' @param shinyProgress this parameter is used to receive shiny Progress instance
-    correct_rtshift = function(i, j, thread = 1, shinyProgress = NULL){
+    correct_rtshift_ChrGrid = function(i, j, thread = 1, shinyProgress = NULL){
       if(missing(i) & missing(j)){
         i_seq <- 1:self$dim[1]
         j_seq <- 1:self$dim[2]
@@ -715,7 +715,7 @@ ChrGrid <- R6::R6Class(
     #' @param j `integer()`, sample index
     #' @param thread `integer(1)`, thread number in parallel
     #' @param shinyProgress this parameter is used to receive shiny Progress instance
-    drop_rtshift = function(i, j, thread = 1, shinyProgress = NULL){
+    drop_rtshift_ChrGrid = function(i, j, thread = 1, shinyProgress = NULL){
       if(missing(i) & missing(j)){
         i_seq <- 1:self$dim[1]
         j_seq <- 1:self$dim[2]

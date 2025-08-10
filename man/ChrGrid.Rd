@@ -46,9 +46,9 @@ chr_grid$findPeaks_ChrGrid()
 \item \href{#method-ChrGrid-findPeaks_ChrGrid}{\code{ChrGrid$findPeaks_ChrGrid()}}
 \item \href{#method-ChrGrid-extend_ChrGrid}{\code{ChrGrid$extend_ChrGrid()}}
 \item \href{#method-ChrGrid-extract_targetPeak_ChrGrid}{\code{ChrGrid$extract_targetPeak_ChrGrid()}}
-\item \href{#method-ChrGrid-cal_rtshift}{\code{ChrGrid$cal_rtshift()}}
-\item \href{#method-ChrGrid-correct_rtshift}{\code{ChrGrid$correct_rtshift()}}
-\item \href{#method-ChrGrid-drop_rtshift}{\code{ChrGrid$drop_rtshift()}}
+\item \href{#method-ChrGrid-cal_rtshift_ChrGrid}{\code{ChrGrid$cal_rtshift_ChrGrid()}}
+\item \href{#method-ChrGrid-correct_rtshift_ChrGrid}{\code{ChrGrid$correct_rtshift_ChrGrid()}}
+\item \href{#method-ChrGrid-drop_rtshift_ChrGrid}{\code{ChrGrid$drop_rtshift_ChrGrid()}}
 }
 }
 \if{html}{\out{<hr>}}
@@ -305,12 +305,12 @@ Extract targte peak in chrmatograms of ChrGrid
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-ChrGrid-cal_rtshift"></a>}}
-\if{latex}{\out{\hypertarget{method-ChrGrid-cal_rtshift}{}}}
-\subsection{Method \code{cal_rtshift()}}{
+\if{html}{\out{<a id="method-ChrGrid-cal_rtshift_ChrGrid"></a>}}
+\if{latex}{\out{\hypertarget{method-ChrGrid-cal_rtshift_ChrGrid}{}}}
+\subsection{Method \code{cal_rtshift_ChrGrid()}}{
 Calculate retention time shift based on target peak of IS window
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ChrGrid$cal_rtshift(
+\if{html}{\out{<div class="r">}}\preformatted{ChrGrid$cal_rtshift_ChrGrid(
   i,
   j,
   thread = 1,
@@ -336,12 +336,12 @@ Calculate retention time shift based on target peak of IS window
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-ChrGrid-correct_rtshift"></a>}}
-\if{latex}{\out{\hypertarget{method-ChrGrid-correct_rtshift}{}}}
-\subsection{Method \code{correct_rtshift()}}{
+\if{html}{\out{<a id="method-ChrGrid-correct_rtshift_ChrGrid"></a>}}
+\if{latex}{\out{\hypertarget{method-ChrGrid-correct_rtshift_ChrGrid}{}}}
+\subsection{Method \code{correct_rtshift_ChrGrid()}}{
 Correct retention time shift
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ChrGrid$correct_rtshift(i, j, thread = 1, shinyProgress = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ChrGrid$correct_rtshift_ChrGrid(i, j, thread = 1, shinyProgress = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -359,12 +359,12 @@ Correct retention time shift
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-ChrGrid-drop_rtshift"></a>}}
-\if{latex}{\out{\hypertarget{method-ChrGrid-drop_rtshift}{}}}
-\subsection{Method \code{drop_rtshift()}}{
+\if{html}{\out{<a id="method-ChrGrid-drop_rtshift_ChrGrid"></a>}}
+\if{latex}{\out{\hypertarget{method-ChrGrid-drop_rtshift_ChrGrid}{}}}
+\subsection{Method \code{drop_rtshift_ChrGrid()}}{
 Restore retention time from correction
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ChrGrid$drop_rtshift(i, j, thread = 1, shinyProgress = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ChrGrid$drop_rtshift_ChrGrid(i, j, thread = 1, shinyProgress = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
