@@ -31,6 +31,8 @@ chr_grid$findPeaks_ChrGrid()
 \item{\code{sampleInfo}}{`data.frame()`, user's sample information}
 
 \item{\code{extended}}{`logical(1)`, whether extended}
+
+\item{\code{stdcurve_list}}{`list()` a list of all StdCurve}
 }
 \if{html}{\out{</div>}}
 }
@@ -51,6 +53,9 @@ chr_grid$findPeaks_ChrGrid()
 \item \href{#method-ChrGrid-drop_rtshift_ChrGrid}{\code{ChrGrid$drop_rtshift_ChrGrid()}}
 \item \href{#method-ChrGrid-blank_ChrGrid}{\code{ChrGrid$blank_ChrGrid()}}
 \item \href{#method-ChrGrid-plot_rtdifference}{\code{ChrGrid$plot_rtdifference()}}
+\item \href{#method-ChrGrid-build_stdcurve}{\code{ChrGrid$build_stdcurve()}}
+\item \href{#method-ChrGrid-GetStdCurve_ChrGrid}{\code{ChrGrid$GetStdCurve_ChrGrid()}}
+\item \href{#method-ChrGrid-CalConcentration_ChrGrid}{\code{ChrGrid$CalConcentration_ChrGrid()}}
 }
 }
 \if{html}{\out{<hr>}}
@@ -419,6 +424,76 @@ Plot rtdifference picture
 \item{\code{i}}{`integer(1)`, index of one analyte}
 
 \item{\code{j}}{`integer()`, sample index}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-ChrGrid-build_stdcurve"></a>}}
+\if{latex}{\out{\hypertarget{method-ChrGrid-build_stdcurve}{}}}
+\subsection{Method \code{build_stdcurve()}}{
+Specify the Quant index
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ChrGrid$build_stdcurve(
+  Quant_i,
+  batchName,
+  areaType = c("into", "intb", "maxo"),
+  weights = c("none", "1/x", "1/x^2"),
+  delete = integer(),
+  zero = FALSE
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{Quant_i}}{`integer(1)`, Quant index of one analyte}
+
+\item{\code{batchName}}{`character(1)`, batch name}
+
+\item{\code{areaType}}{`character(1)`, into, intb or maxo}
+
+\item{\code{weights}}{`character(1)`, weights of standard curve}
+
+\item{\code{delete}}{`integer()`, which points need to be deleted form stdcurve_df}
+
+\item{\code{zero}}{`logical(1)`, does the standard curve pass through the zero point}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-ChrGrid-GetStdCurve_ChrGrid"></a>}}
+\if{latex}{\out{\hypertarget{method-ChrGrid-GetStdCurve_ChrGrid}{}}}
+\subsection{Method \code{GetStdCurve_ChrGrid()}}{
+Get stdcurve list for ChrGrid
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ChrGrid$GetStdCurve_ChrGrid(Quant_i, batchName)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{Quant_i}}{`integer()` Quant index}
+
+\item{\code{batchName}}{`character()`, batch name}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-ChrGrid-CalConcentration_ChrGrid"></a>}}
+\if{latex}{\out{\hypertarget{method-ChrGrid-CalConcentration_ChrGrid}{}}}
+\subsection{Method \code{CalConcentration_ChrGrid()}}{
+Calculate concentration for ChrGrid
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ChrGrid$CalConcentration_ChrGrid(areaType = c("into", "intb", "maxo"))}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{areaType}}{`character(1)`, into, intb or maxo}
 }
 \if{html}{\out{</div>}}
 }

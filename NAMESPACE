@@ -2,6 +2,7 @@
 
 export("%>%")
 export(ChrGrid)
+export(StdCurve)
 export(chromatogram)
 export(readMRMData)
 importFrom(magrittr,"%>%")

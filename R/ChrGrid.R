@@ -33,6 +33,8 @@ ChrGrid <- R6::R6Class(
     sampleInfo = NULL,
     #' @field extended `logical(1)`, whether extended
     extended = FALSE,
+    #' @field stdcurve_list `list()` a list of all StdCurve
+    stdcurve_list = NULL,
 
     #' @description
     #' Create a new instance of ChrGrid
@@ -861,6 +863,108 @@ ChrGrid <- R6::R6Class(
         ggplot2::geom_point(size = 3, ) +
         ggplot2::geom_line() +
         ggplot2::theme_bw()
+    },
+
+    #' @description
+    #' Specify the Quant index
+    #' @param Quant_i `integer(1)`, Quant index of one analyte
+    #' @param batchName `character(1)`, batch name
+    #' @param areaType `character(1)`, into, intb or maxo
+    #' @param weights `character(1)`, weights of standard curve
+    #' @param delete `integer()`, which points need to be deleted form stdcurve_df
+    #' @param zero `logical(1)`, does the standard curve pass through the zero point
+    build_stdcurve = function(Quant_i, batchName, areaType = c("into", "intb", "maxo"),
+                              weights = c("none", "1/x", "1/x^2"), delete = integer(), zero = FALSE){
+      if(self$windowInfo$analyteType[Quant_i] == "IS") stop("Quant_i can not be IS!")
+      if(!batchName %in% unique(self$sampleInfo$batchName)) stop("batchName do not exist!")
+      weights <- match.arg(weights)
+      areaType <- match.arg(areaType)
+      j_std <- which(self$sampleInfo$typeName == "std" & self$sampleInfo$batchName == batchName)
+      # Quant
+      areaVec_Quant <- sapply(j_std, function(j) {
+        area <- self$get(Quant_i, j)$targetPeak[1, areaType]
+        if(is.null(area)) area <- NA
+        area
+      })
+      # IS
+      IS_name <- self$windowInfo$relatedIS[Quant_i]
+      IS_i <- which(self$windowInfo$analyteName == IS_name)
+      areaVec_IS <- sapply(j_std, function(j) {
+        area <- self$get(IS_i, j)$targetPeak[1, areaType]
+        if(is.null(area)) area <- NA
+        area
+      })
+      StdCurve$new(analyteName = self$windowInfo$analyteName[Quant_i], relatedIS = IS_name, batchName = batchName,
+                   weights = weights, delete = delete, zero = zero,
+                   areaVec_Quant = areaVec_Quant, areaVec_IS = areaVec_IS,
+                   initialCon_Quant = self$windowInfo$initialCon[Quant_i], initialCon_IS = self$windowInfo$initialCon[IS_i],
+                   dilutionRatioVec = self$sampleInfo$dilutionRatio[j_std])
+    },
+
+    #' @description
+    #' Get stdcurve list for ChrGrid
+    #' @param Quant_i `integer()` Quant index
+    #' @param batchName `character()`, batch name
+    GetStdCurve_ChrGrid = function(Quant_i, batchName){
+      # initialize
+      if(is.null(self$stdcurve_list)){
+        Quant_i_all <- which(self$windowInfo$analyteType != "IS")
+        batchName_all <- unique(self$sampleInfo$batchName)
+        stdcurve_name <- unlist(lapply(batchName_all, function(batchName_) {
+          paste0(batchName_, "_", Quant_i_all)
+        }))
+        self$stdcurve_list <- lapply(stdcurve_name, function(name_) {
+          NULL
+        })
+        names(self$stdcurve_list) <- stdcurve_name
+      }
+      if(missing(Quant_i)){
+        Quant_i <- which(self$windowInfo$analyteType != "IS")
+      }
+      if(missing(batchName)){
+        batchName <- unique(self$sampleInfo$batchName)
+      }
+      stdcurve_name <- unlist(lapply(batchName, function(batchName_) {
+        paste0(batchName_, "_", Quant_i)
+      }))
+      self$stdcurve_list[stdcurve_name] <- unlist(lapply(batchName, function(batchName_) {
+        lapply(Quant_i, function(Quant_i_) {
+          self$build_stdcurve(Quant_i = Quant_i_, batchName = batchName_)
+        })
+      }))
+    },
+
+    #' @description
+    #' Calculate concentration for ChrGrid
+    #' @param areaType `character(1)`, into, intb or maxo
+    CalConcentration_ChrGrid = function(areaType = c("into", "intb", "maxo")){
+      areaType <- match.arg(areaType)
+      Quant_i <- which(self$windowInfo$analyteType != "IS")
+      batchNameVec <- unique(self$sampleInfo$batchName)
+
+      conDF <- purrr::list_rbind(
+        lapply(Quant_i, function(i) {
+          conList <- lapply(batchNameVec, function(batchName) {
+            real_j <- which(self$sampleInfo$batchName == batchName & self$sampleInfo$typeName == "real")
+            stdcurve <- self$stdcurve_list[[paste0(batchName, "_", i)]]
+            IS_i <- which(self$windowInfo$analyteName == stdcurve$relatedIS)
+            conVec <- sapply(real_j, function(j) {
+              area_Quant <- self$get(i, j)$targetPeak[1, areaType]
+              area_IS <- self$get(IS_i, j)$targetPeak[1, areaType]
+              if(is.null(area_Quant) | is.null(area_IS) | is.null(stdcurve$intercept) | is.null(stdcurve$slope)) return(NA)
+              as.numeric(round((((area_Quant / area_IS) - stdcurve$intercept) / stdcurve$slope) * stdcurve$initialCon_IS, 4))
+            })
+            names(conVec) <- self$sampleInfo$sampleName[real_j]
+            return(conVec)
+          })
+          con <- unlist(conList)
+          df <- as.data.frame(matrix(con, nrow = 1), row.names = self$windowInfo$analyteName[i])
+          colnames(df) <- names(con)
+          return(df)
+        })
+      )
+      conDF <- data.table::data.table(conDF, keep.rownames = "analyteName")
+      return(conDF)
     }
   )
 )
