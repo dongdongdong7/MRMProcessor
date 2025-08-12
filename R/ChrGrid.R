@@ -683,6 +683,7 @@ ChrGrid <- R6::R6Class(
                                       chr$targetPeak[, "rt"] <- chr$targetPeak[, "rt"] - chr$rtshift
                                       chr$targetPeak[, "rtmin"] <- chr$targetPeak[, "rtmin"] - chr$rtshift
                                       chr$targetPeak[, "rtmax"] <- chr$targetPeak[, "rtmax"] - chr$rtshift
+                                      chr$rtdifference <- chr$rtdifference - chr$rtshift
                                       chr$rtcorrect <- chr$rtshift
                                       return(chr)
                                     })
@@ -770,6 +771,7 @@ ChrGrid <- R6::R6Class(
                                       chr$targetPeak[, "rt"] <- chr$targetPeak[, "rt"] + chr$rtcorrect
                                       chr$targetPeak[, "rtmin"] <- chr$targetPeak[, "rtmin"] + chr$rtcorrect
                                       chr$targetPeak[, "rtmax"] <- chr$targetPeak[, "rtmax"] + chr$rtcorrect
+                                      chr$rtdifference <- chr$rtdifference + chr$rtshift
                                       chr$rtcorrect <- NULL
                                       return(chr)
                                     })

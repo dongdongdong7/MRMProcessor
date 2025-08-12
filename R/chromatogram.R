@@ -231,6 +231,7 @@ chromatogram <- R6::R6Class(
         self$targetPeak[, "rt"] <- self$targetPeak[, "rt"] - self$rtshift
         self$targetPeak[, "rtmin"] <- self$targetPeak[, "rtmin"] - self$rtshift
         self$targetPeak[, "rtmax"] <- self$targetPeak[, "rtmax"] - self$rtshift
+        self$rtdifference <- self$rtdifference - self$rtshift
         self$rtcorrect <- self$rtshift
       }
     },
@@ -246,6 +247,7 @@ chromatogram <- R6::R6Class(
         self$targetPeak[, "rt"] <- self$targetPeak[, "rt"] + self$rtcorrect
         self$targetPeak[, "rtmin"] <- self$targetPeak[, "rtmin"] + self$rtcorrect
         self$targetPeak[, "rtmax"] <- self$targetPeak[, "rtmax"] + self$rtcorrect
+        self$rtdifference <- self$rtdifference + self$rtcorrect
         self$rtcorrect <- NULL
       }
     },
